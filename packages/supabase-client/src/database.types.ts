@@ -381,6 +381,188 @@ export type Database = {
           },
         ]
       }
+      restaurant_tables: {
+        Row: {
+          branch_id: string
+          capacity: number
+          created_at: string
+          id: string
+          qr_code_url: string | null
+          restaurant_id: string
+          status: Database["public"]["Enums"]["table_status"]
+          table_number: string
+        }
+        Insert: {
+          branch_id: string
+          capacity?: number
+          created_at?: string
+          id?: string
+          qr_code_url?: string | null
+          restaurant_id: string
+          status?: Database["public"]["Enums"]["table_status"]
+          table_number: string
+        }
+        Update: {
+          branch_id?: string
+          capacity?: number
+          created_at?: string
+          id?: string
+          qr_code_url?: string | null
+          restaurant_id?: string
+          status?: Database["public"]["Enums"]["table_status"]
+          table_number?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_tables_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "restaurant_tables_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          branch_id: string
+          created_at: string
+          customer_id: string | null
+          id: string
+          order_type: Database["public"]["Enums"]["order_type"]
+          placed_by: Database["public"]["Enums"]["order_placed_by"]
+          restaurant_id: string
+          status: Database["public"]["Enums"]["order_status"]
+          subtotal: number
+          table_id: string | null
+          tax: number
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          branch_id: string
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          order_type?: Database["public"]["Enums"]["order_type"]
+          placed_by?: Database["public"]["Enums"]["order_placed_by"]
+          restaurant_id: string
+          status?: Database["public"]["Enums"]["order_status"]
+          subtotal?: number
+          table_id?: string | null
+          tax?: number
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          branch_id?: string
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          order_type?: Database["public"]["Enums"]["order_type"]
+          placed_by?: Database["public"]["Enums"]["order_placed_by"]
+          restaurant_id?: string
+          status?: Database["public"]["Enums"]["order_status"]
+          subtotal?: number
+          table_id?: string | null
+          tax?: number
+          total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_table_id_fkey"
+            columns: ["table_id"]
+            isOneToOne: false
+            referencedRelation: "restaurant_tables"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_items: {
+        Row: {
+          created_at: string
+          id: string
+          kitchen_status: Database["public"]["Enums"]["kitchen_item_status"]
+          menu_item_id: string
+          order_id: string
+          quantity: number
+          restaurant_id: string
+          selected_modifiers: Json
+          special_instructions: string | null
+          unit_price: number
+          variant_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kitchen_status?: Database["public"]["Enums"]["kitchen_item_status"]
+          menu_item_id: string
+          order_id: string
+          quantity?: number
+          restaurant_id: string
+          selected_modifiers?: Json
+          special_instructions?: string | null
+          unit_price: number
+          variant_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kitchen_status?: Database["public"]["Enums"]["kitchen_item_status"]
+          menu_item_id?: string
+          order_id?: string
+          quantity?: number
+          restaurant_id?: string
+          selected_modifiers?: Json
+          special_instructions?: string | null
+          unit_price?: number
+          variant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_menu_item_id_fkey"
+            columns: ["menu_item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "menu_item_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -400,6 +582,15 @@ export type Database = {
         }[]
       }
       is_staff_of: { Args: { _restaurant_id: string }; Returns: boolean }
+      place_order: {
+        Args: {
+          _restaurant_id: string
+          _table_id: string | null
+          _order_type: Database["public"]["Enums"]["order_type"]
+          _items: Json
+        }
+        Returns: { order_id: string; total: number }[]
+      }
       onboard_restaurant: {
         Args: {
           _default_language?: string
@@ -421,10 +612,15 @@ export type Database = {
       }
     }
     Enums: {
+      kitchen_item_status: "queued" | "cooking" | "ready"
+      order_placed_by: "customer" | "waiter" | "ai_waiter"
+      order_status: "pending" | "confirmed" | "preparing" | "ready" | "served" | "completed" | "cancelled"
+      order_type: "dine_in" | "takeaway" | "delivery"
       staff_role: "owner" | "manager" | "cashier" | "chef" | "waiter"
       subscription_plan: "free" | "pro" | "enterprise"
       subscription_status: "active" | "trial" | "suspended" | "cancelled"
       supported_language: "az" | "en" | "ru"
+      table_status: "free" | "occupied" | "reserved"
     }
     CompositeTypes: {
       [_ in never]: never

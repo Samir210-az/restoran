@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   UtensilsCrossed,
   ClipboardList,
+  ChefHat,
   Table2,
   Package,
   Users,
@@ -32,6 +33,7 @@ const NAV_ITEMS: Array<{
 }> = [
   { href: "/dashboard", label: "Ana Səhifə", icon: LayoutDashboard, roles: ["owner", "manager", "cashier", "chef", "waiter"] },
   { href: "/orders", label: "Sifarişlər", icon: ClipboardList, roles: ["owner", "manager", "cashier", "chef", "waiter"] },
+  { href: "/kitchen", label: "Mətbəx Ekranı", icon: ChefHat, roles: ["owner", "manager", "chef"] },
   { href: "/menu", label: "Menyu", icon: UtensilsCrossed, roles: ["owner", "manager"] },
   { href: "/tables", label: "Masalar", icon: Table2, roles: ["owner", "manager", "waiter"] },
   { href: "/inventory", label: "Anbar", icon: Package, roles: ["owner", "manager"] },
