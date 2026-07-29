@@ -1,0 +1,22 @@
+{
+  "name": "restoran",
+  "private": true,
+  "version": "0.1.0",
+  "description": "AI Restoran Idareetme Platformasi - Monorepo",
+  "workspaces": ["apps/*", "packages/*"],
+  "scripts": {
+    "dev:admin": "pnpm --filter @restoran/admin-panel dev",
+    "dev:customer": "pnpm --filter @restoran/customer-app dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck"
+  },
+  "devDependencies": {
+    "turbo": "^2.1.0",
+    "typescript": "^5.6.0"
+  },
+  "packageManager": "pnpm@9.9.0",
+  "engines": {
+    "node": ">=18.18.0"
+  }
+}
