@@ -41,7 +41,7 @@ export async function getCurrentStaffContext(): Promise<StaffContext> {
   ]);
 
   if (!staffRow) {
-    redirect("/register");
+    redirect("/onboarding");
   }
 
   return {
