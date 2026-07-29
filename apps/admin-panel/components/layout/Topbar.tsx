@@ -5,9 +5,10 @@ import { ThemeToggle } from "@restoran/ui";
 
 interface TopbarProps {
   onMenuClick: () => void;
+  initials?: string;
 }
 
-export function Topbar({ onMenuClick }: TopbarProps) {
+export function Topbar({ onMenuClick, initials = "?" }: TopbarProps) {
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-bg/80 px-4 backdrop-blur-md md:px-6">
       <button
@@ -33,7 +34,7 @@ export function Topbar({ onMenuClick }: TopbarProps) {
           className="ml-1 h-9 w-9 rounded-full bg-accent-soft text-center text-sm font-medium leading-9 text-accent"
           aria-hidden="true"
         >
-          S
+          {initials}
         </div>
       </div>
     </header>

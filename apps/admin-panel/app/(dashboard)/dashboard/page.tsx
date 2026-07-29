@@ -1,5 +1,6 @@
 import { TrendingUp, ClipboardList, Users, Wallet } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, Badge } from "@restoran/ui";
+import { getCurrentContext } from "@/lib/get-current-context";
 
 export const metadata = { title: "Ana Səhifə" };
 
@@ -16,13 +17,18 @@ const KPI_CARDS = [
   { label: "Aylıq artım", value: "—", icon: TrendingUp, hint: "Hesabat modulu Faza 11-də" },
 ] as const;
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const context = await getCurrentContext();
+  const greetingName = context?.fullName?.split(" ")[0] ?? "";
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold text-text-primary">Xoş gəldiniz</h1>
+        <h1 className="text-2xl font-semibold text-text-primary">
+          Xoş gəldiniz{greetingName ? `, ${greetingName}` : ""}
+        </h1>
         <p className="text-sm text-text-secondary">
-          Bu, Faza 1 təməl görünüşüdür — biznes məlumatları sonrakı fazalarda qoşulacaq.
+          {context?.restaurant?.name} idarə panelinə xoş gəldiniz.
         </p>
       </div>
 
