@@ -563,6 +563,73 @@ export type Database = {
           },
         ]
       }
+      reservations: {
+        Row: {
+          branch_id: string
+          created_at: string
+          customer_name: string
+          customer_phone: string
+          id: string
+          notes: string | null
+          party_size: number
+          reserved_at: string
+          restaurant_id: string
+          status: Database["public"]["Enums"]["reservation_status"]
+          table_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          branch_id: string
+          created_at?: string
+          customer_name: string
+          customer_phone: string
+          id?: string
+          notes?: string | null
+          party_size: number
+          reserved_at: string
+          restaurant_id: string
+          status?: Database["public"]["Enums"]["reservation_status"]
+          table_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          branch_id?: string
+          created_at?: string
+          customer_name?: string
+          customer_phone?: string
+          id?: string
+          notes?: string | null
+          party_size?: number
+          reserved_at?: string
+          restaurant_id?: string
+          status?: Database["public"]["Enums"]["reservation_status"]
+          table_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reservations_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reservations_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reservations_table_id_fkey"
+            columns: ["table_id"]
+            isOneToOne: false
+            referencedRelation: "restaurant_tables"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -591,6 +658,17 @@ export type Database = {
         }
         Returns: { order_id: string; total: number }[]
       }
+      request_reservation: {
+        Args: {
+          _restaurant_id: string
+          _customer_name: string
+          _customer_phone: string
+          _party_size: number
+          _reserved_at: string
+          _notes?: string | null
+        }
+        Returns: { reservation_id: string }[]
+      }
       onboard_restaurant: {
         Args: {
           _default_language?: string
@@ -616,6 +694,7 @@ export type Database = {
       order_placed_by: "customer" | "waiter" | "ai_waiter"
       order_status: "pending" | "confirmed" | "preparing" | "ready" | "served" | "completed" | "cancelled"
       order_type: "dine_in" | "takeaway" | "delivery"
+      reservation_status: "pending" | "confirmed" | "seated" | "cancelled" | "no_show"
       staff_role: "owner" | "manager" | "cashier" | "chef" | "waiter"
       subscription_plan: "free" | "pro" | "enterprise"
       subscription_status: "active" | "trial" | "suspended" | "cancelled"

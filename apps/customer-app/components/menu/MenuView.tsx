@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Minus, ShoppingBag } from "lucide-react";
+import Link from "next/link";
+import { Plus, Minus, ShoppingBag, CalendarCheck } from "lucide-react";
 import { Button, Modal } from "@restoran/ui";
 import { cn } from "@restoran/utils";
 import { placeOrder } from "@/lib/place-order";
@@ -97,9 +98,18 @@ export function MenuView({ restaurant, categories, items, tableId }: MenuViewPro
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-6 pb-28 md:px-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-text-primary">{restaurant.name}</h1>
-        <p className="text-sm text-text-secondary">{tableId ? "Masa üçün sifariş" : "Öz aparma sifarişi"}</p>
+      <div className="mb-6 flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold text-text-primary">{restaurant.name}</h1>
+          <p className="text-sm text-text-secondary">{tableId ? "Masa üçün sifariş" : "Öz aparma sifarişi"}</p>
+        </div>
+        <Link
+          href={`/${restaurant.slug}/reserve`}
+          className="flex shrink-0 items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-medium text-text-secondary hover:bg-bg-muted"
+        >
+          <CalendarCheck className="h-3.5 w-3.5" aria-hidden="true" />
+          Masa rezerv et
+        </Link>
       </div>
 
       {categories.length > 1 && (
