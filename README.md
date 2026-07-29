@@ -54,3 +54,5 @@ pnpm dev:customer  # http://localhost:3001
 ---
 
 By [s_akhundoff](https://instagram.com/s_akhundoff)
+
+_Son yenilənmə: Faza 4 tamamlandı, Platform Admin paneli əlavə olundu._
