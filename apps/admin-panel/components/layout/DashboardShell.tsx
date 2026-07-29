@@ -10,9 +10,10 @@ interface DashboardShellProps {
   children: React.ReactNode;
   restaurantName: string;
   role: StaffRole;
+  isPlatformAdmin?: boolean;
 }
 
-export function DashboardShell({ children, restaurantName, role }: DashboardShellProps) {
+export function DashboardShell({ children, restaurantName, role, isPlatformAdmin }: DashboardShellProps) {
   const [isMobileNavOpen, setMobileNavOpen] = useState(false);
 
   return (
@@ -44,7 +45,7 @@ export function DashboardShell({ children, restaurantName, role }: DashboardShel
       )}
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <Topbar onMenuClick={() => setMobileNavOpen(true)} restaurantName={restaurantName} role={role} />
+        <Topbar onMenuClick={() => setMobileNavOpen(true)} restaurantName={restaurantName} role={role} isPlatformAdmin={isPlatformAdmin} />
         <main className="flex-1 p-4 md:p-6">{children}</main>
       </div>
     </div>

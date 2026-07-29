@@ -669,6 +669,29 @@ export type Database = {
         }
         Returns: { reservation_id: string }[]
       }
+      is_platform_admin: { Args: Record<string, never>; Returns: boolean }
+      get_platform_overview: {
+        Args: Record<string, never>
+        Returns: {
+          id: string
+          name: string
+          slug: string
+          subscription_plan: Database["public"]["Enums"]["subscription_plan"]
+          subscription_status: Database["public"]["Enums"]["subscription_status"]
+          owner_email: string
+          created_at: string
+          staff_count: number
+          menu_item_count: number
+          order_count: number
+        }[]
+      }
+      set_restaurant_subscription_status: {
+        Args: {
+          _restaurant_id: string
+          _status: Database["public"]["Enums"]["subscription_status"]
+        }
+        Returns: undefined
+      }
       onboard_restaurant: {
         Args: {
           _default_language?: string

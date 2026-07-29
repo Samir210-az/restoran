@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Menu, Bell, LogOut } from "lucide-react";
+import Link from "next/link";
+import { Menu, Bell, LogOut, Shield } from "lucide-react";
 import { ThemeToggle } from "@restoran/ui";
 import { ROLE_LABELS, type StaffRole } from "@restoran/types";
 import { signOutAction } from "@/app/(dashboard)/actions";
@@ -10,9 +11,10 @@ interface TopbarProps {
   onMenuClick: () => void;
   restaurantName: string;
   role: StaffRole;
+  isPlatformAdmin?: boolean;
 }
 
-export function Topbar({ onMenuClick, restaurantName, role }: TopbarProps) {
+export function Topbar({ onMenuClick, restaurantName, role, isPlatformAdmin }: TopbarProps) {
   const [isMenuOpen, setMenuOpen] = useState(false);
   const initial = restaurantName?.charAt(0)?.toUpperCase() || "R";
 
@@ -52,7 +54,16 @@ export function Topbar({ onMenuClick, restaurantName, role }: TopbarProps) {
             {initial}
           </button>
           {isMenuOpen && (
-            <div className="absolute right-0 top-11 w-44 rounded-md border border-border bg-bg-elevated py-1 shadow-elevated animate-fade-in">
+            <div className="absolute right-0 top-11 w-48 rounded-md border border-border bg-bg-elevated py-1 shadow-elevated animate-fade-in">
+              {isPlatformAdmin && (
+                <Link
+                  href="/platform"
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-text-secondary hover:bg-bg-muted hover:text-accent"
+                >
+                  <Shield className="h-4 w-4" aria-hidden="true" />
+                  Platform Admin
+                </Link>
+              )}
               <form action={signOutAction}>
                 <button
                   type="submit"

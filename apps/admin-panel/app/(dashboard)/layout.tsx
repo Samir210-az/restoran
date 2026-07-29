@@ -1,4 +1,5 @@
 import { getCurrentStaffContext } from "@/lib/get-current-staff-context";
+import { getSupabaseServerClient } from "@/lib/supabase-server";
 import { DashboardShell } from "@/components/layout/DashboardShell";
 
 /**
@@ -9,6 +10,12 @@ import { DashboardShell } from "@/components/layout/DashboardShell";
  */
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const context = await getCurrentStaffContext();
+  const supabase = getSupabaseServerClient();
+  const { data: isPlatformAdmin } = await supabase.rpc("is_platform_admin");
 
-  return <DashboardShell restaurantName={context.restaurantName} role={context.role}>{children}</DashboardShell>;
+  return (
+    <DashboardShell restaurantName={context.restaurantName} role={context.role} isPlatformAdmin={!!isPlatformAdmin}>
+      {children}
+    </DashboardShell>
+  );
 }
