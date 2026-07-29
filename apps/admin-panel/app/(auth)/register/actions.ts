@@ -47,7 +47,12 @@ export async function registerAction(formData: FormData) {
   }
 
   const slug = slugifyUnique(restaurantName);
-  const { error: onboardError } = await supabase.rpc("onboard_restaurant", {
+  // NOT: supabase-js-in .rpc() tip-cixarimi bu setof-olmayan (tek obyekt qaytaran)
+  // RPC ucun duzgun overload-u tapa bilmir - runtime-a tesiri yoxdur, args formasi
+  // database.types.ts-deki Args ile eynidir. Yalniz bu cagirisi tipsiz buraxiriq.
+  const { error: onboardError } = await (
+    supabase as unknown as { rpc: (fn: string, args: unknown) => Promise<{ error: { message: string } | null }> }
+  ).rpc("onboard_restaurant", {
     _name: restaurantName,
     _slug: slug,
     _default_language: "az",

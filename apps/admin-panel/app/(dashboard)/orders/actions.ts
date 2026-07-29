@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
 import { getCurrentStaffContext } from "@/lib/get-current-staff-context";
 
-const NEXT_STATUS: Record<string, string> = {
+const NEXT_STATUS: Record<string, "confirmed" | "preparing" | "ready" | "served" | "completed"> = {
   pending: "confirmed",
   confirmed: "preparing",
   preparing: "ready",

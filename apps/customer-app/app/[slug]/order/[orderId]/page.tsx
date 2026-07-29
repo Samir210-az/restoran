@@ -37,5 +37,14 @@ export default async function OrderTrackingPage({ params }: PageProps) {
   const data = await getOrder(params.orderId);
   if (!data) notFound();
 
-  return <OrderTracker initialOrder={data.order} initialItems={data.items} />;
+  const items = data.items.map((row) => ({
+    id: row.id,
+    quantity: row.quantity,
+    unit_price: row.unit_price,
+    kitchen_status: row.kitchen_status,
+    menu_item_id: row.menu_item_id,
+    menu_items: row.menu_items as { name: Record<string, string> } | { name: Record<string, string> }[] | null,
+  }));
+
+  return <OrderTracker initialOrder={data.order} initialItems={items} />;
 }

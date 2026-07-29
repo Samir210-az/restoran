@@ -3,6 +3,7 @@ import { cn } from "@restoran/utils";
 
 export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: "solid" | "glass";
+  children?: React.ReactNode;
 }
 
 export function Card({ className, variant = "solid", ...props }: CardProps) {

@@ -4,7 +4,9 @@ import { revalidatePath } from "next/cache";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
 import { getCurrentStaffContext } from "@/lib/get-current-staff-context";
 
-async function updateStatus(reservationId: string, status: string) {
+type ReservationStatus = "pending" | "confirmed" | "seated" | "cancelled" | "no_show";
+
+async function updateStatus(reservationId: string, status: ReservationStatus) {
   const { restaurantId } = await getCurrentStaffContext();
   const supabase = getSupabaseServerClient();
   await supabase

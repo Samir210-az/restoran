@@ -56,8 +56,17 @@ export default async function RestaurantMenuPage({ params, searchParams }: PageP
   return (
     <MenuView
       restaurant={restaurant}
-      categories={categories}
-      items={items}
+      categories={categories as unknown as { id: string; name: Record<string, string>; sort_order: number }[]}
+      items={
+        items as unknown as {
+          id: string;
+          category_id: string;
+          name: Record<string, string>;
+          description: Record<string, string>;
+          price: number;
+          image_url: string | null;
+        }[]
+      }
       tableId={searchParams.table ?? null}
     />
   );
