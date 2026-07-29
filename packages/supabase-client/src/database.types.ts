@@ -1,3 +1,8 @@
+/**
+ * AVTOMATIK GENERASIYA OLUNUB - `supabase gen types typescript` ile.
+ * Bu faylı əl ilə redaktə ETMƏYİN - dəyişikliklər növbəti generasiyada itəcək.
+ * Bazada dəyişiklik lazımdırsa, yeni migrasiya yazın, sonra bu faylı yeniləyin.
+ */
 export type Json =
   | string
   | number
@@ -250,6 +255,21 @@ export type Database = {
           },
         ]
       }
+      platform_admins: {
+        Row: {
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -411,3 +431,14 @@ export type Database = {
     }
   }
 }
+
+type DefaultSchema = Database["public"]
+
+export type Tables<T extends keyof DefaultSchema["Tables"]> =
+  DefaultSchema["Tables"][T]["Row"]
+export type TablesInsert<T extends keyof DefaultSchema["Tables"]> =
+  DefaultSchema["Tables"][T]["Insert"]
+export type TablesUpdate<T extends keyof DefaultSchema["Tables"]> =
+  DefaultSchema["Tables"][T]["Update"]
+export type Enums<T extends keyof DefaultSchema["Enums"]> =
+  DefaultSchema["Enums"][T]

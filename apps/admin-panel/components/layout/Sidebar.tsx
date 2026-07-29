@@ -14,35 +14,54 @@ import {
   Sparkles,
   Settings,
 } from "lucide-react";
+import type { StaffRole } from "@restoran/types";
 import { cn } from "@restoran/utils";
 import { LogoutButton } from "./LogoutButton";
 
-const NAV_ITEMS = [
-  { href: "/dashboard", label: "Ana Səhifə", icon: LayoutDashboard },
-  { href: "/orders", label: "Sifarişlər", icon: ClipboardList },
-  { href: "/menu", label: "Menyu", icon: UtensilsCrossed },
-  { href: "/tables", label: "Masalar", icon: Table2 },
-  { href: "/inventory", label: "Anbar", icon: Package },
-  { href: "/staff", label: "İşçilər", icon: Users },
-  { href: "/customers", label: "Müştərilər", icon: Heart },
-  { href: "/reports", label: "Hesabatlar", icon: BarChart3 },
-  { href: "/ai-insights", label: "AI Kəşfiyyat", icon: Sparkles },
-  { href: "/settings", label: "Parametrlər", icon: Settings },
-] as const;
+/**
+ * Her naviqasiya maddesi hansi rollara gorunecegini `roles` sahesinde
+ * beyan edir. SAD bolme 6 (Istifadeci Rollari ve Icazeler) ile bire-bir
+ * uygundur: kassir/aspaz/ofisiant is idareetmesi ekranlarini (Isciler,
+ * Hesabatlar, Parametrler) gormemelidir.
+ */
+const NAV_ITEMS: Array<{
+  href: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  roles: StaffRole[];
+}> = [
+  { href: "/dashboard", label: "Ana Səhifə", icon: LayoutDashboard, roles: ["owner", "manager", "cashier", "chef", "waiter"] },
+  { href: "/orders", label: "Sifarişlər", icon: ClipboardList, roles: ["owner", "manager", "cashier", "chef", "waiter"] },
+  { href: "/menu", label: "Menyu", icon: UtensilsCrossed, roles: ["owner", "manager"] },
+  { href: "/tables", label: "Masalar", icon: Table2, roles: ["owner", "manager", "waiter"] },
+  { href: "/inventory", label: "Anbar", icon: Package, roles: ["owner", "manager"] },
+  { href: "/staff", label: "İşçilər", icon: Users, roles: ["owner", "manager"] },
+  { href: "/customers", label: "Müştərilər", icon: Heart, roles: ["owner", "manager"] },
+  { href: "/reports", label: "Hesabatlar", icon: BarChart3, roles: ["owner", "manager"] },
+  { href: "/ai-insights", label: "AI Kəşfiyyat", icon: Sparkles, roles: ["owner", "manager"] },
+  { href: "/settings", label: "Parametrlər", icon: Settings, roles: ["owner", "manager"] },
+];
 
 interface SidebarProps {
   className?: string;
   onNavigate?: () => void;
   restaurantName?: string;
+  role?: StaffRole;
 }
 
 /**
  * Naviqasiya siyahisi SAD-in "10. UI/UX Struktur -> Admin Panel" bolmesi
  * ile bire-bir uygundur. Yeni modul elave olunanda YALNIZ bu massivi
  * genisletmek kifayetdir - Sidebar ve MobileNav avtomatik sync qalir.
+ *
+ * QEYD: Bu, YALNIZ UI qatinda gizletmedir (UX ucun). Hemin route-lara
+ * birbasa URL ile gedilse belletde, real qoruma RLS ve server action-larda
+ * (getCurrentStaffContext + has_role_in) tetbiq olunur - bu siyahi
+ * tehlukesizlik sinirini teskil etmir.
  */
-export function Sidebar({ className, onNavigate, restaurantName }: SidebarProps) {
+export function Sidebar({ className, onNavigate, restaurantName, role }: SidebarProps) {
   const pathname = usePathname();
+  const visibleItems = role ? NAV_ITEMS.filter((item) => item.roles.includes(role)) : NAV_ITEMS;
 
   return (
     <nav className={cn("flex h-full flex-col p-4", className)} aria-label="Əsas naviqasiya">
@@ -56,7 +75,7 @@ export function Sidebar({ className, onNavigate, restaurantName }: SidebarProps)
       </div>
 
       <div className="flex-1">
-        {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+        {visibleItems.map(({ href, label, icon: Icon }) => {
           const isActive = pathname === href || pathname?.startsWith(`${href}/`);
           return (
             <Link

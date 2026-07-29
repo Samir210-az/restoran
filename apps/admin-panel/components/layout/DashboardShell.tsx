@@ -2,27 +2,23 @@
 
 import { useState } from "react";
 import { X } from "lucide-react";
-import { Sidebar } from "@/components/layout/Sidebar";
-import { Topbar } from "@/components/layout/Topbar";
+import type { StaffRole } from "@restoran/types";
+import { Sidebar } from "./Sidebar";
+import { Topbar } from "./Topbar";
 
 interface DashboardShellProps {
   children: React.ReactNode;
   restaurantName: string;
-  userInitial: string;
+  role: StaffRole;
 }
 
-/**
- * Responsiv Dashboard qabığı: masaüstündə sabit sidebar, mobil-de
- * overlay (slide-in) naviqasiya. Auth/kontekst yoxlaması bu komponentdən
- * ÖNCƏ, server tərəfdə (app/(dashboard)/layout.tsx) aparılır.
- */
-export function DashboardShell({ children, restaurantName, userInitial }: DashboardShellProps) {
+export function DashboardShell({ children, restaurantName, role }: DashboardShellProps) {
   const [isMobileNavOpen, setMobileNavOpen] = useState(false);
 
   return (
     <div className="flex min-h-screen bg-bg">
       <aside className="hidden w-64 shrink-0 border-r border-border md:block">
-        <Sidebar restaurantName={restaurantName} />
+        <Sidebar restaurantName={restaurantName} role={role} />
       </aside>
 
       {isMobileNavOpen && (
@@ -42,13 +38,13 @@ export function DashboardShell({ children, restaurantName, userInitial }: Dashbo
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <Sidebar restaurantName={restaurantName} onNavigate={() => setMobileNavOpen(false)} />
+            <Sidebar onNavigate={() => setMobileNavOpen(false)} restaurantName={restaurantName} role={role} />
           </div>
         </div>
       )}
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <Topbar onMenuClick={() => setMobileNavOpen(true)} userInitial={userInitial} />
+        <Topbar onMenuClick={() => setMobileNavOpen(true)} restaurantName={restaurantName} role={role} />
         <main className="flex-1 p-4 md:p-6">{children}</main>
       </div>
     </div>

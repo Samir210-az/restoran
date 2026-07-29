@@ -1,41 +1,16 @@
-"use client";
-
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { AlertCircle } from "lucide-react";
 import { Button, Input } from "@restoran/ui";
-import { createSupabaseBrowserClient } from "@restoran/supabase-client";
-import { logger } from "@restoran/utils";
+import { loginAction } from "./actions";
 
-export default function LoginPage() {
-  const router = useRouter();
-  const [isSubmitting, setSubmitting] = useState(false);
-  const [formError, setFormError] = useState<string | null>(null);
+export const metadata = { title: "Daxil ol" };
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setFormError(null);
-    setSubmitting(true);
-
-    const formData = new FormData(e.currentTarget);
-    const email = String(formData.get("email") ?? "").trim();
-    const password = String(formData.get("password") ?? "");
-
-    try {
-      const supabase = createSupabaseBrowserClient();
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
-
-      router.push("/dashboard");
-      router.refresh();
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Daxil olarkən xəta baş verdi";
-      logger.error("Daxil olma cəhdi uğursuz oldu", { message });
-      setFormError("E-poçt və ya şifrə yanlışdır");
-    } finally {
-      setSubmitting(false);
-    }
-  }
+export default function LoginPage({
+  searchParams,
+}: {
+  searchParams: { error?: string };
+}) {
+  const error = searchParams.error;
 
   return (
     <div className="flex flex-col gap-6">
@@ -44,7 +19,14 @@ export default function LoginPage() {
         <p className="mt-1 text-sm text-text-secondary">Restoranınızı idarə etməyə davam edin</p>
       </div>
 
-      <form className="flex flex-col gap-4" onSubmit={handleSubmit} noValidate>
+      {error && (
+        <div className="flex items-start gap-2 rounded-md bg-danger/10 p-3 text-sm text-danger">
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          <span>{error}</span>
+        </div>
+      )}
+
+      <form action={loginAction} className="flex flex-col gap-4">
         <Input label="E-poçt" type="email" name="email" placeholder="siz@restoran.az" autoComplete="email" required />
         <Input
           label="Şifrə"
@@ -65,13 +47,7 @@ export default function LoginPage() {
           </Link>
         </div>
 
-        {formError && (
-          <p role="alert" className="rounded-md bg-danger/10 px-3 py-2 text-sm text-danger">
-            {formError}
-          </p>
-        )}
-
-        <Button type="submit" className="w-full" size="lg" isLoading={isSubmitting}>
+        <Button type="submit" className="w-full" size="lg">
           Daxil ol
         </Button>
       </form>

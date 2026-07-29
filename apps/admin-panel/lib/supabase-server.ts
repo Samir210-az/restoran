@@ -2,28 +2,34 @@ import { cookies } from "next/headers";
 import { createSupabaseServerClient } from "@restoran/supabase-client";
 
 /**
- * Server Component / Server Action daxilinde cagirilacaq Supabase musterisi.
- * Server Component-lerde cookie YAZMAQ mumkun deyil (Next.js mehdudiyyeti) -
- * ona gore set/remove sessiz key kecir. Real yazma Server Action-larda
- * ve ya middleware-de bas verir.
+ * Server Action / Route Handler daxilinde istifade olunacaq Supabase
+ * musterisi. next/headers-in cookies() funksiyasini @restoran/supabase-client
+ * paketinin gozlediyi ortaq CookieAdapter formatina cevirir.
+ *
+ * QEYD: Server Component daxilinde (sehife render zamani) cookie SET/REMOVE
+ * cagirmaq Next.js-de xetaya sebeb olur - bu funksiya yalniz Server Action
+ * ve Route Handler-lerde istifade edilmelidir.
  */
-export function getServerSupabase() {
+export function getSupabaseServerClient() {
   const cookieStore = cookies();
-
   return createSupabaseServerClient({
-    get: (name) => cookieStore.get(name)?.value,
-    set: (name, value, options) => {
+    get: (name: string) => cookieStore.get(name)?.value,
+    set: (name: string, value: string, options) => {
+      // Server Component daxilinde cookie set etmek qadagandir (Next.js bunu
+      // atir) - middleware.ts artiq sessiya yenilenmesini idare edir, ona gore
+      // burada sessiz key kecirik. Server Action/Route Handler-de bu try heç
+      // vaxt tetiklenmir, cunki orada cookie set icazelidir.
       try {
-        cookieStore.set(name, value, options);
+        cookieStore.set({ name, value, ...options });
       } catch {
-        // Server Component daxilinde cookie yazila bilmez - gozlenilendir
+        /* Server Component daxilindeyik - middleware artiq halledir */
       }
     },
-    remove: (name, options) => {
+    remove: (name: string, options) => {
       try {
-        cookieStore.set(name, "", { ...options, maxAge: 0 });
+        cookieStore.set({ name, value: "", ...options, maxAge: 0 });
       } catch {
-        // eyni sebeb
+        /* Server Component daxilindeyik - middleware artiq halledir */
       }
     },
   });

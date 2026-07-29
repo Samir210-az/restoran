@@ -1,6 +1,6 @@
 import { TrendingUp, ClipboardList, Users, Wallet } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, Badge } from "@restoran/ui";
-import { getCurrentContext } from "@/lib/get-current-context";
+import { getCurrentStaffContext } from "@/lib/get-current-staff-context";
 
 export const metadata = { title: "Ana Səhifə" };
 
@@ -18,8 +18,8 @@ const KPI_CARDS = [
 ] as const;
 
 export default async function DashboardPage() {
-  const context = await getCurrentContext();
-  const greetingName = context?.fullName?.split(" ")[0] ?? "";
+  const context = await getCurrentStaffContext();
+  const greetingName = context.fullName?.split(" ")[0] ?? "";
 
   return (
     <div className="flex flex-col gap-6">
@@ -28,7 +28,7 @@ export default async function DashboardPage() {
           Xoş gəldiniz{greetingName ? `, ${greetingName}` : ""}
         </h1>
         <p className="text-sm text-text-secondary">
-          {context?.restaurant?.name} idarə panelinə xoş gəldiniz.
+          {context.restaurantName} idarə panelinə xoş gəldiniz.
         </p>
       </div>
 

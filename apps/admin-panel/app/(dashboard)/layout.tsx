@@ -1,28 +1,14 @@
-import { redirect } from "next/navigation";
+import { getCurrentStaffContext } from "@/lib/get-current-staff-context";
 import { DashboardShell } from "@/components/layout/DashboardShell";
-import { getCurrentContext } from "@/lib/get-current-context";
 
 /**
- * Dashboard qatına daxil olan bütün səhifələr üçün TEK auth qapısı.
- * İstifadəçi daxil olmayıbsa /login-ə yönləndirilir; daxil olub, amma
- * heç bir restorana bağlı deyilsə (nadir hal), yenidən onboarding axınına.
+ * Server Component olaraq staff kontekstini (restoran adi, rol) burada
+ * tapiriq ve client-side DashboardShell-e prop kimi oturuk - bu sekilde
+ * Sidebar/Topbar hem interaktiv (mobil aç/bağla) qala bilir, hem de
+ * server-de teyin olunan real melumati gosterir.
  */
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const context = await getCurrentContext();
+  const context = await getCurrentStaffContext();
 
-  if (!context) {
-    redirect("/login");
-  }
-
-  if (!context.restaurant) {
-    redirect("/register");
-  }
-
-  const userInitial = (context.fullName?.[0] ?? "R").toUpperCase();
-
-  return (
-    <DashboardShell restaurantName={context.restaurant.name} userInitial={userInitial}>
-      {children}
-    </DashboardShell>
-  );
+  return <DashboardShell restaurantName={context.restaurantName} role={context.role}>{children}</DashboardShell>;
 }
