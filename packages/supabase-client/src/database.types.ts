@@ -823,6 +823,129 @@ export type Database = {
           },
         ]
       }
+      customers: {
+        Row: {
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          loyalty_points: number
+          phone: string | null
+          restaurant_id: string
+          total_spent: number
+          visit_count: number
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          loyalty_points?: number
+          phone?: string | null
+          restaurant_id: string
+          total_spent?: number
+          visit_count?: number
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          loyalty_points?: number
+          phone?: string | null
+          restaurant_id?: string
+          total_spent?: number
+          visit_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customers_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      loyalty_transactions: {
+        Row: {
+          created_at: string
+          customer_id: string
+          id: string
+          order_id: string | null
+          points_change: number
+          reason: string
+          restaurant_id: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          id?: string
+          order_id?: string | null
+          points_change: number
+          reason: string
+          restaurant_id: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          id?: string
+          order_id?: string | null
+          points_change?: number
+          reason?: string
+          restaurant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loyalty_transactions_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reviews: {
+        Row: {
+          comment: string | null
+          created_at: string
+          customer_id: string | null
+          id: string
+          order_id: string | null
+          rating: number
+          restaurant_id: string
+          sentiment: string | null
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          order_id?: string | null
+          rating: number
+          restaurant_id: string
+          sentiment?: string | null
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          order_id?: string | null
+          rating?: number
+          restaurant_id?: string
+          sentiment?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -849,8 +972,14 @@ export type Database = {
           _order_type: Database["public"]["Enums"]["order_type"]
           _items: Json
           _payment_method?: Database["public"]["Enums"]["payment_method"]
+          _customer_phone?: string | null
+          _customer_name?: string | null
         }
         Returns: { order_id: string; total: number }[]
+      }
+      submit_review: {
+        Args: { _order_id: string; _rating: number; _comment?: string | null }
+        Returns: undefined
       }
       request_reservation: {
         Args: {

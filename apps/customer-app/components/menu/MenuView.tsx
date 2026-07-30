@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Plus, Minus, ShoppingBag, CalendarCheck, Banknote, CreditCard } from "lucide-react";
-import { Button, Modal } from "@restoran/ui";
+import { Button, Modal, Input } from "@restoran/ui";
 import { cn } from "@restoran/utils";
 import { placeOrder, type PaymentMethod } from "@/lib/place-order";
 
@@ -49,6 +49,7 @@ export function MenuView({ restaurant, categories, items, tableId }: MenuViewPro
   const [isSubmitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
+  const [phone, setPhone] = useState("");
 
   const visibleItems = activeCategoryId ? items.filter((item) => item.category_id === activeCategoryId) : items;
 
@@ -89,6 +90,7 @@ export function MenuView({ restaurant, categories, items, tableId }: MenuViewPro
         orderType: tableId ? "dine_in" : "takeaway",
         items: cartEntries.map((entry) => ({ menuItemId: entry.item.id, quantity: entry.quantity })),
         paymentMethod,
+        customerPhone: phone.trim() || undefined,
       });
       router.push(`/${restaurant.slug}/order/${result.orderId}`);
     } catch (err) {
@@ -234,6 +236,17 @@ export function MenuView({ restaurant, categories, items, tableId }: MenuViewPro
               <div className="flex items-center justify-between border-t border-border pt-3 text-sm font-semibold text-text-primary">
                 <span>Cəmi</span>
                 <span>{cartTotal.toFixed(2)} ₼</span>
+              </div>
+
+              <div>
+                <Input
+                  label="Telefon (loyallıq balı üçün, istəyə bağlı)"
+                  type="tel"
+                  placeholder="050 123 45 67"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                />
+                <p className="mt-1 text-xs text-text-muted">Hər 1 ₼ xərcə 1 bal — sonrakı sifarişlərdə tanınacaqsınız</p>
               </div>
 
               <div>

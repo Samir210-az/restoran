@@ -25,6 +25,8 @@ export async function placeOrder(params: {
   orderType: "dine_in" | "takeaway" | "delivery";
   items: CartLine[];
   paymentMethod?: PaymentMethod;
+  customerPhone?: string;
+  customerName?: string;
 }): Promise<PlaceOrderResult> {
   const supabase = createSupabasePublicClient();
 
@@ -39,6 +41,8 @@ export async function placeOrder(params: {
       special_instructions: line.specialInstructions ?? null,
     })),
     _payment_method: params.paymentMethod ?? "cash",
+    _customer_phone: params.customerPhone ?? null,
+    _customer_name: params.customerName ?? null,
   });
 
   if (error) {

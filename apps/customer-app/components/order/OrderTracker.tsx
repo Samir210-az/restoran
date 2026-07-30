@@ -5,6 +5,7 @@ import { CheckCircle2, Circle, ChefHat, Clock } from "lucide-react";
 import { Card, Badge } from "@restoran/ui";
 import { cn } from "@restoran/utils";
 import { createSupabaseBrowserClient } from "@restoran/supabase-client";
+import { ReviewForm } from "./ReviewForm";
 
 type OrderStatus = "pending" | "confirmed" | "preparing" | "ready" | "served" | "completed" | "cancelled";
 
@@ -141,6 +142,8 @@ export function OrderTracker({
           <span>{Number(order.total).toFixed(2)} ₼</span>
         </div>
       </Card>
+
+      {(order.status === "completed" || order.status === "served") && <ReviewForm orderId={order.id} />}
     </div>
   );
 }
