@@ -36,10 +36,10 @@ export function createSupabaseServerClient(cookieAdapter: CookieAdapter): Supaba
  * Service role key RLS-i BYPASS edir - browserde ve ya client bundle-da
  * HEC VAXT import edilmemelidir.
  */
-export function createSupabaseServiceClient() {
-  return createClient<Database>(
+export function createSupabaseServiceClient(): SupabaseClient<Database, "public"> {
+  return createClient<Database, "public">(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
     { auth: { persistSession: false } }
-  );
+  ) as unknown as SupabaseClient<Database, "public">;
 }

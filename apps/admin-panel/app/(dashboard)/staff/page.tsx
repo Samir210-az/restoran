@@ -1,15 +1,19 @@
-import { Users, Mail, X } from "lucide-react";
+import { Users, Mail, X, UserPlus, CheckCircle2 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, Input, Badge } from "@restoran/ui";
 import { ROLE_LABELS, STAFF_ROLES } from "@restoran/types";
 import { getCurrentStaffContext } from "@/lib/get-current-staff-context";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
 import { SubmitButton } from "@/components/forms/SubmitButton";
 import { StaffRow } from "@/components/staff/StaffRow";
-import { inviteStaffAction, cancelInvitationAction } from "./actions";
+import { createStaffAccountAction, inviteStaffAction, cancelInvitationAction } from "./actions";
 
 export const metadata = { title: "İşçilər" };
 
-export default async function StaffPage() {
+export default async function StaffPage({
+  searchParams,
+}: {
+  searchParams: { created?: string; error?: string };
+}) {
   const { restaurantId, userId, role } = await getCurrentStaffContext();
   const isOwner = role === "owner";
   const supabase = getSupabaseServerClient();
@@ -44,8 +48,21 @@ export default async function StaffPage() {
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-2xl font-semibold text-text-primary">İşçilər</h1>
-        <p className="text-sm text-text-secondary">Komandanızı idarə edin — dəvət göndərin, rol təyin edin</p>
+        <p className="text-sm text-text-secondary">Komandanızı idarə edin — hesab yaradın, rol təyin edin</p>
       </div>
+
+      {searchParams.created && (
+        <div className="flex items-center gap-2 rounded-md border border-success/30 bg-success/10 px-3 py-2 text-sm text-success">
+          <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" />
+          Hesab yaradıldı! Giriş e-poçtu: <span className="font-mono">{searchParams.created}</span> — işçiyə e-poçtu və təyin
+          etdiyiniz şifrəni bildirin.
+        </div>
+      )}
+      {searchParams.error && (
+        <div role="alert" className="rounded-md border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger">
+          {searchParams.error}
+        </div>
+      )}
 
       <Card>
         {staff.length === 0 ? (
@@ -105,7 +122,44 @@ export default async function StaffPage() {
       {isOwner && (
         <Card className="max-w-sm">
           <CardHeader>
-            <CardTitle>Yeni işçi dəvət et</CardTitle>
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <UserPlus className="h-4 w-4 text-accent" aria-hidden="true" />
+                İşçi hesabı yarat
+              </CardTitle>
+              <CardDescription>Ad və şifrə təyin edin — işçi dərhal daxil ola bilər</CardDescription>
+            </div>
+          </CardHeader>
+          <form action={createStaffAccountAction} className="flex flex-col gap-3">
+            <Input name="full_name" placeholder="Ad Soyad" required />
+            <Input name="email" type="email" placeholder="E-poçt (istəyə bağlı — boş qalsa avtomatik yaradılır)" />
+            <Input name="password" type="password" placeholder="Şifrə (ən azı 6 simvol)" minLength={6} required />
+            <label className="flex flex-col gap-1.5">
+              <span className="text-sm font-medium text-text-primary">Rol</span>
+              <select
+                name="role"
+                required
+                className="h-10 rounded-md border border-border-strong bg-bg px-3 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+              >
+                {STAFF_ROLES.filter((r) => r !== "owner").map((r) => (
+                  <option key={r} value={r}>
+                    {ROLE_LABELS[r].az}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <SubmitButton className="self-start">Hesab yarat</SubmitButton>
+          </form>
+        </Card>
+      )}
+
+      {isOwner && (
+        <Card className="max-w-sm">
+          <CardHeader>
+            <div>
+              <CardTitle>Alternativ: E-poçtla dəvət et</CardTitle>
+              <CardDescription>Əgər işçinin artıq öz hesabı varsa</CardDescription>
+            </div>
           </CardHeader>
           <form action={inviteStaffAction} className="flex flex-col gap-3">
             <Input name="email" type="email" placeholder="isci@restoran.az" required />
@@ -125,10 +179,6 @@ export default async function StaffPage() {
             </label>
             <SubmitButton className="self-start">Dəvət et</SubmitButton>
           </form>
-          <p className="mt-3 text-xs text-text-muted">
-            Qeyd: hələlik avtomatik e-poçt göndərilmir — dəvət olunan şəxsə linki (
-            {process.env.NEXT_PUBLIC_APP_URL ?? "restoran-admin-panel.vercel.app"}/register) özünüz göndərməlisiniz.
-          </p>
         </Card>
       )}
     </div>
