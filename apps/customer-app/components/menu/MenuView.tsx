@@ -254,12 +254,16 @@ export function MenuView({ restaurant, categories, items, tableId }: MenuViewPro
                   </button>
                   <button
                     type="button"
-                    disabled
-                    title="Tezliklə"
-                    className="flex items-center justify-center gap-1.5 rounded-md border border-border px-3 py-2 text-sm font-medium text-text-muted opacity-50"
+                    onClick={() => setPaymentMethod("card")}
+                    className={cn(
+                      "flex items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-sm font-medium transition-colors",
+                      paymentMethod === "card"
+                        ? "border-accent bg-accent-soft text-accent"
+                        : "border-border text-text-secondary hover:bg-bg-muted"
+                    )}
                   >
                     <CreditCard className="h-4 w-4" aria-hidden="true" />
-                    Kartla (tezliklə)
+                    Kartla
                   </button>
                 </div>
               </div>

@@ -114,7 +114,7 @@ export function OrdersRealtimeList({ restaurantId, initialOrders }: { restaurant
                   Növbəti mərhələ
                 </Button>
               )}
-              {order.payment_method === "cash" && order.payment_status !== "completed" && (
+              {(order.payment_method === "cash" || order.payment_method === "card") && order.payment_status !== "completed" && (
                 <Button
                   size="sm"
                   variant="outline"

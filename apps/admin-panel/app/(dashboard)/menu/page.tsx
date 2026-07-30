@@ -4,6 +4,8 @@ import { SubmitButton } from "@/components/forms/SubmitButton";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
 import { getCurrentStaffContext } from "@/lib/get-current-staff-context";
 import { AvailabilityToggle } from "@/components/menu/AvailabilityToggle";
+import { CategoryHeaderActions } from "@/components/menu/CategoryHeaderActions";
+import { MenuItemActions } from "@/components/menu/MenuItemActions";
 import { createCategoryAction, createMenuItemAction } from "./actions";
 
 export const metadata = { title: "Menyu" };
@@ -15,7 +17,8 @@ interface LocalizedText {
 }
 
 export default async function MenuPage() {
-  const { restaurantId } = await getCurrentStaffContext();
+  const { restaurantId, role } = await getCurrentStaffContext();
+  const isOwner = role === "owner";
   const supabase = getSupabaseServerClient();
 
   const [{ data: categories }, { data: items }] = await Promise.all([
@@ -63,6 +66,9 @@ export default async function MenuPage() {
                   <CardTitle>{categoryName}</CardTitle>
                   <CardDescription>{categoryItems.length} yemək</CardDescription>
                 </div>
+                {isOwner && (
+                  <CategoryHeaderActions categoryId={category.id} currentName={categoryName} itemCount={categoryItems.length} />
+                )}
               </CardHeader>
 
               {categoryItems.length === 0 ? (
@@ -72,12 +78,17 @@ export default async function MenuPage() {
                   {categoryItems.map((item) => {
                     const itemName = (item.name as LocalizedText)?.az ?? "Adsız";
                     return (
-                      <div key={item.id} className="flex items-center justify-between py-3">
-                        <div>
+                      <div key={item.id} className="flex items-center justify-between gap-2 py-3">
+                        <div className="min-w-0">
                           <p className="text-sm font-medium text-text-primary">{itemName}</p>
                           <p className="text-sm text-text-secondary">{Number(item.price).toFixed(2)} ₼</p>
                         </div>
-                        <AvailabilityToggle itemId={item.id} isAvailable={item.is_available} />
+                        <div className="flex items-center gap-2">
+                          <AvailabilityToggle itemId={item.id} isAvailable={item.is_available} />
+                          {isOwner && (
+                            <MenuItemActions itemId={item.id} currentName={itemName} currentPrice={item.price} />
+                          )}
+                        </div>
                       </div>
                     );
                   })}
