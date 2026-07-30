@@ -1,5 +1,6 @@
 import { Plus, UtensilsCrossed } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardDescription, Button, Input, Badge } from "@restoran/ui";
+import { Card, CardHeader, CardTitle, CardDescription, Input, Badge } from "@restoran/ui";
+import { SubmitButton } from "@/components/forms/SubmitButton";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
 import { getCurrentStaffContext } from "@/lib/get-current-staff-context";
 import { AvailabilityToggle } from "@/components/menu/AvailabilityToggle";
@@ -94,9 +95,9 @@ export default async function MenuPage() {
           </CardHeader>
           <form action={createCategoryAction} className="flex flex-col gap-3">
             <Input name="name_az" placeholder="Məs. Əsas yeməklər" required />
-            <Button type="submit" leftIcon={<Plus className="h-4 w-4" />} className="self-start">
+            <SubmitButton leftIcon={<Plus className="h-4 w-4" />} className="self-start">
               Kateqoriya əlavə et
-            </Button>
+            </SubmitButton>
           </form>
         </Card>
 
@@ -124,9 +125,9 @@ export default async function MenuPage() {
               </label>
               <Input name="name_az" placeholder="Məs. Toyuq Şaşlıq" required />
               <Input name="price" type="number" step="0.01" min="0" placeholder="Qiymət (₼)" required />
-              <Button type="submit" leftIcon={<Plus className="h-4 w-4" />} className="self-start">
+              <SubmitButton leftIcon={<Plus className="h-4 w-4" />} className="self-start">
                 Yemək əlavə et
-              </Button>
+              </SubmitButton>
             </form>
           )}
         </Card>

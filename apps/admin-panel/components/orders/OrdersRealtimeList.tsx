@@ -38,7 +38,7 @@ const ACTIVE_STATUSES = new Set(["pending", "confirmed", "preparing", "ready", "
 
 export function OrdersRealtimeList({ restaurantId, initialOrders }: { restaurantId: string; initialOrders: OrderRow[] }) {
   const [orders, setOrders] = useState(initialOrders);
-  const [, startTransition] = useTransition();
+  const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
@@ -89,13 +89,14 @@ export function OrdersRealtimeList({ restaurantId, initialOrders }: { restaurant
                 <Button
                   size="sm"
                   variant="outline"
+                  disabled={isPending}
                   onClick={() => startTransition(() => advanceOrderStatusAction(order.id, order.status))}
                 >
                   Növbəti mərhələ
                 </Button>
               )}
               {order.status === "pending" && (
-                <Button size="sm" variant="danger" onClick={() => startTransition(() => cancelOrderAction(order.id))}>
+                <Button size="sm" variant="danger" disabled={isPending} onClick={() => startTransition(() => cancelOrderAction(order.id))}>
                   Ləğv et
                 </Button>
               )}

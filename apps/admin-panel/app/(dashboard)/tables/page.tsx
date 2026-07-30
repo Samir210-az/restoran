@@ -1,5 +1,6 @@
 import { Plus, Table2 } from "lucide-react";
-import { Card, CardHeader, CardTitle, Input, Button } from "@restoran/ui";
+import { Card, CardHeader, CardTitle, Input } from "@restoran/ui";
+import { SubmitButton } from "@/components/forms/SubmitButton";
 import { getCurrentStaffContext } from "@/lib/get-current-staff-context";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
 import { CopyLinkButton } from "@/components/tables/CopyLinkButton";
@@ -70,9 +71,9 @@ export default async function TablesPage() {
         <form action={createTableAction} className="flex flex-col gap-3">
           <Input name="table_number" placeholder="Masa nömrəsi (məs. 12)" required />
           <Input name="capacity" type="number" min="1" placeholder="Tutum (nəfər)" defaultValue={2} />
-          <Button type="submit" leftIcon={<Plus className="h-4 w-4" />} className="self-start">
+          <SubmitButton leftIcon={<Plus className="h-4 w-4" />} className="self-start">
             Masa əlavə et
-          </Button>
+          </SubmitButton>
         </form>
       </Card>
     </div>

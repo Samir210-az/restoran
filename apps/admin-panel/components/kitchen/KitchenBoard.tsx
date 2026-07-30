@@ -30,7 +30,7 @@ const COLUMN_META = {
  */
 export function KitchenBoard({ restaurantId, initialItems }: { restaurantId: string; initialItems: KitchenItem[] }) {
   const [items, setItems] = useState(initialItems);
-  const [, startTransition] = useTransition();
+  const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
@@ -107,6 +107,7 @@ export function KitchenBoard({ restaurantId, initialItems }: { restaurantId: str
                       size="sm"
                       variant="outline"
                       className="mt-3 w-full"
+                      disabled={isPending}
                       onClick={() => handleAdvance(item.id, status)}
                     >
                       {status === "queued" ? "Hazırlanmağa başla" : "Hazırdır olaraq işarələ"}

@@ -1,6 +1,7 @@
 import { Building2 } from "lucide-react";
-import { Card, Badge, Button, Table, TableHead, TableBody, TableRow, TableHeaderCell, TableCell } from "@restoran/ui";
+import { Card, Badge, Table, TableHead, TableBody, TableRow, TableHeaderCell, TableCell } from "@restoran/ui";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
+import { SubmitButton } from "@/components/forms/SubmitButton";
 import { setRestaurantStatusAction } from "./actions";
 
 export const metadata = { title: "Platform Admin" };
@@ -96,15 +97,15 @@ export default async function PlatformOverviewPage() {
                 <TableCell>
                   {r.subscription_status === "suspended" ? (
                     <form action={setRestaurantStatusAction.bind(null, r.id, "active")}>
-                      <Button size="sm" variant="outline" type="submit">
+                      <SubmitButton size="sm" variant="outline">
                         Aktivləşdir
-                      </Button>
+                      </SubmitButton>
                     </form>
                   ) : (
                     <form action={setRestaurantStatusAction.bind(null, r.id, "suspended")}>
-                      <Button size="sm" variant="danger" type="submit">
+                      <SubmitButton size="sm" variant="danger">
                         Dayandır
-                      </Button>
+                      </SubmitButton>
                     </form>
                   )}
                 </TableCell>
