@@ -3,10 +3,10 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Plus, Minus, ShoppingBag, CalendarCheck } from "lucide-react";
+import { Plus, Minus, ShoppingBag, CalendarCheck, Banknote, CreditCard } from "lucide-react";
 import { Button, Modal } from "@restoran/ui";
 import { cn } from "@restoran/utils";
-import { placeOrder } from "@/lib/place-order";
+import { placeOrder, type PaymentMethod } from "@/lib/place-order";
 
 interface CategoryRow {
   id: string;
@@ -48,6 +48,7 @@ export function MenuView({ restaurant, categories, items, tableId }: MenuViewPro
   const [isCartOpen, setCartOpen] = useState(false);
   const [isSubmitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
 
   const visibleItems = activeCategoryId ? items.filter((item) => item.category_id === activeCategoryId) : items;
 
@@ -87,6 +88,7 @@ export function MenuView({ restaurant, categories, items, tableId }: MenuViewPro
         tableId,
         orderType: tableId ? "dine_in" : "takeaway",
         items: cartEntries.map((entry) => ({ menuItemId: entry.item.id, quantity: entry.quantity })),
+        paymentMethod,
       });
       router.push(`/${restaurant.slug}/order/${result.orderId}`);
     } catch (err) {
@@ -232,6 +234,34 @@ export function MenuView({ restaurant, categories, items, tableId }: MenuViewPro
               <div className="flex items-center justify-between border-t border-border pt-3 text-sm font-semibold text-text-primary">
                 <span>Cəmi</span>
                 <span>{cartTotal.toFixed(2)} ₼</span>
+              </div>
+
+              <div>
+                <p className="mb-2 text-xs font-medium text-text-secondary">Ödəniş üsulu</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod("cash")}
+                    className={cn(
+                      "flex items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-sm font-medium transition-colors",
+                      paymentMethod === "cash"
+                        ? "border-accent bg-accent-soft text-accent"
+                        : "border-border text-text-secondary hover:bg-bg-muted"
+                    )}
+                  >
+                    <Banknote className="h-4 w-4" aria-hidden="true" />
+                    Nağd
+                  </button>
+                  <button
+                    type="button"
+                    disabled
+                    title="Tezliklə"
+                    className="flex items-center justify-center gap-1.5 rounded-md border border-border px-3 py-2 text-sm font-medium text-text-muted opacity-50"
+                  >
+                    <CreditCard className="h-4 w-4" aria-hidden="true" />
+                    Kartla (tezliklə)
+                  </button>
+                </div>
               </div>
 
               {!tableId && (

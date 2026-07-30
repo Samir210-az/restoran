@@ -15,6 +15,12 @@ export default async function OrdersPage() {
     .order("created_at", { ascending: false })
     .limit(50);
 
+  const orderIds = (orders ?? []).map((o) => o.id);
+  const { data: payments } = orderIds.length
+    ? await supabase.from("payments").select("order_id, method, status").in("order_id", orderIds)
+    : { data: [] };
+  const paymentByOrder = new Map((payments ?? []).map((p) => [p.order_id, p]));
+
   const tableIds = [...new Set((orders ?? []).map((o) => o.table_id).filter(Boolean))] as string[];
   const { data: tables } = tableIds.length
     ? await supabase.from("restaurant_tables").select("id, table_number").in("id", tableIds)
@@ -28,6 +34,8 @@ export default async function OrdersPage() {
     total: o.total,
     created_at: o.created_at,
     table_number: o.table_id ? tableNumberById.get(o.table_id) ?? null : null,
+    payment_method: paymentByOrder.get(o.id)?.method ?? null,
+    payment_status: paymentByOrder.get(o.id)?.status ?? null,
   }));
 
   return (

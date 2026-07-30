@@ -12,6 +12,8 @@ export interface PlaceOrderResult {
   total: number;
 }
 
+export type PaymentMethod = "cash" | "card" | "online";
+
 /**
  * `place_order` RPC-sini cagirir. Qiymet HEC VAXT burdan gondermirik -
  * server (RPC daxilinde) menu_items cedvelinden yenidden hesablayir.
@@ -22,6 +24,7 @@ export async function placeOrder(params: {
   tableId: string | null;
   orderType: "dine_in" | "takeaway" | "delivery";
   items: CartLine[];
+  paymentMethod?: PaymentMethod;
 }): Promise<PlaceOrderResult> {
   const supabase = createSupabasePublicClient();
 
@@ -35,6 +38,7 @@ export async function placeOrder(params: {
       quantity: line.quantity,
       special_instructions: line.specialInstructions ?? null,
     })),
+    _payment_method: params.paymentMethod ?? "cash",
   });
 
   if (error) {

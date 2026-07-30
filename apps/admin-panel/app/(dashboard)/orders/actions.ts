@@ -28,3 +28,14 @@ export async function cancelOrderAction(orderId: string) {
   await supabase.from("orders").update({ status: "cancelled" }).eq("id", orderId).eq("restaurant_id", restaurantId);
   revalidatePath("/orders");
 }
+
+export async function markPaymentReceivedAction(orderId: string) {
+  const { restaurantId } = await getCurrentStaffContext();
+  const supabase = getSupabaseServerClient();
+  await supabase
+    .from("payments")
+    .update({ status: "completed" })
+    .eq("order_id", orderId)
+    .eq("restaurant_id", restaurantId);
+  revalidatePath("/orders");
+}

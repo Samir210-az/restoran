@@ -744,6 +744,50 @@ export type Database = {
           },
         ]
       }
+      payments: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          method: Database["public"]["Enums"]["payment_method"]
+          order_id: string
+          provider: string | null
+          provider_ref: string | null
+          restaurant_id: string
+          status: Database["public"]["Enums"]["payment_status"]
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          method: Database["public"]["Enums"]["payment_method"]
+          order_id: string
+          provider?: string | null
+          provider_ref?: string | null
+          restaurant_id: string
+          status?: Database["public"]["Enums"]["payment_status"]
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          method?: Database["public"]["Enums"]["payment_method"]
+          order_id?: string
+          provider?: string | null
+          provider_ref?: string | null
+          restaurant_id?: string
+          status?: Database["public"]["Enums"]["payment_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -769,6 +813,7 @@ export type Database = {
           _table_id: string | null
           _order_type: Database["public"]["Enums"]["order_type"]
           _items: Json
+          _payment_method?: Database["public"]["Enums"]["payment_method"]
         }
         Returns: { order_id: string; total: number }[]
       }
@@ -838,6 +883,8 @@ export type Database = {
     Enums: {
       kitchen_item_status: "queued" | "cooking" | "ready"
       inventory_txn_type: "purchase" | "usage" | "waste" | "adjustment"
+      payment_method: "card" | "cash" | "online"
+      payment_status: "pending" | "completed" | "failed" | "refunded"
       order_placed_by: "customer" | "waiter" | "ai_waiter"
       order_status: "pending" | "confirmed" | "preparing" | "ready" | "served" | "completed" | "cancelled"
       order_type: "dine_in" | "takeaway" | "delivery"

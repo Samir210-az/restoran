@@ -3,7 +3,7 @@
 import { useEffect, useState, useTransition } from "react";
 import { Card, Badge, Button } from "@restoran/ui";
 import { createSupabaseBrowserClient } from "@restoran/supabase-client";
-import { advanceOrderStatusAction, cancelOrderAction } from "@/app/(dashboard)/orders/actions";
+import { advanceOrderStatusAction, cancelOrderAction, markPaymentReceivedAction } from "@/app/(dashboard)/orders/actions";
 
 interface OrderRow {
   id: string;
@@ -12,7 +12,15 @@ interface OrderRow {
   total: number;
   created_at: string;
   table_number: string | null;
+  payment_method: string | null;
+  payment_status: string | null;
 }
+
+const PAYMENT_METHOD_LABEL: Record<string, string> = {
+  cash: "Nağd",
+  card: "Kart",
+  online: "Onlayn",
+};
 
 const STATUS_BADGE: Record<string, "neutral" | "warning" | "success" | "danger" | "info" | "accent"> = {
   pending: "neutral",
@@ -80,6 +88,17 @@ export function OrdersRealtimeList({ restaurantId, initialOrders }: { restaurant
               {order.table_number ? `Masa ${order.table_number}` : order.order_type === "takeaway" ? "Özün apar" : "Çatdırılma"}
               {" · "}
               {Number(order.total).toFixed(2)} ₼
+              {order.payment_method && (
+                <>
+                  {" · "}
+                  {PAYMENT_METHOD_LABEL[order.payment_method] ?? order.payment_method}
+                  {order.payment_status === "completed" ? (
+                    <Badge variant="success" className="ml-1">Ödənilib</Badge>
+                  ) : (
+                    <Badge variant="warning" className="ml-1">Gözləyir</Badge>
+                  )}
+                </>
+              )}
             </p>
           </div>
 
@@ -93,6 +112,16 @@ export function OrdersRealtimeList({ restaurantId, initialOrders }: { restaurant
                   onClick={() => startTransition(() => advanceOrderStatusAction(order.id, order.status))}
                 >
                   Növbəti mərhələ
+                </Button>
+              )}
+              {order.payment_method === "cash" && order.payment_status !== "completed" && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={isPending}
+                  onClick={() => startTransition(() => markPaymentReceivedAction(order.id))}
+                >
+                  Ödəniş alındı
                 </Button>
               )}
               {order.status === "pending" && (
