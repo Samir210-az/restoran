@@ -1026,6 +1026,18 @@ export type Database = {
         Args: { _conversation_id: string; _restaurant_id: string; _messages: Json }
         Returns: undefined
       }
+      get_order_tracking: {
+        Args: { _order_id: string }
+        Returns: {
+          id: string
+          status: Database["public"]["Enums"]["order_status"]
+          order_type: Database["public"]["Enums"]["order_type"]
+          total: number
+          created_at: string
+          items: Json
+          payment_status: Database["public"]["Enums"]["payment_status"] | null
+        }[]
+      }
       request_reservation: {
         Args: {
           _restaurant_id: string
