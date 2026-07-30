@@ -433,6 +433,7 @@ export type Database = {
         Row: {
           branch_id: string
           created_at: string
+          created_by: string | null
           customer_id: string | null
           id: string
           order_type: Database["public"]["Enums"]["order_type"]
@@ -448,6 +449,7 @@ export type Database = {
         Insert: {
           branch_id: string
           created_at?: string
+          created_by?: string | null
           customer_id?: string | null
           id?: string
           order_type?: Database["public"]["Enums"]["order_type"]
@@ -463,6 +465,7 @@ export type Database = {
         Update: {
           branch_id?: string
           created_at?: string
+          created_by?: string | null
           customer_id?: string | null
           id?: string
           order_type?: Database["public"]["Enums"]["order_type"]
@@ -1016,6 +1019,7 @@ export type Database = {
           _customer_phone?: string | null
           _customer_name?: string | null
           _placed_by?: Database["public"]["Enums"]["order_placed_by"]
+          _created_by?: string | null
         }
         Returns: { order_id: string; total: number }[]
       }

@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { TrendingUp, TrendingDown, ClipboardList, Users, Wallet } from "lucide-react";
+import { TrendingUp, TrendingDown, ClipboardList, Users, Wallet, Table2, ChefHat, Wallet2 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, Badge } from "@restoran/ui";
 import { getCurrentStaffContext } from "@/lib/get-current-staff-context";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
+import { BigIconTile } from "@/components/dashboard/BigIconTile";
 
 export const metadata = { title: "Ana Səhifə" };
 
@@ -34,11 +35,87 @@ const ACTIVE_STATUSES: ("pending" | "confirmed" | "preparing" | "ready" | "serve
   "served",
 ];
 
+/**
+ * Dashboard MEZMUNU rola gore tam ferqlenir - "hamisi eyni panel" evezine
+ * her isci OZ sahesi ucun uygun ilk ekrani gorur:
+ * - waiter: boyuk "Masalar" ve "Sifarişlər" ikonlari + BUGUNKU OZ satisi
+ *   (orders.created_by = bu isci - bax: place_order RPC-nin yeni parametri)
+ * - chef: boyuk "Metbex Ekrani" ikonu
+ * - cashier: boyuk "Sifarişlər"/"Masalar" ikonlari
+ * - owner/manager: tam KPI dashboard (evvelki kimi)
+ * Butun bunlar eyni melumat bazasindan gelir - owner "Sifarişlər"de
+ * hamisini bir yerde gorur, bu sadece HERKESIN ILK GORDUYU sehife ferqlidir.
+ */
 export default async function DashboardPage() {
   const context = await getCurrentStaffContext();
   const greetingName = context.fullName?.split(" ")[0] ?? "";
   const supabase = getSupabaseServerClient();
 
+  if (context.role === "waiter" || context.role === "cashier") {
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+
+    const { data: myOrders } = await supabase
+      .from("orders")
+      .select("total")
+      .eq("restaurant_id", context.restaurantId)
+      .eq("created_by", context.userId)
+      .neq("status", "cancelled")
+      .gte("created_at", startOfToday);
+
+    const mySalesToday = (myOrders ?? []).reduce((sum, o) => sum + Number(o.total), 0);
+
+    return (
+      <div className="flex flex-col gap-6">
+        <div>
+          <h1 className="text-2xl font-semibold text-text-primary">
+            Xoş gəldiniz{greetingName ? `, ${greetingName}` : ""}
+          </h1>
+          <p className="text-sm text-text-secondary">{context.restaurantName}</p>
+        </div>
+
+        <Card>
+          <div className="flex items-center gap-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent-soft text-accent">
+              <Wallet2 className="h-6 w-6" aria-hidden="true" />
+            </div>
+            <div>
+              <p className="text-sm text-text-secondary">Bugünkü satışım</p>
+              <p className="text-2xl font-semibold text-text-primary">{mySalesToday.toFixed(2)} ₼</p>
+            </div>
+          </div>
+        </Card>
+
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+          <BigIconTile href="/tables" icon={Table2} label="Masalar" description="Toxunub sifariş al" />
+          <BigIconTile href="/orders" icon={ClipboardList} label="Sifarişlər" description="Bütün sifarişlər" />
+          {context.role === "cashier" && (
+            <BigIconTile href="/reservations" icon={Users} label="Rezervasiyalar" description="Gələn müştərilər" />
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (context.role === "chef") {
+    return (
+      <div className="flex flex-col gap-6">
+        <div>
+          <h1 className="text-2xl font-semibold text-text-primary">
+            Xoş gəldiniz{greetingName ? `, ${greetingName}` : ""}
+          </h1>
+          <p className="text-sm text-text-secondary">{context.restaurantName}</p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+          <BigIconTile href="/kitchen" icon={ChefHat} label="Mətbəx Ekranı" description="Sıradakı sifarişlər" />
+          <BigIconTile href="/orders" icon={ClipboardList} label="Sifarişlər" description="Bütün sifarişlər" />
+        </div>
+      </div>
+    );
+  }
+
+  // owner / manager - tam KPI dashboard
   const now = new Date();
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
   const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();

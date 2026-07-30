@@ -19,7 +19,7 @@ export async function createWaiterOrderAction(params: {
   tableId: string | null;
   items: CartLine[];
 }) {
-  const { restaurantId } = await getCurrentStaffContext();
+  const { restaurantId, userId } = await getCurrentStaffContext();
   if (params.items.length === 0) return;
 
   const supabase = getSupabaseServerClient();
@@ -34,6 +34,7 @@ export async function createWaiterOrderAction(params: {
     _items: params.items.map((line) => ({ menu_item_id: line.menuItemId, quantity: line.quantity })),
     _payment_method: "cash",
     _placed_by: "waiter",
+    _created_by: userId,
   });
 
   if (error || !data?.[0]) return;
