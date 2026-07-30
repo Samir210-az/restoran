@@ -34,12 +34,28 @@ export async function createStaffAccountAction(formData: FormData) {
     redirect("/staff?error=" + encodeURIComponent("Ad, rol tələb olunur, şifrə ən azı 6 simvol olmalıdır"));
   }
 
-  if (!email) {
-    const suffix = Math.random().toString(36).slice(2, 6);
-    email = `${slugify(fullName)}-${suffix}@staff.restoran.local`;
-  }
-
   const serviceClient = createSupabaseServiceClient();
+
+  if (!email) {
+    // Qisa, yaddasaxlanan giris ucun: {ad}@{restoran-adi}.staff
+    // (tesadufi herflersiz - "hesen@karvansaray.staff" kimi). Supabase
+    // texniki olaraq email formati teleb edir, amma bu formatda YADDA
+    // SAXLAMAQ ASANDIR. Toqquşma olarsa (eyni addan iki isci) 2, 3... elave edilir.
+    const { data: restaurant } = await serviceClient.from("restaurants").select("name").eq("id", restaurantId).maybeSingle();
+    const firstName = slugify(fullName.split(" ")[0] ?? fullName);
+    const domain = slugify(restaurant?.name ?? "restoran");
+
+    let candidate = `${firstName}@${domain}.staff`;
+    let attempt = 1;
+    while (attempt <= 5) {
+      const { data: existing } = await serviceClient.auth.admin.listUsers();
+      const taken = existing?.users?.some((u) => u.email?.toLowerCase() === candidate);
+      if (!taken) break;
+      attempt += 1;
+      candidate = `${firstName}${attempt}@${domain}.staff`;
+    }
+    email = candidate;
+  }
 
   const { data: created, error: createError } = await serviceClient.auth.admin.createUser({
     email,
