@@ -224,6 +224,67 @@ export type Database = {
           },
         ]
       }
+      expenses: {
+        Row: {
+          amount: number
+          category: Database["public"]["Enums"]["expense_category"]
+          created_at: string
+          created_by: string | null
+          description: string | null
+          expense_date: string
+          id: string
+          restaurant_id: string
+          staff_member_id: string | null
+          supplier_id: string | null
+        }
+        Insert: {
+          amount: number
+          category: Database["public"]["Enums"]["expense_category"]
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          expense_date?: string
+          id?: string
+          restaurant_id: string
+          staff_member_id?: string | null
+          supplier_id?: string | null
+        }
+        Update: {
+          amount?: number
+          category?: Database["public"]["Enums"]["expense_category"]
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          expense_date?: string
+          id?: string
+          restaurant_id?: string
+          staff_member_id?: string | null
+          supplier_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expenses_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expenses_staff_member_id_fkey"
+            columns: ["staff_member_id"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expenses_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inventory_items: {
         Row: {
           created_at: string
@@ -1599,6 +1660,12 @@ export type Database = {
         | "menu_optimization"
         | "inventory_forecast"
         | "demand_forecast"
+      expense_category:
+        | "inventory_purchase"
+        | "salary"
+        | "rent"
+        | "utility"
+        | "other"
       inventory_txn_type: "purchase" | "usage" | "waste" | "adjustment"
       invoice_status: "draft" | "open" | "paid" | "void" | "uncollectible"
       kitchen_item_status: "queued" | "cooking" | "ready"
@@ -1765,6 +1832,13 @@ export const Constants = {
         "menu_optimization",
         "inventory_forecast",
         "demand_forecast",
+      ],
+      expense_category: [
+        "inventory_purchase",
+        "salary",
+        "rent",
+        "utility",
+        "other",
       ],
       inventory_txn_type: ["purchase", "usage", "waste", "adjustment"],
       invoice_status: ["draft", "open", "paid", "void", "uncollectible"],
