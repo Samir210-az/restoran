@@ -788,6 +788,41 @@ export type Database = {
           },
         ]
       }
+      staff_invitations: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          invited_by: string
+          restaurant_id: string
+          role: Database["public"]["Enums"]["staff_role"]
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          invited_by: string
+          restaurant_id: string
+          role: Database["public"]["Enums"]["staff_role"]
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          invited_by?: string
+          restaurant_id?: string
+          role?: Database["public"]["Enums"]["staff_role"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_invitations_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -859,6 +894,27 @@ export type Database = {
           _related_order_id?: string | null
         }
         Returns: undefined
+      }
+      invite_staff_member: {
+        Args: {
+          _restaurant_id: string
+          _email: string
+          _role: Database["public"]["Enums"]["staff_role"]
+        }
+        Returns: { status: string }[]
+      }
+      accept_pending_invitations: { Args: Record<string, never>; Returns: undefined }
+      get_staff_list: {
+        Args: { _restaurant_id: string }
+        Returns: {
+          id: string
+          user_id: string
+          full_name: string | null
+          email: string
+          role: Database["public"]["Enums"]["staff_role"]
+          is_active: boolean
+          hired_at: string
+        }[]
       }
       onboard_restaurant: {
         Args: {

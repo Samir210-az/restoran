@@ -29,6 +29,13 @@ export async function getCurrentStaffContext(): Promise<StaffContext> {
     redirect("/login");
   }
 
+  // Gozleyen deveti(leri) varsa, burada sessiz sekilde qebul edilir -
+  // bu, "isciler" sehifesinde davet olunan bir sexs sonradan qeydiyyatdan
+  // kecende avtomatik dogru restorana qosulmasini temin edir.
+  await (supabase as unknown as { rpc: (fn: string, args?: unknown) => Promise<unknown> }).rpc(
+    "accept_pending_invitations"
+  );
+
   const [{ data: staffRow }, { data: profile }] = await Promise.all([
     supabase
       .from("staff_members")
