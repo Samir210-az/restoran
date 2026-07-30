@@ -226,7 +226,9 @@ export default async function DashboardPage() {
               {orders.map((o) => (
                 <div key={o.id} className="flex items-center justify-between py-2.5 text-sm">
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs text-text-muted">#{o.order_number}</span>
+                    <span className="font-mono text-xs text-text-muted">
+                      #{o.order_number} · {new Date(o.created_at).toLocaleDateString("az-AZ", { day: "numeric", month: "short" })}
+                    </span>
                     <Badge variant={STATUS_BADGE[o.status] ?? "neutral"}>{STATUS_LABEL[o.status] ?? o.status}</Badge>
                   </div>
                   <span className="font-medium text-text-primary">{Number(o.total).toFixed(2)} ₼</span>

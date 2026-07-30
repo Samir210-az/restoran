@@ -1064,14 +1064,17 @@ export type Database = {
       }
       restaurant_order_counters: {
         Row: {
+          counter_date: string
           next_number: number
           restaurant_id: string
         }
         Insert: {
+          counter_date: string
           next_number?: number
           restaurant_id: string
         }
         Update: {
+          counter_date?: string
           next_number?: number
           restaurant_id?: string
         }
@@ -1410,6 +1413,7 @@ export type Database = {
         Args: { _days?: number; _restaurant_id: string }
         Returns: Json
       }
+      get_order_report: { Args: { _restaurant_id: string }; Returns: Json }
       get_order_tracking: {
         Args: { _order_id: string }
         Returns: {
