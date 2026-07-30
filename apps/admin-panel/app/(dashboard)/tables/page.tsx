@@ -1,6 +1,7 @@
-import { Plus, Table2, ClipboardPlus } from "lucide-react";
+import { Plus, Table2 } from "lucide-react";
 import Link from "next/link";
 import { Card, CardHeader, CardTitle, Input } from "@restoran/ui";
+import { cn } from "@restoran/utils";
 import { SubmitButton } from "@/components/forms/SubmitButton";
 import { getCurrentStaffContext } from "@/lib/get-current-staff-context";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
@@ -9,38 +10,113 @@ import { createTableAction } from "./actions";
 
 export const metadata = { title: "Masalar" };
 
-/**
- * QEYD: Bu, tam Masa/Rezervasiya idareetmesi deyil (o, SAD Faza 4-de gelir) -
- * hazirda YALNIZ sifaris axininin ise dusmesi ucun minimum lazim olani
- * (masa yaratma + musteri linki) teqdim edir. Real QR sekil generasiyasi
- * ve rezervasiya sistemi Faza 4-de elave olunacaq.
- */
+type TableStatus = "free" | "occupied" | "reserved";
+
+const ACTIVE_ORDER_STATUSES: ("pending" | "confirmed" | "preparing" | "ready" | "served")[] = [
+  "pending",
+  "confirmed",
+  "preparing",
+  "ready",
+  "served",
+];
+
 export default async function TablesPage() {
   const { restaurantId } = await getCurrentStaffContext();
   const supabase = getSupabaseServerClient();
 
-  const [{ data: restaurant }, { data: tables }] = await Promise.all([
+  const [{ data: restaurant }, { data: tables }, { data: activeOrders }, { data: reservations }] = await Promise.all([
     supabase.from("restaurants").select("slug").eq("id", restaurantId).maybeSingle(),
     supabase
       .from("restaurant_tables")
-      .select("id, table_number, capacity, status")
+      .select("id, table_number, capacity")
       .eq("restaurant_id", restaurantId)
       .order("table_number", { ascending: true }),
+    supabase
+      .from("orders")
+      .select("id, table_id, status")
+      .eq("restaurant_id", restaurantId)
+      .not("table_id", "is", null)
+      .in("status", ACTIVE_ORDER_STATUSES),
+    supabase
+      .from("reservations")
+      .select("table_id, reserved_at")
+      .eq("restaurant_id", restaurantId)
+      .not("table_id", "is", null)
+      .in("status", ["pending", "confirmed"])
+      .gte("reserved_at", new Date().toISOString())
+      .order("reserved_at", { ascending: true }),
   ]);
+
+  const orderIds = (activeOrders ?? []).map((o) => o.id);
+  const { data: payments } = orderIds.length
+    ? await supabase.from("payments").select("order_id, status").in("order_id", orderIds)
+    : { data: [] };
+  const paymentStatusByOrder = new Map((payments ?? []).map((p) => [p.order_id, p.status]));
+
+  // Masa "occupied" sayilir eger: aktiv (pending..ready) sifarisi varsa,
+  // YA DA "served" olub amma odenis hele tamamlanmayibsa. Odenis
+  // tamamlanan+served sifaris masani AZAD sayir (kassir pulu alanda
+  // masa avtomatik bosalir - elave "masani azad et" duymesine ehtiyac yoxdur).
+  const occupiedTableIds = new Set(
+    (activeOrders ?? [])
+      .filter((o) => {
+        if (o.status !== "served") return true;
+        return paymentStatusByOrder.get(o.id) !== "completed";
+      })
+      .map((o) => o.table_id)
+      .filter(Boolean)
+  );
+
+  const reservationByTable = new Map<string, string>();
+  for (const r of reservations ?? []) {
+    if (r.table_id && !reservationByTable.has(r.table_id)) {
+      reservationByTable.set(r.table_id, r.reserved_at);
+    }
+  }
+
+  function getStatus(tableId: string): TableStatus {
+    if (occupiedTableIds.has(tableId)) return "occupied";
+    if (reservationByTable.has(tableId)) return "reserved";
+    return "free";
+  }
 
   const customerAppUrl = process.env.NEXT_PUBLIC_CUSTOMER_APP_URL ?? "http://localhost:3001";
   const slug = restaurant?.slug ?? "";
+  const tableRows = tables ?? [];
+
+  const STATUS_STYLE: Record<TableStatus, string> = {
+    free: "border-success/40 bg-success/10 text-success",
+    occupied: "border-danger/40 bg-danger/10 text-danger",
+    reserved: "border-warning/40 bg-warning/10 text-warning",
+  };
+  const STATUS_LABEL: Record<TableStatus, string> = {
+    free: "Boş",
+    occupied: "Doludur",
+    reserved: "Rezerv edilib",
+  };
 
   return (
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-2xl font-semibold text-text-primary">Masalar</h1>
         <p className="text-sm text-text-secondary">
-          Hər masa üçün müştəri linki yaradın — bu linki QR koda çevirib masaya qoya bilərsiniz
+          Masaya toxunaraq həmin masa üçün dərhal sifariş verin — rəng masanın vəziyyətini göstərir
         </p>
       </div>
 
-      {(tables ?? []).length === 0 ? (
+      <div className="flex items-center gap-4 text-xs text-text-secondary">
+        <span className="flex items-center gap-1.5">
+          <span className="h-2.5 w-2.5 rounded-full bg-success" /> Boş
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="h-2.5 w-2.5 rounded-full bg-danger" /> Doludur
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="h-2.5 w-2.5 rounded-full bg-warning" /> Rezerv edilib
+        </span>
+      </div>
+
+      {tableRows.length === 0 ? (
         <Card>
           <div className="flex flex-col items-center gap-2 py-10 text-center">
             <Table2 className="h-8 w-8 text-text-muted" aria-hidden="true" />
@@ -48,8 +124,38 @@ export default async function TablesPage() {
           </div>
         </Card>
       ) : (
+        <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
+          {tableRows.map((table) => {
+            const status = getStatus(table.id);
+            const reservedAt = reservationByTable.get(table.id);
+            const reservedTimeLabel = reservedAt
+              ? new Date(reservedAt).toLocaleTimeString("az-AZ", { hour: "2-digit", minute: "2-digit" })
+              : null;
+
+            return (
+              <Link
+                key={table.id}
+                href={`/order-new?table=${table.id}`}
+                title={reservedTimeLabel ? `Rezervasiya saat ${reservedTimeLabel}` : STATUS_LABEL[status]}
+                className={cn(
+                  "flex flex-col items-center justify-center gap-1 rounded-xl border-2 p-3 text-center transition-transform active:scale-95",
+                  STATUS_STYLE[status]
+                )}
+              >
+                <Table2 className="h-6 w-6" aria-hidden="true" />
+                <span className="text-sm font-semibold">{table.table_number}</span>
+                <span className="text-[10px] opacity-80">{STATUS_LABEL[status]}</span>
+                {reservedTimeLabel && <span className="text-[10px] font-medium">{reservedTimeLabel}</span>}
+              </Link>
+            );
+          })}
+        </div>
+      )}
+
+      <div className="mt-2 flex flex-col gap-3">
+        <h2 className="text-sm font-semibold text-text-secondary">Müştəri QR linkləri</h2>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {(tables ?? []).map((table) => {
+          {tableRows.map((table) => {
             const link = `${customerAppUrl}/${slug}?table=${table.id}`;
             return (
               <Card key={table.id} className="flex flex-col gap-2">
@@ -58,21 +164,12 @@ export default async function TablesPage() {
                   <span className="text-xs text-text-muted">{table.capacity} nəfərlik</span>
                 </div>
                 <p className="truncate text-xs text-text-muted">{link}</p>
-                <div className="flex gap-2">
-                  <CopyLinkButton link={link} />
-                  <Link
-                    href={`/order-new?table=${table.id}`}
-                    className="flex items-center gap-1.5 rounded-md border border-border-strong px-2.5 py-1.5 text-xs font-medium text-text-secondary hover:bg-bg-muted"
-                  >
-                    <ClipboardPlus className="h-3.5 w-3.5" />
-                    Sifariş al
-                  </Link>
-                </div>
+                <CopyLinkButton link={link} />
               </Card>
             );
           })}
         </div>
-      )}
+      </div>
 
       <Card className="max-w-sm">
         <CardHeader>
