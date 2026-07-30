@@ -44,7 +44,7 @@ function findMentionedItems(text: string, items: ItemRow[]): ItemRow[] {
 export function AIWaiterChat({ restaurantId, items, onAddToCart }: AIWaiterChatProps) {
   const [isOpen, setOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
-    { role: "assistant", content: "Salam! 👋 Mən AI ofisiantınızam. Nə növ yemək istərdiniz — ət, toyuq, vegetarian?" },
+    { role: "assistant", content: "Hörmətli müştəri, xoş gəlmisiniz! 😊 Mən sizin AI ofisiantınızam. Nə növ yemək istərdiniz — ət, toyuq, vegetarian? 🍽️" },
   ]);
   const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
   const [input, setInput] = useState("");
@@ -89,7 +89,7 @@ export function AIWaiterChat({ restaurantId, items, onAddToCart }: AIWaiterChatP
         })
         .then(() => {});
     } catch {
-      setMessages([...nextMessages, { role: "assistant", content: "Bağlantı xətası oldu. Yenidən cəhd edin." }]);
+      setMessages([...nextMessages, { role: "assistant", content: "Hörmətli müştəri, bağlantıda kiçik bir xəta oldu. Zəhmət olmasa yenidən cəhd edin. 🙏" }]);
     } finally {
       setSending(false);
     }

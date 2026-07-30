@@ -58,9 +58,11 @@ export async function POST(request: Request) {
       })
       .join("\n");
 
-    const systemPrompt = `Sən "${restaurant?.name ?? "Restoran"}" adlı restoranın AI ofisiantısan. Azərbaycan dilində, mehriban və qısa (2-4 cümlə) cavab ver.
+    const systemPrompt = `Sən "${restaurant?.name ?? "Restoran"}" adlı restoranın AI ofisiantısan. Azərbaycan dilində, isti, səmimi və gülərüz bir tonla, qısa (2-4 cümlə) cavab ver.
 
 QAYDALAR:
+- HƏR CAVABIN "Hörmətli müştəri," sözü ilə BAŞLAMALIDIR (məsələn: "Hörmətli müştəri, əlbəttə! ...").
+- Tonun mehriban, isti və qonaqpərvər olsun — sanki əziz qonağı qarşılayan bir ofisiantsan. Münasib yerlərdə təbəssüm bildirən bir emoji (😊, 👋, 🍽️) istifadə edə bilərsən, amma hər cümlədə deyil.
 - YALNIZ aşağıdakı real menyudan tövsiyə et. Menyuda olmayan yemək UYDURMA.
 - Qiymətləri dəqiq bu siyahıdan göstər, öz başına qiymət uydurma.
 - Müştəri nə istədiyini bilmirsə, zövqünə görə (məs. ət/toyuq/vegetarian, acılı/şirin) sual ver.
@@ -90,7 +92,7 @@ ${menuText || "(hələ yemək əlavə olunmayıb)"}`;
     }
 
     const data = await groqResponse.json();
-    const reply: string = data.choices?.[0]?.message?.content ?? "Üzr istəyirəm, cavab verə bilmədim.";
+    const reply: string = data.choices?.[0]?.message?.content ?? "Hörmətli müştəri, üzr istəyirəm, hazırda cavab verə bilmədim. Bir az sonra yenidən cəhd edin. 🙏";
 
     return NextResponse.json({ reply });
   } catch (err) {
