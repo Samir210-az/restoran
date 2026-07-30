@@ -1490,80 +1490,23 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      place_order:
-        | {
-            Args: {
-              _items: Json
-              _order_type: Database["public"]["Enums"]["order_type"]
-              _restaurant_id: string
-              _table_id: string
-            }
-            Returns: {
-              order_id: string
-              total: number
-            }[]
-          }
-        | {
-            Args: {
-              _items: Json
-              _order_type: Database["public"]["Enums"]["order_type"]
-              _payment_method?: Database["public"]["Enums"]["payment_method"]
-              _restaurant_id: string
-              _table_id: string
-            }
-            Returns: {
-              order_id: string
-              total: number
-            }[]
-          }
-        | {
-            Args: {
-              _customer_name?: string
-              _customer_phone?: string
-              _items: Json
-              _order_type: Database["public"]["Enums"]["order_type"]
-              _payment_method?: Database["public"]["Enums"]["payment_method"]
-              _restaurant_id: string
-              _table_id: string
-            }
-            Returns: {
-              order_id: string
-              total: number
-            }[]
-          }
-        | {
-            Args: {
-              _customer_name?: string
-              _customer_phone?: string
-              _items: Json
-              _order_type: Database["public"]["Enums"]["order_type"]
-              _payment_method?: Database["public"]["Enums"]["payment_method"]
-              _placed_by?: Database["public"]["Enums"]["order_placed_by"]
-              _restaurant_id: string
-              _table_id: string
-            }
-            Returns: {
-              order_id: string
-              total: number
-            }[]
-          }
-        | {
-            Args: {
-              _created_by?: string
-              _customer_name?: string
-              _customer_phone?: string
-              _items: Json
-              _order_type: Database["public"]["Enums"]["order_type"]
-              _payment_method?: Database["public"]["Enums"]["payment_method"]
-              _placed_by?: Database["public"]["Enums"]["order_placed_by"]
-              _restaurant_id: string
-              _table_id: string
-            }
-            Returns: {
-              order_id: string
-              total: number
-            }[]
-          }
+      place_order: {
+        Args: {
+          _created_by?: string
+          _customer_name?: string
+          _customer_phone?: string
+          _items: Json
+          _order_type: Database["public"]["Enums"]["order_type"]
+          _payment_method?: Database["public"]["Enums"]["payment_method"]
+          _placed_by?: Database["public"]["Enums"]["order_placed_by"]
+          _restaurant_id: string
+          _table_id: string
+        }
+        Returns: {
+          order_id: string
+          total: number
+        }[]
+      }
       record_inventory_transaction: {
         Args: {
           _item_id: string
