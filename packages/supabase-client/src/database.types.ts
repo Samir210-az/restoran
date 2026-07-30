@@ -630,6 +630,120 @@ export type Database = {
           },
         ]
       }
+      suppliers: {
+        Row: {
+          contact_info: Json
+          created_at: string
+          id: string
+          name: string
+          restaurant_id: string
+        }
+        Insert: {
+          contact_info?: Json
+          created_at?: string
+          id?: string
+          name: string
+          restaurant_id: string
+        }
+        Update: {
+          contact_info?: Json
+          created_at?: string
+          id?: string
+          name?: string
+          restaurant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "suppliers_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_items: {
+        Row: {
+          created_at: string
+          current_stock: number
+          id: string
+          low_stock_threshold: number
+          name: string
+          restaurant_id: string
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          current_stock?: number
+          id?: string
+          low_stock_threshold?: number
+          name: string
+          restaurant_id: string
+          unit: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          current_stock?: number
+          id?: string
+          low_stock_threshold?: number
+          name?: string
+          restaurant_id?: string
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_items_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_transactions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          item_id: string
+          quantity: number
+          related_order_id: string | null
+          restaurant_id: string
+          type: Database["public"]["Enums"]["inventory_txn_type"]
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          item_id: string
+          quantity: number
+          related_order_id?: string | null
+          restaurant_id: string
+          type: Database["public"]["Enums"]["inventory_txn_type"]
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          item_id?: string
+          quantity?: number
+          related_order_id?: string | null
+          restaurant_id?: string
+          type?: Database["public"]["Enums"]["inventory_txn_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_transactions_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -692,6 +806,15 @@ export type Database = {
         }
         Returns: undefined
       }
+      record_inventory_transaction: {
+        Args: {
+          _item_id: string
+          _type: Database["public"]["Enums"]["inventory_txn_type"]
+          _quantity: number
+          _related_order_id?: string | null
+        }
+        Returns: undefined
+      }
       onboard_restaurant: {
         Args: {
           _default_language?: string
@@ -714,6 +837,7 @@ export type Database = {
     }
     Enums: {
       kitchen_item_status: "queued" | "cooking" | "ready"
+      inventory_txn_type: "purchase" | "usage" | "waste" | "adjustment"
       order_placed_by: "customer" | "waiter" | "ai_waiter"
       order_status: "pending" | "confirmed" | "preparing" | "ready" | "served" | "completed" | "cancelled"
       order_type: "dine_in" | "takeaway" | "delivery"
