@@ -60,9 +60,14 @@ export function RoleLoginGate({ error }: { error?: string }) {
 
         <p className="text-center text-sm text-text-secondary">
           Hesabınız yoxdur?{" "}
-          <Link href="/register" className="font-medium text-accent hover:underline">
-            Qeydiyyatdan keçin
-          </Link>
+          <a
+            href="https://wa.me/994552107111"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-accent hover:underline"
+          >
+            Qeydiyyat üçün müraciət edin
+          </a>
         </p>
       </div>
     );
