@@ -2,8 +2,10 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { Card, Badge, Button } from "@restoran/ui";
+import { MapPin } from "lucide-react";
 import { createSupabaseBrowserClient } from "@restoran/supabase-client";
 import { advanceOrderStatusAction, cancelOrderAction, markPaymentReceivedAction } from "@/app/(dashboard)/orders/actions";
+import { CourierAssignment } from "@/components/orders/CourierAssignment";
 
 interface OrderRow {
   id: string;
@@ -15,6 +17,10 @@ interface OrderRow {
   table_number: string | null;
   payment_method: string | null;
   payment_status: string | null;
+  delivery_address: string | null;
+  courier_id: string | null;
+  courier_name: string | null;
+  courier_phone: string | null;
 }
 
 const PAYMENT_METHOD_LABEL: Record<string, string> = {
@@ -45,7 +51,15 @@ const STATUS_LABEL: Record<string, string> = {
 
 const ACTIVE_STATUSES = new Set(["pending", "confirmed", "preparing", "ready", "served"]);
 
-export function OrdersRealtimeList({ restaurantId, initialOrders }: { restaurantId: string; initialOrders: OrderRow[] }) {
+export function OrdersRealtimeList({
+  restaurantId,
+  initialOrders,
+  couriers,
+}: {
+  restaurantId: string;
+  initialOrders: OrderRow[];
+  couriers: { id: string; full_name: string | null }[];
+}) {
   const [orders, setOrders] = useState(initialOrders);
   const [isPending, startTransition] = useTransition();
 
@@ -104,9 +118,26 @@ export function OrdersRealtimeList({ restaurantId, initialOrders }: { restaurant
                 </>
               )}
             </p>
+            {order.order_type === "delivery" && order.delivery_address && (
+              <p className="mt-1 flex items-start gap-1 text-xs text-text-muted">
+                <MapPin className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />
+                {order.delivery_address}
+              </p>
+            )}
           </div>
 
-          {ACTIVE_STATUSES.has(order.status) && (
+          <div className="flex flex-col items-end gap-2">
+            {order.order_type === "delivery" && ACTIVE_STATUSES.has(order.status) && (
+              <CourierAssignment
+                orderId={order.id}
+                couriers={couriers}
+                currentCourierId={order.courier_id}
+                currentCourierName={order.courier_name}
+                currentCourierPhone={order.courier_phone}
+              />
+            )}
+
+            {ACTIVE_STATUSES.has(order.status) && (
             <div className="flex gap-2">
               {order.status !== "served" && (
                 <Button
@@ -134,7 +165,8 @@ export function OrdersRealtimeList({ restaurantId, initialOrders }: { restaurant
                 </Button>
               )}
             </div>
-          )}
+            )}
+          </div>
         </Card>
       ))}
     </div>

@@ -3,10 +3,11 @@ import { getSupabaseServerClient } from "./supabase-server";
 
 export interface StaffContext {
   userId: string;
+  staffId: string;
   fullName: string | null;
   restaurantId: string;
   restaurantName: string;
-  role: "owner" | "manager" | "cashier" | "chef" | "waiter";
+  role: "owner" | "manager" | "cashier" | "chef" | "waiter" | "courier";
 }
 
 /**
@@ -39,7 +40,7 @@ export async function getCurrentStaffContext(): Promise<StaffContext> {
   const [{ data: staffRow }, { data: profile }] = await Promise.all([
     supabase
       .from("staff_members")
-      .select("restaurant_id, role, restaurants(name)")
+      .select("id, restaurant_id, role, restaurants(name)")
       .eq("user_id", user.id)
       .eq("is_active", true)
       .limit(1)
@@ -53,6 +54,7 @@ export async function getCurrentStaffContext(): Promise<StaffContext> {
 
   return {
     userId: user.id,
+    staffId: staffRow.id,
     fullName: profile?.full_name ?? null,
     restaurantId: staffRow.restaurant_id,
     restaurantName: (staffRow.restaurants as unknown as { name: string })?.name ?? "",

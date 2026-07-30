@@ -832,6 +832,9 @@ export type Database = {
       orders: {
         Row: {
           branch_id: string
+          courier_id: string | null
+          courier_name: string | null
+          courier_phone: string | null
           created_at: string
           created_by: string | null
           customer_id: string | null
@@ -850,6 +853,9 @@ export type Database = {
         }
         Insert: {
           branch_id: string
+          courier_id?: string | null
+          courier_name?: string | null
+          courier_phone?: string | null
           created_at?: string
           created_by?: string | null
           customer_id?: string | null
@@ -868,6 +874,9 @@ export type Database = {
         }
         Update: {
           branch_id?: string
+          courier_id?: string | null
+          courier_name?: string | null
+          courier_phone?: string | null
           created_at?: string
           created_by?: string | null
           customer_id?: string | null
@@ -890,6 +899,13 @@ export type Database = {
             columns: ["branch_id"]
             isOneToOne: false
             referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_courier_id_fkey"
+            columns: ["courier_id"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
             referencedColumns: ["id"]
           },
           {
@@ -1478,6 +1494,8 @@ export type Database = {
       get_order_tracking: {
         Args: { _order_id: string }
         Returns: {
+          courier_name: string
+          courier_phone: string
           created_at: string
           id: string
           items: Json
@@ -1705,7 +1723,13 @@ export type Database = {
         | "seated"
         | "cancelled"
         | "no_show"
-      staff_role: "owner" | "manager" | "cashier" | "chef" | "waiter"
+      staff_role:
+        | "owner"
+        | "manager"
+        | "cashier"
+        | "chef"
+        | "waiter"
+        | "courier"
       subscription_plan: "free" | "pro" | "enterprise"
       subscription_status: "active" | "trial" | "suspended" | "cancelled"
       supported_language: "az" | "en" | "ru"
@@ -1884,7 +1908,7 @@ export const Constants = {
         "cancelled",
         "no_show",
       ],
-      staff_role: ["owner", "manager", "cashier", "chef", "waiter"],
+      staff_role: ["owner", "manager", "cashier", "chef", "waiter", "courier"],
       subscription_plan: ["free", "pro", "enterprise"],
       subscription_status: ["active", "trial", "suspended", "cancelled"],
       supported_language: ["az", "en", "ru"],

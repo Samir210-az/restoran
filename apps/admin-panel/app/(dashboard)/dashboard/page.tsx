@@ -97,6 +97,52 @@ export default async function DashboardPage() {
     );
   }
 
+  if (context.role === "courier") {
+    const { data: myDeliveries } = await supabase
+      .from("orders")
+      .select("id, order_number, status, delivery_address, total")
+      .eq("restaurant_id", context.restaurantId)
+      .eq("order_type", "delivery")
+      .eq("courier_id", context.staffId)
+      .in("status", ["ready", "served"])
+      .order("created_at", { ascending: true });
+
+    const deliveries = myDeliveries ?? [];
+
+    return (
+      <div className="flex flex-col gap-6">
+        <div>
+          <h1 className="text-2xl font-semibold text-text-primary">
+            Xoş gəldiniz{greetingName ? `, ${greetingName}` : ""}
+          </h1>
+          <p className="text-sm text-text-secondary">{context.restaurantName} · Mənə təyin olunan çatdırılmalar</p>
+        </div>
+
+        {deliveries.length === 0 ? (
+          <Card>
+            <p className="py-8 text-center text-sm text-text-secondary">Hazırda sizə təyin olunan çatdırılma yoxdur</p>
+          </Card>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {deliveries.map((d) => (
+              <Card key={d.id}>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-medium text-text-primary">#{d.order_number}</p>
+                    <p className="mt-1 text-sm text-text-secondary">{d.delivery_address}</p>
+                  </div>
+                  <p className="shrink-0 font-semibold text-text-primary">{Number(d.total).toFixed(2)} ₼</p>
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        <BigIconTile href="/orders" icon={ClipboardList} label="Bütün sifarişlər" description="Tam siyahı" />
+      </div>
+    );
+  }
+
   if (context.role === "chef") {
     return (
       <div className="flex flex-col gap-6">

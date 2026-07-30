@@ -96,7 +96,7 @@ export async function inviteStaffAction(formData: FormData) {
   revalidatePath("/staff");
 }
 
-export async function updateStaffRoleAction(staffId: string, role: "owner" | "manager" | "cashier" | "chef" | "waiter") {
+export async function updateStaffRoleAction(staffId: string, role: "owner" | "manager" | "cashier" | "chef" | "waiter" | "courier") {
   const { restaurantId } = await requireOwner();
   const supabase = getSupabaseServerClient();
   await supabase.from("staff_members").update({ role }).eq("id", staffId).eq("restaurant_id", restaurantId);

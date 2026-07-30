@@ -33,8 +33,8 @@ const NAV_ITEMS: Array<{
   icon: typeof LayoutDashboard;
   roles: StaffRole[];
 }> = [
-  { href: "/dashboard", label: "Ana Səhifə", icon: LayoutDashboard, roles: ["owner", "manager", "cashier", "chef", "waiter"] },
-  { href: "/orders", label: "Sifarişlər", icon: ClipboardList, roles: ["owner", "manager", "cashier", "chef", "waiter"] },
+  { href: "/dashboard", label: "Ana Səhifə", icon: LayoutDashboard, roles: ["owner", "manager", "cashier", "chef", "waiter", "courier"] },
+  { href: "/orders", label: "Sifarişlər", icon: ClipboardList, roles: ["owner", "manager", "cashier", "chef", "waiter", "courier"] },
   { href: "/kitchen", label: "Mətbəx Ekranı", icon: ChefHat, roles: ["owner", "manager", "chef"] },
   { href: "/reservations", label: "Rezervasiyalar", icon: CalendarCheck, roles: ["owner", "manager", "waiter"] },
   { href: "/menu", label: "Menyu", icon: UtensilsCrossed, roles: ["owner", "manager"] },

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CheckCircle2, Circle, ChefHat, Clock } from "lucide-react";
+import { CheckCircle2, Circle, ChefHat, Clock, Bike } from "lucide-react";
 import { Card, Badge } from "@restoran/ui";
 import { cn } from "@restoran/utils";
 import { createSupabasePublicClient } from "@restoran/supabase-client";
@@ -27,6 +27,8 @@ export interface OrderTrackingRow {
   created_at: string;
   items: OrderItemJson[];
   payment_status: string | null;
+  courier_name: string | null;
+  courier_phone: string | null;
 }
 
 const STEPS: { status: OrderStatus; label: string; icon: typeof Clock }[] = [
@@ -101,6 +103,22 @@ export function OrderTracker({ orderId, initialOrder }: { orderId: string; initi
             );
           })}
         </div>
+      )}
+
+      {order.order_type === "delivery" && order.courier_name && (
+        <Card className="mb-4 flex items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent">
+            <Bike className="h-5 w-5" aria-hidden="true" />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-text-primary">Kuryeriniz: {order.courier_name}</p>
+            {order.courier_phone && (
+              <a href={`tel:${order.courier_phone}`} className="text-sm text-accent hover:underline">
+                {order.courier_phone}
+              </a>
+            )}
+          </div>
+        </Card>
       )}
 
       <Card>
