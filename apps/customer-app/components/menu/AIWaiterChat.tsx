@@ -99,10 +99,11 @@ export function AIWaiterChat({ restaurantId, items, onAddToCart }: AIWaiterChatP
     <>
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-20 right-4 z-20 flex h-12 w-12 items-center justify-center rounded-full bg-accent text-accent-foreground shadow-elevated hover:opacity-90"
+        className="fixed bottom-20 right-4 z-20 flex items-center gap-2 rounded-full bg-accent px-4 py-3 text-accent-foreground shadow-elevated transition-transform hover:scale-105 hover:opacity-90"
         aria-label="AI Ofisiantla söhbət et"
       >
-        <Sparkles className="h-5 w-5" />
+        <Sparkles className="h-5 w-5 shrink-0" aria-hidden="true" />
+        <span className="text-sm font-medium">AI Ofisiant</span>
       </button>
 
       <Modal isOpen={isOpen} onClose={() => setOpen(false)} title="AI Ofisiant" className="flex h-[80vh] max-h-[600px] flex-col">
