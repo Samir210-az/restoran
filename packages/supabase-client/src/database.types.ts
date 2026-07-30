@@ -946,6 +946,47 @@ export type Database = {
           },
         ]
       }
+      ai_conversations: {
+        Row: {
+          channel: Database["public"]["Enums"]["ai_conversation_channel"]
+          created_at: string
+          customer_id: string | null
+          id: string
+          messages: Json
+          restaurant_id: string
+          status: Database["public"]["Enums"]["ai_conversation_status"]
+          updated_at: string
+        }
+        Insert: {
+          channel?: Database["public"]["Enums"]["ai_conversation_channel"]
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          messages?: Json
+          restaurant_id: string
+          status?: Database["public"]["Enums"]["ai_conversation_status"]
+          updated_at?: string
+        }
+        Update: {
+          channel?: Database["public"]["Enums"]["ai_conversation_channel"]
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          messages?: Json
+          restaurant_id?: string
+          status?: Database["public"]["Enums"]["ai_conversation_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_conversations_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -979,6 +1020,10 @@ export type Database = {
       }
       submit_review: {
         Args: { _order_id: string; _rating: number; _comment?: string | null }
+        Returns: undefined
+      }
+      save_ai_conversation: {
+        Args: { _conversation_id: string; _restaurant_id: string; _messages: Json }
         Returns: undefined
       }
       request_reservation: {
@@ -1070,6 +1115,8 @@ export type Database = {
       inventory_txn_type: "purchase" | "usage" | "waste" | "adjustment"
       payment_method: "card" | "cash" | "online"
       payment_status: "pending" | "completed" | "failed" | "refunded"
+      ai_conversation_channel: "qr_menu" | "whatsapp" | "web_chat"
+      ai_conversation_status: "active" | "handed_off" | "completed"
       order_placed_by: "customer" | "waiter" | "ai_waiter"
       order_status: "pending" | "confirmed" | "preparing" | "ready" | "served" | "completed" | "cancelled"
       order_type: "dine_in" | "takeaway" | "delivery"

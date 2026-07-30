@@ -7,6 +7,7 @@ import { Plus, Minus, ShoppingBag, CalendarCheck, Banknote, CreditCard } from "l
 import { Button, Modal, Input } from "@restoran/ui";
 import { cn } from "@restoran/utils";
 import { placeOrder, type PaymentMethod } from "@/lib/place-order";
+import { AIWaiterChat } from "./AIWaiterChat";
 
 interface CategoryRow {
   id: string;
@@ -299,6 +300,8 @@ export function MenuView({ restaurant, categories, items, tableId }: MenuViewPro
           )}
         </div>
       </Modal>
+
+      <AIWaiterChat restaurantId={restaurant.id} />
     </div>
   );
 }
