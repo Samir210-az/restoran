@@ -10,7 +10,7 @@ export default async function OrdersPage() {
 
   const { data: orders } = await supabase
     .from("orders")
-    .select("id, status, order_type, total, created_at, table_id")
+    .select("id, order_number, status, order_type, total, created_at, table_id")
     .eq("restaurant_id", restaurantId)
     .order("created_at", { ascending: false })
     .limit(50);
@@ -29,6 +29,7 @@ export default async function OrdersPage() {
 
   const orderRows = (orders ?? []).map((o) => ({
     id: o.id,
+    order_number: o.order_number,
     status: o.status,
     order_type: o.order_type,
     total: o.total,

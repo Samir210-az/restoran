@@ -19,6 +19,8 @@ interface OrderItemJson {
 
 export interface OrderTrackingRow {
   id: string;
+  order_number: number;
+  restaurant_name: string;
   status: OrderStatus;
   order_type: string;
   total: number;
@@ -64,7 +66,9 @@ export function OrderTracker({ orderId, initialOrder }: { orderId: string; initi
     <div className="mx-auto max-w-md px-4 py-8">
       <div className="mb-6 text-center">
         <p className="text-sm text-text-secondary">Sifariş nömrəsi</p>
-        <p className="font-mono text-sm text-text-muted">{order.id.slice(0, 8)}</p>
+        <p className="text-lg font-semibold text-text-primary">
+          {order.restaurant_name} #{order.order_number}
+        </p>
       </div>
 
       {isCancelled ? (

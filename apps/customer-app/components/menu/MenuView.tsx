@@ -25,12 +25,18 @@ interface ItemRow {
   tags: string[];
 }
 
+interface TableRow {
+  id: string;
+  table_number: string;
+}
+
 interface MenuViewProps {
   restaurant: { id: string; name: string; slug: string; logo_url?: string | null };
   categories: CategoryRow[];
   items: ItemRow[];
   tableId: string | null;
   bestsellerItemId: string | null;
+  tables: TableRow[];
 }
 
 interface CartEntry {
@@ -38,13 +44,21 @@ interface CartEntry {
   quantity: number;
 }
 
+type FulfilmentMode = "dine_in" | "takeaway" | "delivery";
+
 /**
  * Musteriye gorunen menyu + sebet + checkout axini. Sebet YALNIZ
  * bu komponentin yaddasinda (React state) saxlanilir - sehife
  * yenilense sebet sifirlanir (localStorage-a kocurmek Faza 4+ ucun
  * qeyd olunub, hazirda sadelik ucun belle saxlanilmir).
+ *
+ * Masa secimi: eger QR koddan `tableId` gelibse (URL-de ?table=...),
+ * bu SABIT qebul edilir - musteri onu deyise bilmez (fiziki QR
+ * masaya bagli oldugu ucun). QR-siz gelen musteri (birbasa link/
+ * direktoridan) ise "Masadayam / Ozumle aparıram / Evə çatdırılma"
+ * secimini OZU edir.
  */
-export function MenuView({ restaurant, categories, items, tableId, bestsellerItemId }: MenuViewProps) {
+export function MenuView({ restaurant, categories, items, tableId, bestsellerItemId, tables }: MenuViewProps) {
   const router = useRouter();
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(categories[0]?.id ?? null);
   const [cart, setCart] = useState<Record<string, CartEntry>>({});
@@ -53,6 +67,9 @@ export function MenuView({ restaurant, categories, items, tableId, bestsellerIte
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
   const [phone, setPhone] = useState("");
+  const [fulfilmentMode, setFulfilmentMode] = useState<FulfilmentMode>("takeaway");
+  const [selectedTableId, setSelectedTableId] = useState<string>("");
+  const [deliveryAddress, setDeliveryAddress] = useState("");
 
   const visibleItems = activeCategoryId ? items.filter((item) => item.category_id === activeCategoryId) : items;
 
@@ -85,15 +102,37 @@ export function MenuView({ restaurant, categories, items, tableId, bestsellerIte
 
   async function handleCheckout() {
     setSubmitError(null);
+
+    // QR-dan gelen tableId varsa - HEMISE dine_in, masa sabitdir.
+    // Yoxdursa - musterinin sectiyi rejime gore teyin olunur.
+    const effectiveOrderType = tableId ? "dine_in" : fulfilmentMode;
+    const effectiveTableId = tableId || (fulfilmentMode === "dine_in" ? selectedTableId : null);
+
+    if (!tableId && fulfilmentMode === "dine_in" && !selectedTableId) {
+      setSubmitError("Zəhmət olmasa oturduğunuz masanı seçin");
+      return;
+    }
+    if (effectiveOrderType === "delivery") {
+      if (!phone.trim()) {
+        setSubmitError("Evə çatdırılma üçün telefon nömrəsi tələb olunur");
+        return;
+      }
+      if (!deliveryAddress.trim()) {
+        setSubmitError("Evə çatdırılma üçün ünvanınızı yazın");
+        return;
+      }
+    }
+
     setSubmitting(true);
     try {
       const result = await placeOrder({
         restaurantId: restaurant.id,
-        tableId,
-        orderType: tableId ? "dine_in" : "takeaway",
+        tableId: effectiveTableId || null,
+        orderType: effectiveOrderType,
         items: cartEntries.map((entry) => ({ menuItemId: entry.item.id, quantity: entry.quantity })),
         paymentMethod,
         customerPhone: phone.trim() || undefined,
+        deliveryAddress: effectiveOrderType === "delivery" ? deliveryAddress.trim() : undefined,
       });
       router.push(`/${restaurant.slug}/order/${result.orderId}`);
     } catch (err) {
@@ -277,9 +316,90 @@ export function MenuView({ restaurant, categories, items, tableId, bestsellerIte
                 <span>{cartTotal.toFixed(2)} ₼</span>
               </div>
 
+              {!tableId && (
+                <div>
+                  <p className="mb-2 text-xs font-medium text-text-secondary">Sifariş necə olsun?</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setFulfilmentMode("dine_in")}
+                      className={cn(
+                        "rounded-md border px-2 py-2 text-xs font-medium transition-colors",
+                        fulfilmentMode === "dine_in"
+                          ? "border-accent bg-accent-soft text-accent"
+                          : "border-border text-text-secondary hover:bg-bg-muted"
+                      )}
+                    >
+                      Masadayam
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFulfilmentMode("takeaway")}
+                      className={cn(
+                        "rounded-md border px-2 py-2 text-xs font-medium transition-colors",
+                        fulfilmentMode === "takeaway"
+                          ? "border-accent bg-accent-soft text-accent"
+                          : "border-border text-text-secondary hover:bg-bg-muted"
+                      )}
+                    >
+                      Özüm aparıram
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFulfilmentMode("delivery")}
+                      className={cn(
+                        "rounded-md border px-2 py-2 text-xs font-medium transition-colors",
+                        fulfilmentMode === "delivery"
+                          ? "border-accent bg-accent-soft text-accent"
+                          : "border-border text-text-secondary hover:bg-bg-muted"
+                      )}
+                    >
+                      Evə çatdır
+                    </button>
+                  </div>
+
+                  {fulfilmentMode === "dine_in" && (
+                    <div className="mt-3">
+                      {tables.length === 0 ? (
+                        <p className="text-xs text-warning">Bu restoranda hələ masa qeydə alınmayıb</p>
+                      ) : (
+                        <label className="flex flex-col gap-1.5 text-sm">
+                          <span className="text-xs font-medium text-text-secondary">Masanızı seçin</span>
+                          <select
+                            value={selectedTableId}
+                            onChange={(e) => setSelectedTableId(e.target.value)}
+                            className="rounded-md border border-border-strong bg-bg px-3 py-2 text-sm text-text-primary"
+                          >
+                            <option value="">— Seçin —</option>
+                            {tables.map((t) => (
+                              <option key={t.id} value={t.id}>
+                                Masa {t.table_number}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                      )}
+                    </div>
+                  )}
+
+                  {fulfilmentMode === "delivery" && (
+                    <label className="mt-3 flex flex-col gap-1.5 text-sm">
+                      <span className="text-xs font-medium text-text-secondary">Ünvanınız *</span>
+                      <textarea
+                        value={deliveryAddress}
+                        onChange={(e) => setDeliveryAddress(e.target.value)}
+                        rows={2}
+                        placeholder="Küçə, ev, mənzil nömrəsi..."
+                        className="rounded-md border border-border-strong bg-bg px-3 py-2 text-sm text-text-primary placeholder:text-text-muted"
+                      />
+                    </label>
+                  )}
+                </div>
+              )}
+
               <div>
                 <Input
-                  label="Telefon (loyallıq balı üçün, istəyə bağlı)"
+                  label={fulfilmentMode === "delivery" && !tableId ? "Telefon *" : "Telefon (loyallıq balı üçün, istəyə bağlı)"}
                   type="tel"
                   placeholder="050 123 45 67"
                   value={phone}
@@ -320,11 +440,6 @@ export function MenuView({ restaurant, categories, items, tableId, bestsellerIte
                 </div>
               </div>
 
-              {!tableId && (
-                <p className="rounded-md bg-warning/10 px-3 py-2 text-xs text-warning">
-                  Masa məlumatı tapılmadı — sifariş "özün apar" kimi göndəriləcək.
-                </p>
-              )}
               {submitError && (
                 <p role="alert" className="text-sm text-danger">
                   {submitError}

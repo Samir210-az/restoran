@@ -153,7 +153,7 @@ export default async function DashboardPage() {
       .lt("created_at", startOfThisMonth),
     supabase
       .from("orders")
-      .select("id, status, order_type, total, created_at")
+      .select("id, order_number, status, order_type, total, created_at")
       .eq("restaurant_id", context.restaurantId)
       .order("created_at", { ascending: false })
       .limit(5),
@@ -226,7 +226,7 @@ export default async function DashboardPage() {
               {orders.map((o) => (
                 <div key={o.id} className="flex items-center justify-between py-2.5 text-sm">
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs text-text-muted">#{o.id.slice(0, 8)}</span>
+                    <span className="font-mono text-xs text-text-muted">#{o.order_number}</span>
                     <Badge variant={STATUS_BADGE[o.status] ?? "neutral"}>{STATUS_LABEL[o.status] ?? o.status}</Badge>
                   </div>
                   <span className="font-medium text-text-primary">{Number(o.total).toFixed(2)} ₼</span>

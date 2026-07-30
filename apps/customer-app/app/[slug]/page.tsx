@@ -27,7 +27,7 @@ async function getRestaurantData(slug: string) {
   const restaurant = restaurantRows?.[0];
   if (!restaurant) return null;
 
-  const [{ data: categories }, { data: items }, { data: bestsellerRows }] = await Promise.all([
+  const [{ data: categories }, { data: items }, { data: bestsellerRows }, { data: tables }] = await Promise.all([
     supabase
       .from("menu_categories")
       .select("id, name, sort_order")
@@ -41,6 +41,7 @@ async function getRestaurantData(slug: string) {
       .eq("is_available", true)
       .order("sort_order", { ascending: true }),
     supabase.rpc("get_todays_bestseller", { _restaurant_id: restaurant.id }),
+    supabase.rpc("get_public_restaurant_tables", { _restaurant_id: restaurant.id }),
   ]);
 
   return {
@@ -48,6 +49,7 @@ async function getRestaurantData(slug: string) {
     categories: categories ?? [],
     items: items ?? [],
     bestsellerItemId: bestsellerRows?.[0]?.menu_item_id ?? null,
+    tables: tables ?? [],
   };
 }
 
@@ -60,7 +62,7 @@ export default async function RestaurantMenuPage({ params, searchParams }: PageP
   const data = await getRestaurantData(params.slug);
   if (!data) notFound();
 
-  const { restaurant, categories, items, bestsellerItemId } = data;
+  const { restaurant, categories, items, bestsellerItemId, tables } = data;
 
   // Her restoranin OZ tonlari: --accent/--accent-soft/--accent-foreground
   // bu wrapper-de theme_color-a esasen EVEZ olunur (root tokens.css-i
@@ -95,6 +97,7 @@ export default async function RestaurantMenuPage({ params, searchParams }: PageP
         }
         tableId={searchParams.table ?? null}
         bestsellerItemId={bestsellerItemId}
+        tables={tables as unknown as { id: string; table_number: string }[]}
       />
     </div>
   );

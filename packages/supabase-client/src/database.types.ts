@@ -7,8 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
@@ -776,7 +774,9 @@ export type Database = {
           created_at: string
           created_by: string | null
           customer_id: string | null
+          delivery_address: string | null
           id: string
+          order_number: number
           order_type: Database["public"]["Enums"]["order_type"]
           placed_by: Database["public"]["Enums"]["order_placed_by"]
           restaurant_id: string
@@ -792,7 +792,9 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           customer_id?: string | null
+          delivery_address?: string | null
           id?: string
+          order_number: number
           order_type?: Database["public"]["Enums"]["order_type"]
           placed_by?: Database["public"]["Enums"]["order_placed_by"]
           restaurant_id: string
@@ -808,7 +810,9 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           customer_id?: string | null
+          delivery_address?: string | null
           id?: string
+          order_number?: number
           order_type?: Database["public"]["Enums"]["order_type"]
           placed_by?: Database["public"]["Enums"]["order_placed_by"]
           restaurant_id?: string
@@ -1054,6 +1058,29 @@ export type Database = {
             columns: ["table_id"]
             isOneToOne: false
             referencedRelation: "restaurant_tables"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      restaurant_order_counters: {
+        Row: {
+          next_number: number
+          restaurant_id: string
+        }
+        Insert: {
+          next_number?: number
+          restaurant_id: string
+        }
+        Update: {
+          next_number?: number
+          restaurant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_order_counters_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: true
+            referencedRelation: "restaurants"
             referencedColumns: ["id"]
           },
         ]
@@ -1389,8 +1416,10 @@ export type Database = {
           created_at: string
           id: string
           items: Json
+          order_number: number
           order_type: Database["public"]["Enums"]["order_type"]
           payment_status: Database["public"]["Enums"]["payment_status"]
+          restaurant_name: string
           status: Database["public"]["Enums"]["order_status"]
           total: number
         }[]
@@ -1429,6 +1458,13 @@ export type Database = {
           name: string
           slug: string
           theme_color: string
+        }[]
+      }
+      get_public_restaurant_tables: {
+        Args: { _restaurant_id: string }
+        Returns: {
+          id: string
+          table_number: string
         }[]
       }
       get_staff_list: {
@@ -1495,6 +1531,7 @@ export type Database = {
           _created_by?: string
           _customer_name?: string
           _customer_phone?: string
+          _delivery_address?: string
           _items: Json
           _order_type: Database["public"]["Enums"]["order_type"]
           _payment_method?: Database["public"]["Enums"]["payment_method"]
@@ -1504,6 +1541,7 @@ export type Database = {
         }
         Returns: {
           order_id: string
+          order_number: number
           total: number
         }[]
       }

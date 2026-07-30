@@ -7,6 +7,7 @@ import { advanceOrderStatusAction, cancelOrderAction, markPaymentReceivedAction 
 
 interface OrderRow {
   id: string;
+  order_number: number;
   status: string;
   order_type: string;
   total: number;
@@ -81,7 +82,7 @@ export function OrdersRealtimeList({ restaurantId, initialOrders }: { restaurant
         <Card key={order.id} className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-mono text-xs text-text-muted">#{order.id.slice(0, 8)}</span>
+              <span className="font-mono text-xs text-text-muted">#{order.order_number}</span>
               <Badge variant={STATUS_BADGE[order.status] ?? "neutral"}>{STATUS_LABEL[order.status] ?? order.status}</Badge>
             </div>
             <p className="mt-1 text-sm text-text-secondary">
