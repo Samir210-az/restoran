@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Plus, Minus, ShoppingBag, CalendarCheck, Banknote, CreditCard } from "lucide-react";
+import { Plus, Minus, ShoppingBag, CalendarCheck, Banknote, CreditCard, Flame, ChefHat } from "lucide-react";
 import { Button, Modal, Input } from "@restoran/ui";
 import { cn } from "@restoran/utils";
 import { placeOrder, type PaymentMethod } from "@/lib/place-order";
@@ -22,6 +22,7 @@ interface ItemRow {
   description: Record<string, string>;
   price: number;
   image_url: string | null;
+  tags: string[];
 }
 
 interface MenuViewProps {
@@ -29,6 +30,7 @@ interface MenuViewProps {
   categories: CategoryRow[];
   items: ItemRow[];
   tableId: string | null;
+  bestsellerItemId: string | null;
 }
 
 interface CartEntry {
@@ -42,7 +44,7 @@ interface CartEntry {
  * yenilense sebet sifirlanir (localStorage-a kocurmek Faza 4+ ucun
  * qeyd olunub, hazirda sadelik ucun belle saxlanilmir).
  */
-export function MenuView({ restaurant, categories, items, tableId }: MenuViewProps) {
+export function MenuView({ restaurant, categories, items, tableId, bestsellerItemId }: MenuViewProps) {
   const router = useRouter();
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(categories[0]?.id ?? null);
   const [cart, setCart] = useState<Record<string, CartEntry>>({});
@@ -101,12 +103,17 @@ export function MenuView({ restaurant, categories, items, tableId }: MenuViewPro
     }
   }
 
+  const bestsellerItem = bestsellerItemId ? items.find((i) => i.id === bestsellerItemId) : null;
+  const chefSpecials = items.filter((i) => i.tags?.includes("chef_special"));
+
   return (
     <div className="mx-auto max-w-2xl px-4 py-6 pb-28 md:px-6">
-      <div className="mb-6 flex items-start justify-between gap-3">
+      <div className="mb-2 flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold text-text-primary">{restaurant.name}</h1>
-          <p className="text-sm text-text-secondary">{tableId ? "Masa üçün sifariş" : "Öz aparma sifarişi"}</p>
+          <h1 className="text-2xl font-semibold text-text-primary">{restaurant.name} sizi salamlayır! 👋</h1>
+          <p className="text-sm text-text-secondary">
+            {tableId ? "Masanız üçün ləzzətli seçimlər hazırdır" : "Öz aparma sifarişiniz üçün buyurun"}
+          </p>
         </div>
         <Link
           href={`/${restaurant.slug}/reserve`}
@@ -116,6 +123,27 @@ export function MenuView({ restaurant, categories, items, tableId }: MenuViewPro
           Masa rezerv et
         </Link>
       </div>
+
+      {(bestsellerItem || chefSpecials.length > 0) && (
+        <div className="mb-6 mt-4 flex flex-col gap-2">
+          {bestsellerItem && (
+            <div className="flex items-center gap-2 rounded-lg border border-accent/30 bg-accent-soft px-3 py-2 text-sm">
+              <Flame className="h-4 w-4 shrink-0 text-accent" aria-hidden="true" />
+              <span className="text-text-primary">
+                <span className="font-medium">Bu gün ən çox sevilən:</span> {bestsellerItem.name.az}
+              </span>
+            </div>
+          )}
+          {chefSpecials.map((item) => (
+            <div key={item.id} className="flex items-center gap-2 rounded-lg border border-border bg-bg-muted px-3 py-2 text-sm">
+              <ChefHat className="h-4 w-4 shrink-0 text-text-secondary" aria-hidden="true" />
+              <span className="text-text-primary">
+                <span className="font-medium">Aşpazın təklifi:</span> {item.name.az}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
 
       {categories.length > 1 && (
         <div className="mb-6 flex gap-2 overflow-x-auto pb-2">

@@ -1015,8 +1015,13 @@ export type Database = {
           _payment_method?: Database["public"]["Enums"]["payment_method"]
           _customer_phone?: string | null
           _customer_name?: string | null
+          _placed_by?: Database["public"]["Enums"]["order_placed_by"]
         }
         Returns: { order_id: string; total: number }[]
+      }
+      get_todays_bestseller: {
+        Args: { _restaurant_id: string }
+        Returns: { menu_item_id: string; name: Json; total_quantity: number }[]
       }
       submit_review: {
         Args: { _order_id: string; _rating: number; _comment?: string | null }

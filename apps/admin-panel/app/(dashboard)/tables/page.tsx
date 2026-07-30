@@ -1,4 +1,5 @@
-import { Plus, Table2 } from "lucide-react";
+import { Plus, Table2, ClipboardPlus } from "lucide-react";
+import Link from "next/link";
 import { Card, CardHeader, CardTitle, Input } from "@restoran/ui";
 import { SubmitButton } from "@/components/forms/SubmitButton";
 import { getCurrentStaffContext } from "@/lib/get-current-staff-context";
@@ -57,7 +58,16 @@ export default async function TablesPage() {
                   <span className="text-xs text-text-muted">{table.capacity} nəfərlik</span>
                 </div>
                 <p className="truncate text-xs text-text-muted">{link}</p>
-                <CopyLinkButton link={link} />
+                <div className="flex gap-2">
+                  <CopyLinkButton link={link} />
+                  <Link
+                    href={`/order-new?table=${table.id}`}
+                    className="flex items-center gap-1.5 rounded-md border border-border-strong px-2.5 py-1.5 text-xs font-medium text-text-secondary hover:bg-bg-muted"
+                  >
+                    <ClipboardPlus className="h-3.5 w-3.5" />
+                    Sifariş al
+                  </Link>
+                </div>
               </Card>
             );
           })}

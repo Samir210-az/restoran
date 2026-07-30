@@ -4,6 +4,7 @@ import { SubmitButton } from "@/components/forms/SubmitButton";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
 import { getCurrentStaffContext } from "@/lib/get-current-staff-context";
 import { AvailabilityToggle } from "@/components/menu/AvailabilityToggle";
+import { ChefSpecialToggle } from "@/components/menu/ChefSpecialToggle";
 import { CategoryHeaderActions } from "@/components/menu/CategoryHeaderActions";
 import { MenuItemActions } from "@/components/menu/MenuItemActions";
 import { createCategoryAction, createMenuItemAction } from "./actions";
@@ -29,7 +30,7 @@ export default async function MenuPage() {
       .order("sort_order", { ascending: true }),
     supabase
       .from("menu_items")
-      .select("id, name, price, is_available, category_id")
+      .select("id, name, price, is_available, category_id, tags")
       .eq("restaurant_id", restaurantId)
       .order("sort_order", { ascending: true }),
   ]);
@@ -85,6 +86,7 @@ export default async function MenuPage() {
                         </div>
                         <div className="flex items-center gap-2">
                           <AvailabilityToggle itemId={item.id} isAvailable={item.is_available} />
+                          <ChefSpecialToggle itemId={item.id} tags={item.tags ?? []} />
                           {isOwner && (
                             <MenuItemActions itemId={item.id} currentName={itemName} currentPrice={item.price} />
                           )}

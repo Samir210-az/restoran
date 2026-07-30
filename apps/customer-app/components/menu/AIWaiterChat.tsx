@@ -18,6 +18,7 @@ interface ItemRow {
   description: Record<string, string>;
   price: number;
   image_url: string | null;
+  tags: string[];
 }
 
 interface AIWaiterChatProps {

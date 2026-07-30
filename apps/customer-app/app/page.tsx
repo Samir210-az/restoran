@@ -1,23 +1,24 @@
 import { QrCode, Sparkles, CalendarCheck } from "lucide-react";
-import { Card, CardTitle, CardDescription, Button } from "@restoran/ui";
+import { Card, CardTitle, CardDescription } from "@restoran/ui";
 
 export const metadata = { title: "Ana Səhifə" };
 
 /**
- * UI-ONLY: Bu, musteri tetbiqinin qarsilama sehifesinin STRUKTURUDUR.
- * Real restoran/menyu melumati Faza 2-de restaurant slug-a gore
- * dinamik marsrutlasdirma (/[restaurantSlug]) ile qosulacaq.
+ * Bu, KONKRET restorana bagli sehife DEYIL - platformanin umumi
+ * izahat sehifesidir (restoran.app/[slug] hexiqi musteri girisidir).
+ * Ona gore burada "Menyuya bax" kimi hec bir sey etmeyen saxta
+ * dyme YOXDUR - bu, istifadecini cashdirirdi.
  */
 const ENTRY_POINTS = [
   {
     icon: QrCode,
     title: "QR Menyunu skan edin",
-    description: "Masanızdakı QR kodu skan edərək menyuya birbaşa keçin",
+    description: "Restoranın masasındakı QR kodu skan edərək menyuya birbaşa keçin",
   },
   {
     icon: Sparkles,
     title: "AI Ofisiantla söhbət edin",
-    description: "Nə istədiyinizi bilmirsiniz? AI köməkçimiz tövsiyə versin",
+    description: "Nə istədiyinizi bilmirsiniz? AI köməkçi tövsiyə versin",
   },
   {
     icon: CalendarCheck,
@@ -45,12 +46,10 @@ export default function HomePage() {
           <p className="mt-4 text-base text-text-secondary md:text-lg">
             QR menyu, ağıllı tövsiyələr və anında sifariş — hamısı bir yerdə
           </p>
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <Button size="lg">Menyuya bax</Button>
-            <Button size="lg" variant="outline">
-              Masa rezerv et
-            </Button>
-          </div>
+          <p className="mt-6 text-sm text-text-muted">
+            Bu, restoranların QR-menyu platformasıdır — konkret bir restoranın menyusunu görmək üçün
+            masadakı QR kodu skan edin, ya da restoranın sizə göndərdiyi linki açın.
+          </p>
         </div>
       </section>
 

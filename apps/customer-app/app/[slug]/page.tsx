@@ -26,7 +26,7 @@ async function getRestaurantData(slug: string) {
   const restaurant = restaurantRows?.[0];
   if (!restaurant) return null;
 
-  const [{ data: categories }, { data: items }] = await Promise.all([
+  const [{ data: categories }, { data: items }, { data: bestsellerRows }] = await Promise.all([
     supabase
       .from("menu_categories")
       .select("id, name, sort_order")
@@ -35,13 +35,19 @@ async function getRestaurantData(slug: string) {
       .order("sort_order", { ascending: true }),
     supabase
       .from("menu_items")
-      .select("id, name, description, price, category_id, is_available, image_url")
+      .select("id, name, description, price, category_id, is_available, image_url, tags")
       .eq("restaurant_id", restaurant.id)
       .eq("is_available", true)
       .order("sort_order", { ascending: true }),
+    supabase.rpc("get_todays_bestseller", { _restaurant_id: restaurant.id }),
   ]);
 
-  return { restaurant, categories: categories ?? [], items: items ?? [] };
+  return {
+    restaurant,
+    categories: categories ?? [],
+    items: items ?? [],
+    bestsellerItemId: bestsellerRows?.[0]?.menu_item_id ?? null,
+  };
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -53,7 +59,7 @@ export default async function RestaurantMenuPage({ params, searchParams }: PageP
   const data = await getRestaurantData(params.slug);
   if (!data) notFound();
 
-  const { restaurant, categories, items } = data;
+  const { restaurant, categories, items, bestsellerItemId } = data;
 
   return (
     <MenuView
@@ -67,9 +73,11 @@ export default async function RestaurantMenuPage({ params, searchParams }: PageP
           description: Record<string, string>;
           price: number;
           image_url: string | null;
+          tags: string[];
         }[]
       }
       tableId={searchParams.table ?? null}
+      bestsellerItemId={bestsellerItemId}
     />
   );
 }

@@ -54,6 +54,15 @@ export async function toggleItemAvailabilityAction(itemId: string, nextValue: bo
   revalidatePath("/menu");
 }
 
+export async function toggleChefSpecialAction(itemId: string, currentTags: string[]) {
+  await getCurrentStaffContext();
+  const supabase = getSupabaseServerClient();
+  const hasTag = currentTags.includes("chef_special");
+  const nextTags = hasTag ? currentTags.filter((t) => t !== "chef_special") : [...currentTags, "chef_special"];
+  await supabase.from("menu_items").update({ tags: nextTags }).eq("id", itemId);
+  revalidatePath("/menu");
+}
+
 /**
  * Redakte ve silme YALNIZ owner-e aciqdir (menecer/kassir/asci/ofisiant
  * yox) - bu, RLS-in "manager de yaza biler" qaydasindan qesden daha
