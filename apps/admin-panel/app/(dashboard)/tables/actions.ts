@@ -5,7 +5,10 @@ import { getSupabaseServerClient } from "@/lib/supabase-server";
 import { getCurrentStaffContext } from "@/lib/get-current-staff-context";
 
 export async function createTableAction(formData: FormData) {
-  const { restaurantId } = await getCurrentStaffContext();
+  const { restaurantId, role } = await getCurrentStaffContext();
+  if (role !== "owner" && role !== "manager") {
+    throw new Error("FORBIDDEN: masaları yalnız sahib/menecer əlavə edə bilər");
+  }
   const tableNumber = String(formData.get("table_number") ?? "").trim();
   const capacity = Number(formData.get("capacity") ?? 2);
   if (!tableNumber) return;

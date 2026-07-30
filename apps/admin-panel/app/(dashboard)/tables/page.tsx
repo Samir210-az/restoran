@@ -21,7 +21,8 @@ const ACTIVE_ORDER_STATUSES: ("pending" | "confirmed" | "preparing" | "ready" | 
 ];
 
 export default async function TablesPage() {
-  const { restaurantId } = await getCurrentStaffContext();
+  const { restaurantId, role } = await getCurrentStaffContext();
+  const canManageTables = role === "owner" || role === "manager";
   const supabase = getSupabaseServerClient();
 
   const [{ data: restaurant }, { data: tables }, { data: activeOrders }, { data: reservations }] = await Promise.all([
@@ -171,18 +172,20 @@ export default async function TablesPage() {
         </div>
       </div>
 
-      <Card className="max-w-sm">
-        <CardHeader>
-          <CardTitle>Yeni masa</CardTitle>
-        </CardHeader>
-        <form action={createTableAction} className="flex flex-col gap-3">
-          <Input name="table_number" placeholder="Masa nömrəsi (məs. 12)" required />
-          <Input name="capacity" type="number" min="1" placeholder="Tutum (nəfər)" defaultValue={2} />
-          <SubmitButton leftIcon={<Plus className="h-4 w-4" />} className="self-start">
-            Masa əlavə et
-          </SubmitButton>
-        </form>
-      </Card>
+      {canManageTables && (
+        <Card className="max-w-sm">
+          <CardHeader>
+            <CardTitle>Yeni masa</CardTitle>
+          </CardHeader>
+          <form action={createTableAction} className="flex flex-col gap-3">
+            <Input name="table_number" placeholder="Masa nömrəsi (məs. 12)" required />
+            <Input name="capacity" type="number" min="1" placeholder="Tutum (nəfər)" defaultValue={2} />
+            <SubmitButton leftIcon={<Plus className="h-4 w-4" />} className="self-start">
+              Masa əlavə et
+            </SubmitButton>
+          </form>
+        </Card>
+      )}
     </div>
   );
 }
