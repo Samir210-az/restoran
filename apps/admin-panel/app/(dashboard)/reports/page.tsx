@@ -1,9 +1,9 @@
 import { redirect } from "next/navigation";
-import { CalendarDays, CalendarRange, Calendar, Receipt, TrendingUp, PlusCircle } from "lucide-react";
+import Link from "next/link";
+import { CalendarDays, CalendarRange, Calendar, Receipt, TrendingUp, Wallet } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, Badge, Table, TableHead, TableBody, TableRow, TableHeaderCell, TableCell } from "@restoran/ui";
 import { getCurrentStaffContext } from "@/lib/get-current-staff-context";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
-import { ExpenseForm } from "@/components/reports/ExpenseForm";
 import { DeleteExpenseButton } from "@/components/reports/DeleteExpenseButton";
 
 export const metadata = { title: "Hesabatlar" };
@@ -44,6 +44,8 @@ const CATEGORY_LABELS: Record<string, string> = {
   salary: "Maaş",
   rent: "Kira",
   utility: "Kommunal",
+  tax: "Vergi",
+  supplier_payment: "Təchizatçıya ödəniş",
   other: "Digər",
 };
 
@@ -52,6 +54,8 @@ const CATEGORY_BADGE: Record<string, "neutral" | "warning" | "success" | "danger
   salary: "accent",
   rent: "warning",
   utility: "warning",
+  tax: "danger",
+  supplier_payment: "info",
   other: "neutral",
 };
 
@@ -71,20 +75,9 @@ export default async function ReportsPage({ searchParams }: { searchParams: { sa
 
   const supabase = getSupabaseServerClient();
 
-  const [{ data: report }, { data: suppliers }, { data: staffRows }] = await Promise.all([
-    (
-      supabase as unknown as { rpc: (fn: string, args: unknown) => Promise<{ data: OrderReport | null }> }
-    ).rpc("get_order_report", { _restaurant_id: context.restaurantId }),
-    supabase.from("suppliers").select("id, name").eq("restaurant_id", context.restaurantId).order("name"),
-    (
-      supabase as unknown as {
-        rpc: (
-          fn: string,
-          args: unknown
-        ) => Promise<{ data: { id: string; full_name: string | null; role: string }[] | null }>;
-      }
-    ).rpc("get_staff_list", { _restaurant_id: context.restaurantId }),
-  ]);
+  const { data: report } = await (
+    supabase as unknown as { rpc: (fn: string, args: unknown) => Promise<{ data: OrderReport | null }> }
+  ).rpc("get_order_report", { _restaurant_id: context.restaurantId });
 
   const today = report?.today ?? { order_count: 0, revenue: 0, expenses: 0 };
   const thisWeek = report?.this_week ?? { order_count: 0, revenue: 0, expenses: 0 };
@@ -165,31 +158,24 @@ export default async function ReportsPage({ searchParams }: { searchParams: { sa
         </Card>
       )}
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <PlusCircle className="h-4 w-4 text-accent" aria-hidden="true" />
-                Yeni xərc əlavə et
-              </CardTitle>
-              <CardDescription>Anbar alışı, maaş/əlavə haqq, kira, kommunal və digər xərclər</CardDescription>
-            </div>
-          </CardHeader>
-          <ExpenseForm suppliers={suppliers ?? []} staff={(staffRows ?? []) as { id: string; full_name: string | null; role: string }[]} />
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Receipt className="h-4 w-4 text-accent" aria-hidden="true" />
-                Son xərclər
-              </CardTitle>
-              <CardDescription>Ən son 20 qeyd</CardDescription>
-            </div>
-          </CardHeader>
-          {recentExpenses.length === 0 ? (
+      <Card>
+        <CardHeader>
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Receipt className="h-4 w-4 text-accent" aria-hidden="true" />
+              Son xərclər
+            </CardTitle>
+            <CardDescription>Ən son 20 qeyd — anbar alışı, maaş, ödənişlər, hamısı bir yerdə</CardDescription>
+          </div>
+          <Link
+            href="/expenses"
+            className="flex shrink-0 items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-medium text-text-secondary hover:bg-bg-muted"
+          >
+            <Wallet className="h-3.5 w-3.5" aria-hidden="true" />
+            Xərc əlavə et
+          </Link>
+        </CardHeader>
+        {recentExpenses.length === 0 ? (
             <p className="py-8 text-center text-sm text-text-secondary">Hələ xərc qeyd olunmayıb</p>
           ) : (
             <div className="flex max-h-96 flex-col divide-y divide-border overflow-y-auto">
@@ -217,7 +203,6 @@ export default async function ReportsPage({ searchParams }: { searchParams: { sa
             </div>
           )}
         </Card>
-      </div>
 
       <Card>
         <div className="mb-4 flex items-center gap-2">

@@ -1619,6 +1619,16 @@ export type Database = {
         }
         Returns: undefined
       }
+      record_supplier_purchase: {
+        Args: {
+          _amount: number
+          _description?: string
+          _item_id: string
+          _quantity: number
+          _supplier_id?: string
+        }
+        Returns: undefined
+      }
       request_reservation: {
         Args: {
           _customer_name: string
@@ -1666,6 +1676,8 @@ export type Database = {
         | "rent"
         | "utility"
         | "other"
+        | "supplier_payment"
+        | "tax"
       inventory_txn_type: "purchase" | "usage" | "waste" | "adjustment"
       invoice_status: "draft" | "open" | "paid" | "void" | "uncollectible"
       kitchen_item_status: "queued" | "cooking" | "ready"
@@ -1839,6 +1851,8 @@ export const Constants = {
         "rent",
         "utility",
         "other",
+        "supplier_payment",
+        "tax",
       ],
       inventory_txn_type: ["purchase", "usage", "waste", "adjustment"],
       invoice_status: ["draft", "open", "paid", "void", "uncollectible"],

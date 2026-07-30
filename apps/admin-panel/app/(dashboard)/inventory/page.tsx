@@ -8,7 +8,7 @@ import { createInventoryItemAction, createSupplierAction } from "./actions";
 
 export const metadata = { title: "Anbar" };
 
-export default async function InventoryPage() {
+export default async function InventoryPage({ searchParams }: { searchParams: { error?: string } }) {
   const { restaurantId } = await getCurrentStaffContext();
   const supabase = getSupabaseServerClient();
 
@@ -35,6 +35,12 @@ export default async function InventoryPage() {
         <h1 className="text-2xl font-semibold text-text-primary">Anbar</h1>
         <p className="text-sm text-text-secondary">Stok səviyyələri və təchizatçılar</p>
       </div>
+
+      {searchParams.error && (
+        <div role="alert" className="rounded-md border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger">
+          {searchParams.error}
+        </div>
+      )}
 
       {lowStockCount > 0 && (
         <div className="flex items-center gap-2 rounded-md border border-warning/30 bg-warning/10 px-3 py-2 text-sm text-warning">
@@ -68,7 +74,7 @@ export default async function InventoryPage() {
                       minimum: {item.low_stock_threshold} {item.unit}
                     </p>
                   </div>
-                  <TransactionForm itemId={item.id} />
+                  <TransactionForm itemId={item.id} suppliers={supplierRows} />
                 </div>
               </Card>
             );

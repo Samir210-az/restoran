@@ -15,6 +15,7 @@ import {
   BarChart3,
   Sparkles,
   Settings,
+  Wallet,
 } from "lucide-react";
 import type { StaffRole } from "@restoran/types";
 import { cn } from "@restoran/utils";
@@ -41,6 +42,7 @@ const NAV_ITEMS: Array<{
   { href: "/inventory", label: "Anbar", icon: Package, roles: ["owner", "manager"] },
   { href: "/staff", label: "İşçilər", icon: Users, roles: ["owner", "manager"] },
   { href: "/customers", label: "Müştərilər", icon: Heart, roles: ["owner", "manager"] },
+  { href: "/expenses", label: "Xərclər", icon: Wallet, roles: ["owner", "manager"] },
   { href: "/reports", label: "Hesabatlar", icon: BarChart3, roles: ["owner", "manager"] },
   { href: "/ai-insights", label: "AI Kəşfiyyat", icon: Sparkles, roles: ["owner", "manager"] },
   { href: "/settings", label: "Parametrlər", icon: Settings, roles: ["owner", "manager"] },

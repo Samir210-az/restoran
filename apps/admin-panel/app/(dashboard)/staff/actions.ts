@@ -116,3 +116,31 @@ export async function cancelInvitationAction(invitationId: string) {
   await supabase.from("staff_invitations").delete().eq("id", invitationId);
   revalidatePath("/staff");
 }
+
+/**
+ * Isciye maaş/elave haqq odenishini QEYD edir (expenses cedveline,
+ * category=salary). Pul cixarilmasi hessas emeliyyat oldugu ucun
+ * digər staff idareetme funksiyalari kimi YALNIZ owner (requireOwner).
+ */
+export async function payStaffSalaryAction(staffId: string, amount: number, description: string) {
+  const { restaurantId } = await requireOwner();
+  if (!amount || amount <= 0) return;
+
+  const supabase = getSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  await supabase.from("expenses").insert({
+    restaurant_id: restaurantId,
+    category: "salary",
+    amount,
+    description: description.trim() || null,
+    staff_member_id: staffId,
+    expense_date: new Date().toISOString().slice(0, 10),
+    created_by: user?.id ?? null,
+  });
+
+  revalidatePath("/staff");
+  revalidatePath("/reports");
+}
