@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { createSupabasePublicClient } from "@restoran/supabase-client";
+import { hexToRgbTriplet, lightenRgbTriplet, contrastForegroundRgbTriplet } from "@restoran/utils";
 import { MenuView } from "@/components/menu/MenuView";
 
 interface PageProps {
@@ -61,23 +62,40 @@ export default async function RestaurantMenuPage({ params, searchParams }: PageP
 
   const { restaurant, categories, items, bestsellerItemId } = data;
 
+  // Her restoranin OZ tonlari: --accent/--accent-soft/--accent-foreground
+  // bu wrapper-de theme_color-a esasen EVEZ olunur (root tokens.css-i
+  // deyismir, yalnix bu alt-agacda override edir) + accent-den tureyen
+  // yumsaq fon (SAD-in "her sehife her restoran ucun ferqli tonlar ve fon" telebi).
+  const themeStyle = {
+    ["--accent" as string]: hexToRgbTriplet(restaurant.theme_color),
+    ["--accent-soft" as string]: lightenRgbTriplet(restaurant.theme_color),
+    ["--accent-foreground" as string]: contrastForegroundRgbTriplet(restaurant.theme_color),
+  } as React.CSSProperties;
+
   return (
-    <MenuView
-      restaurant={restaurant}
-      categories={categories as unknown as { id: string; name: Record<string, string>; sort_order: number }[]}
-      items={
-        items as unknown as {
-          id: string;
-          category_id: string;
-          name: Record<string, string>;
-          description: Record<string, string>;
-          price: number;
-          image_url: string | null;
-          tags: string[];
-        }[]
-      }
-      tableId={searchParams.table ?? null}
-      bestsellerItemId={bestsellerItemId}
-    />
+    <div
+      style={{
+        ...themeStyle,
+        background: `radial-gradient(circle at 50% 0%, rgb(var(--accent) / 0.12), transparent 55%)`,
+      }}
+    >
+      <MenuView
+        restaurant={restaurant}
+        categories={categories as unknown as { id: string; name: Record<string, string>; sort_order: number }[]}
+        items={
+          items as unknown as {
+            id: string;
+            category_id: string;
+            name: Record<string, string>;
+            description: Record<string, string>;
+            price: number;
+            image_url: string | null;
+            tags: string[];
+          }[]
+        }
+        tableId={searchParams.table ?? null}
+        bestsellerItemId={bestsellerItemId}
+      />
+    </div>
   );
 }

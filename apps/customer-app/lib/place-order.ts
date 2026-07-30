@@ -32,7 +32,10 @@ export async function placeOrder(params: {
 
   const { data, error } = await supabase.rpc("place_order", {
     _restaurant_id: params.restaurantId,
-    _table_id: params.tableId,
+    // Generasiya olunmus Supabase tipi _table_id-ni qeyri-null kimi gosterir,
+    // amma DB-de sutun nullable-dir (masasiz "takeaway" sifarisleri ucun) -
+    // buna gore cast lazimdir, run-time-da null duzgun gonderilir.
+    _table_id: params.tableId as string,
     _order_type: params.orderType,
     _items: params.items.map((line) => ({
       menu_item_id: line.menuItemId,
@@ -41,8 +44,8 @@ export async function placeOrder(params: {
       special_instructions: line.specialInstructions ?? null,
     })),
     _payment_method: params.paymentMethod ?? "cash",
-    _customer_phone: params.customerPhone ?? null,
-    _customer_name: params.customerName ?? null,
+    _customer_phone: params.customerPhone ?? undefined,
+    _customer_name: params.customerName ?? undefined,
   });
 
   if (error) {

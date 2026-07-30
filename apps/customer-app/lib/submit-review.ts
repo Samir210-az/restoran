@@ -5,7 +5,7 @@ export async function submitReview(orderId: string, rating: number, comment?: st
   const { error } = await supabase.rpc("submit_review", {
     _order_id: orderId,
     _rating: rating,
-    _comment: comment ?? null,
+    _comment: comment ?? undefined,
   });
 
   if (error) {

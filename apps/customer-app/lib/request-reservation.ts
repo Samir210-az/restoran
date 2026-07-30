@@ -18,7 +18,7 @@ export async function requestReservation(params: RequestReservationParams): Prom
     _customer_phone: params.customerPhone,
     _party_size: params.partySize,
     _reserved_at: params.reservedAt,
-    _notes: params.notes ?? null,
+    _notes: params.notes ?? undefined,
   });
 
   if (error) {

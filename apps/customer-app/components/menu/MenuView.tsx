@@ -26,7 +26,7 @@ interface ItemRow {
 }
 
 interface MenuViewProps {
-  restaurant: { id: string; name: string; slug: string };
+  restaurant: { id: string; name: string; slug: string; logo_url?: string | null };
   categories: CategoryRow[];
   items: ItemRow[];
   tableId: string | null;
@@ -109,11 +109,21 @@ export function MenuView({ restaurant, categories, items, tableId, bestsellerIte
   return (
     <div className="mx-auto max-w-2xl px-4 py-6 pb-28 md:px-6">
       <div className="mb-2 flex items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold text-text-primary">{restaurant.name} sizi salamlayır! 👋</h1>
-          <p className="text-sm text-text-secondary">
-            {tableId ? "Masanız üçün ləzzətli seçimlər hazırdır" : "Öz aparma sifarişiniz üçün buyurun"}
-          </p>
+        <div className="flex items-center gap-3">
+          {restaurant.logo_url && (
+            /* eslint-disable-next-line @next/next/no-img-element -- kicik dairevi loqo, next/image-a ehtiyac yoxdur */
+            <img
+              src={restaurant.logo_url}
+              alt={restaurant.name}
+              className="h-11 w-11 shrink-0 rounded-full border border-border object-cover"
+            />
+          )}
+          <div>
+            <h1 className="text-2xl font-semibold text-text-primary">{restaurant.name} sizi salamlayır! 👋</h1>
+            <p className="text-sm text-text-secondary">
+              {tableId ? "Masanız üçün ləzzətli seçimlər hazırdır" : "Öz aparma sifarişiniz üçün buyurun"}
+            </p>
+          </div>
         </div>
         <Link
           href={`/${restaurant.slug}/reserve`}
