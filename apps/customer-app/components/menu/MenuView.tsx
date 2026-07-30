@@ -301,7 +301,7 @@ export function MenuView({ restaurant, categories, items, tableId }: MenuViewPro
         </div>
       </Modal>
 
-      <AIWaiterChat restaurantId={restaurant.id} />
+      <AIWaiterChat restaurantId={restaurant.id} items={items} onAddToCart={addToCart} />
     </div>
   );
 }

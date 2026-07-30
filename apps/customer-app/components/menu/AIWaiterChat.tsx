@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Sparkles, X, Send } from "lucide-react";
+import { Sparkles, Plus, Send } from "lucide-react";
 import { Modal } from "@restoran/ui";
 import { cn } from "@restoran/utils";
 import { createSupabasePublicClient, type Json } from "@restoran/supabase-client";
@@ -11,16 +11,41 @@ interface ChatMessage {
   content: string;
 }
 
+interface ItemRow {
+  id: string;
+  category_id: string;
+  name: Record<string, string>;
+  description: Record<string, string>;
+  price: number;
+  image_url: string | null;
+}
+
+interface AIWaiterChatProps {
+  restaurantId: string;
+  items: ItemRow[];
+  onAddToCart: (item: ItemRow) => void;
+}
+
 /**
- * AI Ofisiant chat pəncərəsi. Hər mesajda /api/ai-waiter route-una
- * fetch edir (öz origin-imiz - GROQ_API_KEY brauzerə heç vaxt gəlmir).
- * Söhbət `ai_conversations`-a asinxron saxlanılır (UI-nı bloklamır).
+ * AI cavabinda hansi menyu adlarinin kecdiyini tapir (sade substring
+ * uyğunlugu - AI sistem prompt-unda YALNIZ real menyudan danisdigi ucun
+ * bu, praktikada etibarlidir). Tapilan her yemek ucun "+ Sebete elave et"
+ * chip-i gosterilir ki, musteri AI-nin tovsiyesini birbasa qebul ede bilsin.
  */
-export function AIWaiterChat({ restaurantId }: { restaurantId: string }) {
+function findMentionedItems(text: string, items: ItemRow[]): ItemRow[] {
+  const lowerText = text.toLowerCase();
+  return items.filter((item) => {
+    const name = item.name.az?.toLowerCase();
+    return name && name.length > 2 && lowerText.includes(name);
+  });
+}
+
+export function AIWaiterChat({ restaurantId, items, onAddToCart }: AIWaiterChatProps) {
   const [isOpen, setOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
     { role: "assistant", content: "Salam! 👋 Mən AI ofisiantınızam. Nə növ yemək istərdiniz — ət, toyuq, vegetarian?" },
   ]);
+  const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
   const [input, setInput] = useState("");
   const [isSending, setSending] = useState(false);
   const conversationId = useRef<string>(crypto.randomUUID());
@@ -29,6 +54,11 @@ export function AIWaiterChat({ restaurantId }: { restaurantId: string }) {
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
+
+  function handleAdd(item: ItemRow) {
+    onAddToCart(item);
+    setAddedIds((prev) => new Set(prev).add(item.id));
+  }
 
   async function handleSend() {
     const text = input.trim();
@@ -50,7 +80,6 @@ export function AIWaiterChat({ restaurantId }: { restaurantId: string }) {
       const finalMessages: ChatMessage[] = [...nextMessages, { role: "assistant", content: reply }];
       setMessages(finalMessages);
 
-      // Arxa planda saxla - xetasi UI-ni bloklamir
       createSupabasePublicClient()
         .rpc("save_ai_conversation", {
           _conversation_id: conversationId.current,
@@ -77,18 +106,41 @@ export function AIWaiterChat({ restaurantId }: { restaurantId: string }) {
 
       <Modal isOpen={isOpen} onClose={() => setOpen(false)} title="AI Ofisiant" className="flex h-[80vh] max-h-[600px] flex-col">
         <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto py-2">
-          {messages.map((m, i) => (
-            <div key={i} className={cn("flex", m.role === "user" ? "justify-end" : "justify-start")}>
-              <div
-                className={cn(
-                  "max-w-[85%] rounded-lg px-3 py-2 text-sm",
-                  m.role === "user" ? "bg-accent text-accent-foreground" : "bg-bg-muted text-text-primary"
+          {messages.map((m, i) => {
+            const mentioned = m.role === "assistant" ? findMentionedItems(m.content, items) : [];
+            return (
+              <div key={i} className={cn("flex flex-col", m.role === "user" ? "items-end" : "items-start")}>
+                <div
+                  className={cn(
+                    "max-w-[85%] rounded-lg px-3 py-2 text-sm",
+                    m.role === "user" ? "bg-accent text-accent-foreground" : "bg-bg-muted text-text-primary"
+                  )}
+                >
+                  {m.content}
+                </div>
+                {mentioned.length > 0 && (
+                  <div className="mt-1.5 flex max-w-[85%] flex-wrap gap-1.5">
+                    {mentioned.map((item) => (
+                      <button
+                        key={item.id}
+                        onClick={() => handleAdd(item)}
+                        disabled={addedIds.has(item.id)}
+                        className={cn(
+                          "flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors",
+                          addedIds.has(item.id)
+                            ? "border-success/40 bg-success/10 text-success"
+                            : "border-accent/40 bg-accent-soft text-accent hover:bg-accent hover:text-accent-foreground"
+                        )}
+                      >
+                        {addedIds.has(item.id) ? "Əlavə olundu ✓" : <Plus className="h-3 w-3" />}
+                        {item.name.az} — {item.price.toFixed(2)} ₼
+                      </button>
+                    ))}
+                  </div>
                 )}
-              >
-                {m.content}
               </div>
-            </div>
-          ))}
+            );
+          })}
           {isSending && (
             <div className="flex justify-start">
               <div className="rounded-lg bg-bg-muted px-3 py-2 text-sm text-text-muted">Yazır...</div>

@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { notFound } from "next/navigation";
 import { createSupabasePublicClient } from "@restoran/supabase-client";
 import { OrderTracker, type OrderTrackingRow } from "@/components/order/OrderTracker";
