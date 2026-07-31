@@ -1,18 +1,21 @@
 # RESTORAN — HANDOFF.md
-_Son yenilənmə: 2026-07-31, gecə sessiyası sonu_
+_Son yenilənmə: 2026-07-31, gecə sessiyası sonu (2-ci yeniləmə)_
 
 ## 🔴 HƏLL OLUNMAMIŞ, İLK NÖVBƏDƏ BAXILMALI PROBLEM
 
-**customer-app-da Vercel deployment statusu qeyri-müəyyəndir.**
+**customer-app-da köhnə (silinmiş) "Karvansaray" restoranı canlı saytda görünürdü — səbəb HƏLƏ TAM AYDIN DEYİL.**
 
-- DB (`restaurants` cədvəli) **3 dəfə yoxlanıldı — tam təmizdir (0 sətir)**
-- Kod tərəfi (`app/page.tsx`, `get_public_restaurant_directory` RPC) yoxlanıldı — düzgündür, heç bir hardcoded/fallback data yoxdur
-- Buna baxmayaraq, istifadəçi **incognito rejimində belə** silinmiş "Karvansaray" restoranının customer-app-ın ana səhifəsində göründüyünü bildirir
-- Vercel Deployments siyahısında **"Status 6/7"** görünür — 7 deployment-dən 1-i filtrlə gizlənib, ehtimal ki bu, ən son commit-in (`aab42e8` — "Platform Admin: loqo yükləmə") **uğursuz build-idir**
-- **Son addım:** istifadəçi Vercel-də "Status" filtrini açıb bütün statusları görünən edəcək, xəta olan deployment-in Build Logs-una baxacaq və nəticəni bildirəcək
-- **Əgər build xətası aşkar olunsa** — çox güman ki, səbəb `apps/customer-app/next.config.js`-ə əlavə edilən `runtimeCaching` massividir (commit `d4dc5b9`) — lokal build keçsə də, Vercel-in build mühiti fərqli ola bilər
+Bu sessiyada aparılan araşdırma və nəticələr:
+- DB (`restaurants` cədvəli) **dəfələrlə yoxlanıldı — köhnə Karvansaray təsdiqlənmiş şəkildə silinib**, cədvəl təmizdir
+- Kod tərəfi (`app/page.tsx`, `get_public_restaurant_directory` RPC, `dynamic = "force-dynamic"`) yoxlanıldı — düzgündür, heç bir hardcoded/fallback data yoxdur
+- **Vercel Deployments siyahısında "uğursuz/Error" build TAPILMADI** — istifadəçi "Status" filtrini açıb yoxladı, ehtimal edilən uğursuz build nəzəriyyəsi TƏSDİQLƏNMƏDİ
+- Yəni: son commit-lər (PWA `runtimeCaching` fix-i daxil) görünür ki, uğurla deploy olunub, amma problem (əgər hələ də davam edirsə) başqa bir səbəbdən irəli gəlir
 
-**Növbəti sessiyada BURADAN başla.**
+**Növbəti sessiyada BURADAN başla — araşdırılmalı ehtimallar:**
+1. İstifadəçidən **YENİDƏN, tam təzə** (bütün keş təmizləndikdən, PWA silinib-yenidən quraşdırıldıqdan sonra) customer-app-ın ana səhifəsinin skrinşotunu al — problem HƏLƏ DƏ var mı, dəqiqləşdir (bəlkə artıq öz-özünə həll olunub)
+2. Əgər hələ də varsa: Vercel-in konkret **hansı domain/URL-ə** trafik yönləndirdiyini yoxla (bəlkə DNS/alias səhv bir deployment-ə işarə edir)
+3. `NEXT_PUBLIC_SUPABASE_URL` env dəyişənini Vercel dashboard-da bax — həqiqətən `qrbfpujqhrjtyvkrjygo` layihəsinə işarə etdiyini təsdiqlə (heç vaxt fərziyyə etmə, birbaşa Vercel-in Environment Variables bölməsindən oxu)
+4. Supabase tərəfində restoran həqiqətən silinib (yoxlanıldı, təsdiqləndi) — deməli qalan yeganə izah client-side keş və ya env/domain uyğunsuzluğudur
 
 ---
 
