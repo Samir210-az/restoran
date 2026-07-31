@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Sparkles, Plus, Send } from "lucide-react";
+import { Plus, Send } from "lucide-react";
+import Image from "next/image";
 import { Modal } from "@restoran/ui";
 import { cn } from "@restoran/utils";
 import { createSupabasePublicClient, type Json } from "@restoran/supabase-client";
@@ -99,10 +100,19 @@ export function AIWaiterChat({ restaurantId, items, onAddToCart }: AIWaiterChatP
     <>
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-20 right-4 z-20 flex items-center gap-2 rounded-full bg-accent px-4 py-3 text-accent-foreground shadow-elevated transition-transform hover:scale-105 hover:opacity-90"
+        className="fixed bottom-20 right-4 z-20 flex items-center gap-2 rounded-full bg-accent py-2.5 pl-2.5 pr-4 text-accent-foreground shadow-elevated transition-transform hover:scale-105 hover:opacity-90"
         aria-label="AI Ofisiantla söhbət et"
       >
-        <Sparkles className="h-5 w-5 shrink-0" aria-hidden="true" />
+        {/* Terpenen (float) animasiyali AI maskotu - butun ekranlarda
+            diqqeti ceker, "canli/interaktiv" hissi yaradir. */}
+        <Image
+          src="/images/ai-waiter-icon.png"
+          alt=""
+          width={36}
+          height={36}
+          className="h-9 w-9 shrink-0 animate-float"
+          priority={false}
+        />
         <span className="text-sm font-medium">AI Ofisiant</span>
       </button>
 

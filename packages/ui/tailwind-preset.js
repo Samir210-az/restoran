@@ -39,10 +39,15 @@ module.exports = {
           from: { opacity: 0, transform: "translateY(8px)" },
           to: { opacity: 1, transform: "translateY(0)" },
         },
+        float: {
+          "0%, 100%": { transform: "translateY(0) rotate(-3deg)" },
+          "50%": { transform: "translateY(-5px) rotate(3deg)" },
+        },
       },
       animation: {
         "fade-in": "fade-in 200ms ease-out",
         "slide-up": "slide-up 250ms ease-out",
+        float: "float 2.6s ease-in-out infinite",
       },
     },
   },
