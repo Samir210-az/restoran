@@ -75,6 +75,21 @@ export function OrdersRealtimeList({
           setOrders((prev) => prev.map((o) => (o.id === updated.id ? { ...o, status: updated.status } : o)));
         }
       )
+      .on(
+        // Ozunda "orders" statusu canli yenilense de, ODENIŞ (payments
+        // cedveli) AYRI cedveldir - evvelki versiyada bura abune
+        // olunmurdu, ona gore odenis nisani sehife ILK yuklendiyi anin
+        // melumatinda "ilişib" qalirdi (mes. status canli "Tamamlandı"
+        // gorunur, amma odenis hele "Gözləyir" - kohnelmiş ekran).
+        "postgres_changes",
+        { event: "*", schema: "public", table: "payments", filter: `restaurant_id=eq.${restaurantId}` },
+        (payload) => {
+          const updated = payload.new as { order_id: string; status: string; method: string };
+          setOrders((prev) =>
+            prev.map((o) => (o.id === updated.order_id ? { ...o, payment_status: updated.status, payment_method: updated.method } : o))
+          );
+        }
+      )
       .subscribe();
 
     return () => {
@@ -137,9 +152,8 @@ export function OrdersRealtimeList({
               />
             )}
 
-            {ACTIVE_STATUSES.has(order.status) && (
             <div className="flex flex-wrap justify-end gap-2">
-              {order.status !== "served" && (
+              {ACTIVE_STATUSES.has(order.status) && order.status !== "served" && (
                 <Button
                   size="sm"
                   variant="outline"
@@ -149,17 +163,23 @@ export function OrdersRealtimeList({
                   Növbəti mərhələ
                 </Button>
               )}
-              {(order.payment_method === "cash" || order.payment_method === "card") && order.payment_status !== "completed" && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={isPending}
-                  onClick={() => startTransition(() => markPaymentReceivedAction(order.id))}
-                >
-                  Ödəniş alındı, bağla
-                </Button>
-              )}
-              {order.status === "served" && order.payment_status === "completed" && (
+              {/* Bu duyme QESDEN ACTIVE_STATUSES-e baglı deyil - eger her
+                  hansi sebebden (kohne test melumati, ehtimal olunmayan
+                  hal) status "Tamamlandı" olub odenis hele "Gözləyir"
+                  gorunse, staff-in bunu duzeltmeye YOLU olsun deye. */}
+              {order.status !== "cancelled" &&
+                (order.payment_method === "cash" || order.payment_method === "card") &&
+                order.payment_status !== "completed" && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={isPending}
+                    onClick={() => startTransition(() => markPaymentReceivedAction(order.id))}
+                  >
+                    Ödəniş alındı, bağla
+                  </Button>
+                )}
+              {ACTIVE_STATUSES.has(order.status) && order.status === "served" && order.payment_status === "completed" && (
                 <Button
                   size="sm"
                   variant="outline"
@@ -169,13 +189,12 @@ export function OrdersRealtimeList({
                   Sifarişi bağla
                 </Button>
               )}
-              {order.status === "pending" && (
+              {ACTIVE_STATUSES.has(order.status) && order.status === "pending" && (
                 <Button size="sm" variant="danger" disabled={isPending} onClick={() => startTransition(() => cancelOrderAction(order.id))}>
                   Ləğv et
                 </Button>
               )}
             </div>
-            )}
           </div>
         </Card>
       ))}
