@@ -1,4 +1,5 @@
 import { Building2, PlusCircle, CheckCircle2, AlertCircle } from "lucide-react";
+import Link from "next/link";
 import {
   Card,
   CardHeader,
@@ -118,7 +119,9 @@ export default async function PlatformOverviewPage({
             {rows.map((r) => (
               <TableRow key={r.id}>
                 <TableCell>
-                  <p className="font-medium">{r.name}</p>
+                  <Link href={`/platform/${r.id}`} className="font-medium text-text-primary hover:text-accent hover:underline">
+                    {r.name}
+                  </Link>
                   <p className="text-xs text-text-muted">/{r.slug}</p>
                 </TableCell>
                 <TableCell className="text-text-secondary">{r.owner_email}</TableCell>

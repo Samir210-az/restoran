@@ -13,7 +13,7 @@ export async function setRestaurantStatusAction(restaurantId: string, status: st
   await (
     supabase as unknown as { rpc: (fn: string, args: unknown) => Promise<{ error: unknown }> }
   ).rpc("set_restaurant_subscription_status", { _restaurant_id: restaurantId, _status: status });
-  revalidatePath("/platform");
+  revalidatePath("/platform", "layout");
 }
 
 /**
@@ -114,7 +114,7 @@ export async function resetRestaurantDataAction(restaurantId: string, confirmNam
   await requirePlatformAdmin();
 
   if (confirmName.trim().toLowerCase() !== expectedName.trim().toLowerCase()) {
-    redirect("/platform?rerror=" + encodeURIComponent("Restoran adı düzgün yazılmadı, sıfırlama ləğv edildi"));
+    redirect(`/platform/${restaurantId}?rerror=` + encodeURIComponent("Restoran adı düzgün yazılmadı, sıfırlama ləğv edildi"));
   }
 
   const supabase = getSupabaseServerClient();
@@ -123,9 +123,9 @@ export async function resetRestaurantDataAction(restaurantId: string, confirmNam
   ).rpc("platform_reset_restaurant_data", { _restaurant_id: restaurantId });
 
   if (error) {
-    redirect("/platform?rerror=" + encodeURIComponent("Sıfırlama uğursuz oldu: " + error.message));
+    redirect(`/platform/${restaurantId}?rerror=` + encodeURIComponent("Sıfırlama uğursuz oldu: " + error.message));
   }
 
-  revalidatePath("/platform");
-  redirect("/platform?rreset=" + encodeURIComponent(expectedName));
+  revalidatePath("/platform", "layout");
+  redirect(`/platform/${restaurantId}?rreset=` + encodeURIComponent(expectedName));
 }
