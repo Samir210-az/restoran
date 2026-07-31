@@ -1,10 +1,10 @@
-import { Palette, ImageIcon, ExternalLink } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardDescription } from "@restoran/ui";
+import { Palette, ImageIcon, ExternalLink, CreditCard, ShieldCheck } from "lucide-react";
+import { Card, CardHeader, CardTitle, CardDescription, Input, Badge } from "@restoran/ui";
 import { getCurrentStaffContext } from "@/lib/get-current-staff-context";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
 import { SubmitButton } from "@/components/forms/SubmitButton";
 import { ThemeColorPicker } from "@/components/settings/ThemeColorPicker";
-import { updateRestaurantBrandingAction } from "./actions";
+import { updateRestaurantBrandingAction, updatePaymentSettingsAction } from "./actions";
 
 export const metadata = { title: "Parametrlər" };
 
@@ -15,11 +15,18 @@ export default async function SettingsPage({
 }) {
   const context = await getCurrentStaffContext();
   const supabase = getSupabaseServerClient();
-  const { data: restaurant } = await supabase
-    .from("restaurants")
-    .select("name, slug, logo_url, theme_color")
-    .eq("id", context.restaurantId)
-    .maybeSingle();
+  const [{ data: restaurant }, { data: paymentStatusRows }] = await Promise.all([
+    supabase.from("restaurants").select("name, slug, logo_url, theme_color").eq("id", context.restaurantId).maybeSingle(),
+    (
+      supabase as unknown as {
+        rpc: (
+          fn: string,
+          args: unknown
+        ) => Promise<{ data: { provider: string; merchant_id: string | null; is_active: boolean; has_secret: boolean }[] | null }>;
+      }
+    ).rpc("get_payment_settings_status", { _restaurant_id: context.restaurantId }),
+  ]);
+  const paymentStatus = paymentStatusRows?.[0] ?? null;
 
   const customerAppUrl = process.env.NEXT_PUBLIC_CUSTOMER_APP_URL;
   const publicPageUrl = customerAppUrl && restaurant ? `${customerAppUrl}/${restaurant.slug}` : null;
@@ -92,6 +99,68 @@ export default async function SettingsPage({
             </div>
 
             <ThemeColorPicker defaultValue={restaurant?.theme_color ?? "#B48428"} />
+
+            <SubmitButton className="self-start">Yadda saxla</SubmitButton>
+          </form>
+        )}
+      </Card>
+
+      <Card className="max-w-md">
+        <CardHeader>
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <CreditCard className="h-4 w-4 text-accent" aria-hidden="true" />
+              Ödəniş (Payriff)
+            </CardTitle>
+            <CardDescription>
+              Öz Payriff hesabınızı qoşun — müştəri kartla ödəyəndə pul birbaşa SİZİN hesabınıza düşür, biz heç vaxt vasitəçi
+              olmuruq
+            </CardDescription>
+          </div>
+        </CardHeader>
+
+        <div className="mb-4 flex items-center gap-2 rounded-md border border-border bg-bg-muted px-3 py-2 text-xs text-text-secondary">
+          <ShieldCheck className="h-4 w-4 shrink-0 text-accent" aria-hidden="true" />
+          Secret Key şifrələnmiş şəkildə saxlanılır və heç kimə (bizə də) geri göstərilmir — yalnız ödəniş zamanı istifadə olunur.
+        </div>
+
+        {context.role !== "owner" ? (
+          <p className="text-sm text-text-secondary">Ödəniş parametrlərini yalnız restoran sahibi dəyişə bilər.</p>
+        ) : (
+          <form action={updatePaymentSettingsAction} className="flex flex-col gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-text-secondary">Status:</span>
+              {paymentStatus?.is_active && paymentStatus.has_secret ? (
+                <Badge variant="success">Aktiv</Badge>
+              ) : paymentStatus?.merchant_id || paymentStatus?.has_secret ? (
+                <Badge variant="warning">Yarımçıq</Badge>
+              ) : (
+                <Badge variant="neutral">Qoşulmayıb</Badge>
+              )}
+            </div>
+
+            <Input
+              label="Merchant ID"
+              name="merchant_id"
+              placeholder="Payriff Applications səhifəsindən"
+              defaultValue={paymentStatus?.merchant_id ?? ""}
+            />
+            <label className="flex flex-col gap-1.5 text-sm">
+              <span className="font-medium text-text-primary">Secret Key</span>
+              <input
+                type="password"
+                name="secret_key"
+                placeholder={paymentStatus?.has_secret ? "•••••••• (dəyişmək üçün yeni açar yazın)" : "Payriff Secret Key"}
+                autoComplete="off"
+                className="rounded-md border border-border-strong bg-bg px-3 py-2 text-sm text-text-primary placeholder:text-text-muted"
+              />
+              <span className="text-xs text-text-muted">Boş buraxsanız, əvvəlki açar dəyişmədən qalır</span>
+            </label>
+
+            <label className="flex items-center gap-2 text-sm text-text-primary">
+              <input type="checkbox" name="is_active" defaultChecked={paymentStatus?.is_active ?? false} className="h-4 w-4 rounded border-border-strong" />
+              Kartla ödənişi aktiv et
+            </label>
 
             <SubmitButton className="self-start">Yadda saxla</SubmitButton>
           </form>

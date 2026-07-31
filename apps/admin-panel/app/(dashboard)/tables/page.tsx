@@ -1,5 +1,6 @@
-import { Plus, Table2 } from "lucide-react";
+import { Plus, Table2, Download } from "lucide-react";
 import Link from "next/link";
+import QRCode from "qrcode";
 import { Card, CardHeader, CardTitle, Input } from "@restoran/ui";
 import { cn } from "@restoran/utils";
 import { SubmitButton } from "@/components/forms/SubmitButton";
@@ -85,6 +86,18 @@ export default async function TablesPage() {
   const slug = restaurant?.slug ?? "";
   const tableRows = tables ?? [];
 
+  // Her masa ucun QR kodu AVTOMATIK, server terefinde generasiya olunur -
+  // masa yaradilan kimi bu sehifeye girende deje hazir gorunur, ayrica
+  // "QR yarat" duymesine ehtiyac yoxdur. Qara/ag saxlanilir (brend rengi
+  // ile boyamaq skan etibarliligini azalda biler).
+  const tableQrCodes = await Promise.all(
+    tableRows.map(async (table) => {
+      const link = `${customerAppUrl}/${slug}?table=${table.id}`;
+      const qrDataUrl = await QRCode.toDataURL(link, { width: 320, margin: 1 });
+      return { ...table, link, qrDataUrl };
+    })
+  );
+
   const STATUS_STYLE: Record<TableStatus, string> = {
     free: "border-success/40 bg-success/10 text-success",
     occupied: "border-danger/40 bg-danger/10 text-danger",
@@ -154,21 +167,33 @@ export default async function TablesPage() {
       )}
 
       <div className="mt-2 flex flex-col gap-3">
-        <h2 className="text-sm font-semibold text-text-secondary">Müştəri QR linkləri</h2>
+        <h2 className="text-sm font-semibold text-text-secondary">Müştəri QR kodları</h2>
+        <p className="text-xs text-text-muted">
+          Hər masa üçün QR kod avtomatik yaradılır — yüklə, çap et, masaya qoy. Müştəri skan edəndə birbaşa həmin masa üçün menyuya düşür.
+        </p>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {tableRows.map((table) => {
-            const link = `${customerAppUrl}/${slug}?table=${table.id}`;
-            return (
-              <Card key={table.id} className="flex flex-col gap-2">
-                <div className="flex items-center justify-between">
-                  <p className="font-medium text-text-primary">Masa {table.table_number}</p>
-                  <span className="text-xs text-text-muted">{table.capacity} nəfərlik</span>
-                </div>
-                <p className="truncate text-xs text-text-muted">{link}</p>
-                <CopyLinkButton link={link} />
-              </Card>
-            );
-          })}
+          {tableQrCodes.map((table) => (
+            <Card key={table.id} className="flex flex-col items-center gap-3 text-center">
+              <div className="flex w-full items-center justify-between">
+                <p className="font-medium text-text-primary">Masa {table.table_number}</p>
+                <span className="text-xs text-text-muted">{table.capacity} nəfərlik</span>
+              </div>
+              {/* eslint-disable-next-line @next/next/no-img-element -- data URI QR kod, next/image-a ehtiyac yoxdur */}
+              <img src={table.qrDataUrl} alt={`Masa ${table.table_number} QR kodu`} className="h-40 w-40 rounded-md border border-border bg-white p-2" />
+              <p className="w-full truncate text-xs text-text-muted">{table.link}</p>
+              <div className="flex w-full gap-2">
+                <CopyLinkButton link={table.link} />
+                <a
+                  href={table.qrDataUrl}
+                  download={`masa-${table.table_number}-qr.png`}
+                  className="flex flex-1 items-center justify-center gap-1.5 rounded-md border border-border-strong px-3 py-2 text-xs font-medium text-text-secondary hover:bg-bg-muted"
+                >
+                  <Download className="h-3.5 w-3.5" aria-hidden="true" />
+                  Yüklə
+                </a>
+              </div>
+            </Card>
+          ))}
         </div>
       </div>
 

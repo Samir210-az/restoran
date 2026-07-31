@@ -1165,6 +1165,41 @@ export type Database = {
           },
         ]
       }
+      restaurant_payment_settings: {
+        Row: {
+          is_active: boolean
+          merchant_id: string | null
+          provider: string
+          restaurant_id: string
+          secret_key: string | null
+          updated_at: string
+        }
+        Insert: {
+          is_active?: boolean
+          merchant_id?: string | null
+          provider?: string
+          restaurant_id: string
+          secret_key?: string | null
+          updated_at?: string
+        }
+        Update: {
+          is_active?: boolean
+          merchant_id?: string | null
+          provider?: string
+          restaurant_id?: string
+          secret_key?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_payment_settings_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: true
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       restaurant_tables: {
         Row: {
           branch_id: string
@@ -1505,6 +1540,15 @@ export type Database = {
           restaurant_name: string
           status: Database["public"]["Enums"]["order_status"]
           total: number
+        }[]
+      }
+      get_payment_settings_status: {
+        Args: { _restaurant_id: string }
+        Returns: {
+          has_secret: boolean
+          is_active: boolean
+          merchant_id: string
+          provider: string
         }[]
       }
       get_platform_overview: {

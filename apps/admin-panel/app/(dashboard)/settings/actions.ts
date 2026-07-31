@@ -71,3 +71,53 @@ export async function updateRestaurantBrandingAction(formData: FormData) {
   revalidatePath("/settings");
   redirect("/settings?saved=1");
 }
+
+/**
+ * Restoranin OZ Payriff hesabinin acarlarini saxlayir. Bu acarlar
+ * musteri odeyende ISTIFADE OLUNACAQ ki, pul BIRBASA restoranin oz
+ * Payriff hesabina dussun - platforma (biz) pulun ustunden kecmir.
+ *
+ * secret_key HEC VAXT geri oxunmur (restaurant_payment_settings-de
+ * SELECT policy yoxdur) - bu action YAZIR, `get_payment_settings_status`
+ * RPC-si isə YALNIZ maskalanmiş statusu (var/yox) qaytarir.
+ */
+export async function updatePaymentSettingsAction(formData: FormData) {
+  const context = await getCurrentStaffContext();
+
+  if (context.role !== "owner") {
+    redirect("/settings?error=" + encodeURIComponent("Ödəniş parametrlərini yalnız restoran sahibi dəyişə bilər"));
+  }
+
+  const merchantId = String(formData.get("merchant_id") ?? "").trim();
+  const secretKeyInput = String(formData.get("secret_key") ?? "").trim();
+  const isActive = formData.get("is_active") === "on";
+
+  if (isActive && (!merchantId || !secretKeyInput)) {
+    redirect("/settings?error=" + encodeURIComponent("Aktiv etmək üçün Merchant ID və Secret Key tələb olunur"));
+  }
+
+  const supabase = getSupabaseServerClient();
+
+  const updates: { merchant_id: string; is_active: boolean; provider: string; secret_key?: string } = {
+    merchant_id: merchantId,
+    is_active: isActive,
+    provider: "payriff",
+  };
+  // Sahib secret key sahesini bos buraxsa (evvelceden saxlanmis deyeri
+  // deyismek istemirse), movcud deyeri EZMIRIK - yalniz yeni deyer
+  // yazilanda update edirik.
+  if (secretKeyInput) {
+    updates.secret_key = secretKeyInput;
+  }
+
+  const { error } = await supabase
+    .from("restaurant_payment_settings")
+    .upsert({ restaurant_id: context.restaurantId, ...updates }, { onConflict: "restaurant_id" });
+
+  if (error) {
+    redirect("/settings?error=" + encodeURIComponent("Ödəniş parametrləri yadda saxlanıla bilmədi"));
+  }
+
+  revalidatePath("/settings");
+  redirect("/settings?saved=1");
+}
