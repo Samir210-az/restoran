@@ -121,7 +121,20 @@ export function AIWaiterChat({ restaurantId, items, onAddToCart }: AIWaiterChatP
         />
       </div>
 
-      <Modal isOpen={isOpen} onClose={() => setOpen(false)} title="AI Ofisiant" className="flex h-[80vh] max-h-[600px] flex-col">
+      <Modal
+        isOpen={isOpen}
+        onClose={() => setOpen(false)}
+        title={
+          <span className="flex items-center gap-2">
+            {/* Eyni maskot + eyni terpenme animasiyasi - duyme ile AI
+                sohbet bolmesi arasinda vizual ardıcıllıq (brend elementi
+                tekrarlanir). */}
+            <Image src="/images/ai-waiter-icon.png" alt="" width={80} height={120} className="h-8 w-auto animate-float" />
+            AI Ofisiant
+          </span>
+        }
+        className="flex h-[80vh] max-h-[600px] flex-col"
+      >
         <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto py-2">
           {messages.map((m, i) => {
             const mentioned = m.role === "assistant" ? findMentionedItems(m.content, items) : [];

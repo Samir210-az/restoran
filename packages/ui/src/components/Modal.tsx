@@ -7,7 +7,7 @@ import { cn } from "@restoran/utils";
 export interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
-  title?: string;
+  title?: React.ReactNode;
   description?: string;
   children: React.ReactNode;
   className?: string;
