@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Card, Badge, Button } from "@restoran/ui";
+import { ClipboardList } from "lucide-react";
 import {
   confirmReservationAction,
   seatReservationAction,
@@ -46,6 +48,23 @@ const STATUS_LABEL: Record<string, string> = {
 export function ReservationRow({ reservation, tables }: ReservationRowProps) {
   const [selectedTable, setSelectedTable] = useState(tables[0]?.id ?? "");
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
+
+  /**
+   * "Oturt" ARTIQ sadece statusu deyisdirmir - masa secilibse, isciyi
+   * DERHAL o masa ucun sifariş formasina (order-new) aparir. Evvelki
+   * versiyada "Oturt" yalniz bir etiket deyisikliyi idi, HEC bir real
+   * neticesi (sifariş, masa mesguliyyeti) olmurdu - musteri gercekden
+   * "oturmurdu", ona gore masa hemise (yanlis olaraq) bos gorunurdu.
+   */
+  function handleSeat() {
+    startTransition(async () => {
+      await seatReservationAction(reservation.id, selectedTable || null);
+      if (selectedTable) {
+        router.push(`/order-new?table=${selectedTable}`);
+      }
+    });
+  }
 
   const reservedAt = new Date(reservation.reserved_at);
   const formattedTime = reservedAt.toLocaleString("az-AZ", {
@@ -96,12 +115,9 @@ export function ReservationRow({ reservation, tables }: ReservationRowProps) {
               ))}
             </select>
           )}
-          <Button
-            size="sm"
-            disabled={isPending}
-            onClick={() => startTransition(() => seatReservationAction(reservation.id, selectedTable || null))}
-          >
-            Oturt
+          <Button size="sm" disabled={isPending} onClick={handleSeat}>
+            <ClipboardList className="h-3.5 w-3.5" aria-hidden="true" />
+            {selectedTable ? "Otur, sifariş al" : "Oturt"}
           </Button>
           <Button
             size="sm"

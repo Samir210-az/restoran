@@ -726,7 +726,7 @@ export type Database = {
           restaurant_id: string | null
           title: string
           type: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           body?: string | null
@@ -736,7 +736,7 @@ export type Database = {
           restaurant_id?: string | null
           title: string
           type: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           body?: string | null
@@ -746,7 +746,7 @@ export type Database = {
           restaurant_id?: string | null
           title?: string
           type?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -1716,6 +1716,10 @@ export type Database = {
           order_number: number
           total: number
         }[]
+      }
+      platform_reset_restaurant_data: {
+        Args: { _restaurant_id: string }
+        Returns: undefined
       }
       record_inventory_transaction: {
         Args: {

@@ -212,6 +212,7 @@ export default async function DashboardPage() {
 
   const kpiCards = [
     { label: "Bugünkü satış", value: `${todaySales.toFixed(2)} ₼`, icon: Wallet },
+    { label: "Bu ay ümumi satış", value: `${thisMonthTotal.toFixed(2)} ₼`, icon: TrendingUp },
     { label: "Aktiv sifarişlər", value: String(activeOrders.count ?? 0), icon: ClipboardList },
     { label: "Bu ay yeni müştəri", value: String(newCustomers.count ?? 0), icon: Users },
     {
@@ -234,7 +235,7 @@ export default async function DashboardPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
         {kpiCards.map(({ label, value, icon: Icon }) => (
           <Card key={label}>
             <div className="flex items-start justify-between">

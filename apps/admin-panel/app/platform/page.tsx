@@ -15,6 +15,7 @@ import {
 } from "@restoran/ui";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
 import { SubmitButton } from "@/components/forms/SubmitButton";
+import { ResetRestaurantButton } from "@/components/platform/ResetRestaurantButton";
 import { setRestaurantStatusAction, createRestaurantWithOwnerAction } from "./actions";
 
 export const metadata = { title: "Platform Admin" };
@@ -42,7 +43,7 @@ const STATUS_LABEL: Record<string, string> = {
 export default async function PlatformOverviewPage({
   searchParams,
 }: {
-  searchParams: { rcreated?: string; rerror?: string };
+  searchParams: { rcreated?: string; rerror?: string; rreset?: string };
 }) {
   const supabase = getSupabaseServerClient();
   const { data: restaurants } = await supabase.rpc("get_platform_overview");
@@ -62,6 +63,12 @@ export default async function PlatformOverviewPage({
         <div className="flex items-center gap-2 rounded-md border border-success/30 bg-success/10 px-3 py-2 text-sm text-success">
           <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" />
           Restoran yaradıldı: <span className="font-medium">{searchParams.rcreated}</span> — giriş məlumatlarını sahibinə bildirin.
+        </div>
+      )}
+      {searchParams.rreset && (
+        <div className="flex items-center gap-2 rounded-md border border-success/30 bg-success/10 px-3 py-2 text-sm text-success">
+          <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" />
+          <span className="font-medium">{searchParams.rreset}</span> sıfırlandı — bütün test məlumatları silindi.
         </div>
       )}
       {searchParams.rerror && (
@@ -125,19 +132,22 @@ export default async function PlatformOverviewPage({
                 <TableCell>{r.menu_item_count}</TableCell>
                 <TableCell>{r.order_count}</TableCell>
                 <TableCell>
-                  {r.subscription_status === "suspended" ? (
-                    <form action={setRestaurantStatusAction.bind(null, r.id, "active")}>
-                      <SubmitButton size="sm" variant="outline">
-                        Aktivləşdir
-                      </SubmitButton>
-                    </form>
-                  ) : (
-                    <form action={setRestaurantStatusAction.bind(null, r.id, "suspended")}>
-                      <SubmitButton size="sm" variant="danger">
-                        Dayandır
-                      </SubmitButton>
-                    </form>
-                  )}
+                  <div className="flex flex-wrap items-start gap-2">
+                    {r.subscription_status === "suspended" ? (
+                      <form action={setRestaurantStatusAction.bind(null, r.id, "active")}>
+                        <SubmitButton size="sm" variant="outline">
+                          Aktivləşdir
+                        </SubmitButton>
+                      </form>
+                    ) : (
+                      <form action={setRestaurantStatusAction.bind(null, r.id, "suspended")}>
+                        <SubmitButton size="sm" variant="danger">
+                          Dayandır
+                        </SubmitButton>
+                      </form>
+                    )}
+                    <ResetRestaurantButton restaurantId={r.id} restaurantName={r.name} />
+                  </div>
                 </TableCell>
               </TableRow>
             ))}

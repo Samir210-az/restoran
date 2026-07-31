@@ -101,3 +101,31 @@ export async function createRestaurantWithOwnerAction(formData: FormData) {
   revalidatePath("/platform");
   redirect("/platform?rcreated=" + encodeURIComponent(`${restaurantName} (giriş: ${ownerEmail})`));
 }
+
+/**
+ * Restoranin BUTUN test/emeliyyat melumatlarini (sifarisler,
+ * rezervasiyalar, musteriler, xercler ve s.) sildirir, qurulusu
+ * (menyu, isciler, masalar, brendinq) SAXLAYIR. YALNIZ platform admin
+ * (requirePlatformAdmin) cagira biler - restoran sahibi/menecerin bu
+ * emeliyyata hec bir yolu yoxdur (heç bir UI-de teklif olunmur, RPC-nin
+ * ozu de is_platform_admin() yoxlayir - iki qatli qoruma).
+ */
+export async function resetRestaurantDataAction(restaurantId: string, confirmName: string, expectedName: string) {
+  await requirePlatformAdmin();
+
+  if (confirmName.trim().toLowerCase() !== expectedName.trim().toLowerCase()) {
+    redirect("/platform?rerror=" + encodeURIComponent("Restoran adı düzgün yazılmadı, sıfırlama ləğv edildi"));
+  }
+
+  const supabase = getSupabaseServerClient();
+  const { error } = await (
+    supabase as unknown as { rpc: (fn: string, args: unknown) => Promise<{ error: { message: string } | null }> }
+  ).rpc("platform_reset_restaurant_data", { _restaurant_id: restaurantId });
+
+  if (error) {
+    redirect("/platform?rerror=" + encodeURIComponent("Sıfırlama uğursuz oldu: " + error.message));
+  }
+
+  revalidatePath("/platform");
+  redirect("/platform?rreset=" + encodeURIComponent(expectedName));
+}

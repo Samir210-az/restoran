@@ -14,7 +14,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const { data: isPlatformAdmin } = await supabase.rpc("is_platform_admin");
 
   return (
-    <DashboardShell restaurantName={context.restaurantName} role={context.role} isPlatformAdmin={!!isPlatformAdmin}>
+    <DashboardShell
+      restaurantId={context.restaurantId}
+      restaurantName={context.restaurantName}
+      role={context.role}
+      isPlatformAdmin={!!isPlatformAdmin}
+    >
       {children}
     </DashboardShell>
   );
