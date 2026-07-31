@@ -146,7 +146,11 @@ export function MenuView({ restaurant, categories, items, tableId, bestsellerIte
   const chefSpecials = items.filter((i) => i.tags?.includes("chef_special"));
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-6 pb-28 md:px-6">
+    <div className="relative mx-auto max-w-2xl px-4 py-6 pb-28 md:px-6">
+      {/* Butun menyu kontenti TEK glass-panel kartinda - foto fonun
+          uzerinde oxunaqliligi ve vizual struktur temin edir (SAD-in
+          "glassmorphism kartlari fonla uygunlassin" telebi). */}
+      <div className="glass-panel rounded-2xl p-4 shadow-elevated md:p-6">
       <div className="mb-2 flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
           {restaurant.logo_url && (
@@ -261,6 +265,7 @@ export function MenuView({ restaurant, categories, items, tableId, bestsellerIte
           })}
         </div>
       )}
+      </div>
 
       {cartCount > 0 && (
         <button

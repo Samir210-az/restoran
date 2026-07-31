@@ -35,35 +35,23 @@ export default async function HomePage() {
   const restaurants = await getRestaurants();
 
   return (
-    <div className="flex flex-col">
-      {/* HERO: restoran foto foni. `next/image` + `fill` istifade olunur
-          (raw CSS background-image evezine) - Next.js avtomatik olaraq
-          WebP/AVIF-e cevirir, responsive srcset yaradir ve CLS-i qarsisini
-          alir (parent-de sabit hündürlük olduğu ucun). `priority` verilib
-          (lazy YOX) - bu, hero LCP (Largest Contentful Paint) şəkli
-          olduğu ucun Next.js-in oz tövsiyesidir: ilk ekranda gorunen
-          şəkilleri lazy-load etmek performansı PISLƏŞDİRİR (LCP gecikir).
-          `background-attachment:fixed` QESDEN istifade OLUNMUR - bu,
-          xüsusile mobil Safari-de melum performans/jank problemleri
-          yaradir; onun evezine sadece statik cover-fit istifade olunur. */}
-      <section className="relative isolate flex min-h-[85vh] items-center overflow-hidden px-4 py-20 text-center md:min-h-screen md:py-28">
-        <Image
-          src="/images/hero-restaurant.jpg"
-          alt=""
-          fill
-          priority
-          sizes="100vw"
-          className="-z-20 object-cover object-center"
-        />
-        {/* Tund overlay - oxunaqliligi temin edir (WCAG AA), şəklin
-            ozunun parlaqligindan asili olmayaraq metn HEMISE kontrastli
-            qalir. */}
-        <div className="absolute inset-0 -z-10 bg-black/65" aria-hidden="true" />
+    <div className="relative flex min-h-screen flex-col">
+      {/* TAM SEHIFE foni: `fixed inset-0` ile viewport-a bağlanır - hero-nun
+          öz hündürlüyünə DEYİL, BÜTÜN səhifəyə (scroll edəndə də sabit qalır).
+          Bu, real DOM elementi olduğu ucun CSS-in `background-attachment:fixed`
+          xassesinden FERQLI olaraq mobil Safari-de jank problemi yaratmır.
+          `next/image` + `fill` avtomatik WebP/AVIF-e cevirir, CLS yaratmır. */}
+      <div className="fixed inset-0 -z-20" aria-hidden="true">
+        <Image src="/images/hero-restaurant.jpg" alt="" fill priority sizes="100vw" className="object-cover object-center" />
+        {/* Tund overlay - butun sehife boyu oxunaqliligi (WCAG AA) temin edir */}
+        <div className="absolute inset-0 bg-black/70" />
         <div
-          className="pointer-events-none absolute inset-0 -z-10 opacity-40"
+          className="absolute inset-0 opacity-40"
           style={{ background: "radial-gradient(circle at 50% 0%, rgb(var(--accent) / 0.25), transparent 55%)" }}
-          aria-hidden="true"
         />
+      </div>
+
+      <section className="relative flex min-h-[70vh] items-center px-4 py-20 text-center md:min-h-[80vh] md:py-28">
         <div className="relative z-10 mx-auto max-w-2xl">
           <h1 className="text-3xl font-semibold tracking-tight text-white md:text-5xl">
             Sevimli restoranınızı seçin
@@ -74,11 +62,11 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="px-4 pb-20 md:px-6">
+      <section className="relative px-4 pb-20 md:px-6">
         {restaurants.length === 0 ? (
           <div className="mx-auto max-w-md py-16 text-center">
-            <UtensilsCrossed className="mx-auto h-10 w-10 text-text-muted" aria-hidden="true" />
-            <p className="mt-3 text-sm text-text-secondary">Hələ heç bir restoran qeydiyyatdan keçməyib</p>
+            <UtensilsCrossed className="mx-auto h-10 w-10 text-white/60" aria-hidden="true" />
+            <p className="mt-3 text-sm text-white/70">Hələ heç bir restoran qeydiyyatdan keçməyib</p>
           </div>
         ) : (
           <div className="mx-auto grid max-w-5xl grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
@@ -86,11 +74,11 @@ export default async function HomePage() {
               <Link
                 key={r.id}
                 href={`/${r.slug}`}
-                className="group flex flex-col items-center gap-3 rounded-xl border border-border bg-bg-elevated p-4 text-center shadow-soft transition-transform hover:-translate-y-0.5 hover:shadow-elevated"
+                className="group flex flex-col items-center gap-3 rounded-xl border border-white/15 bg-white/10 p-4 text-center shadow-elevated backdrop-blur-md transition-transform hover:-translate-y-0.5 hover:bg-white/15"
               >
                 <div
                   className="flex aspect-square w-full items-center justify-center overflow-hidden rounded-lg"
-                  style={{ backgroundColor: `${r.theme_color}1a` }}
+                  style={{ backgroundColor: `${r.theme_color}33` }}
                 >
                   {r.logo_url ? (
                     <Image
@@ -106,7 +94,7 @@ export default async function HomePage() {
                     </span>
                   )}
                 </div>
-                <span className="line-clamp-2 text-sm font-medium text-text-primary group-hover:text-accent">
+                <span className="line-clamp-2 text-sm font-medium text-white group-hover:text-accent">
                   {r.name}
                 </span>
               </Link>

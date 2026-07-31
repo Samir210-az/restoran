@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import Image from "next/image";
 import { createSupabasePublicClient } from "@restoran/supabase-client";
 import { hexToRgbTriplet, lightenRgbTriplet, contrastForegroundRgbTriplet } from "@restoran/utils";
 import { MenuView } from "@/components/menu/MenuView";
@@ -75,12 +76,20 @@ export default async function RestaurantMenuPage({ params, searchParams }: PageP
   } as React.CSSProperties;
 
   return (
-    <div
-      style={{
-        ...themeStyle,
-        background: `radial-gradient(circle at 50% 0%, rgb(var(--accent) / 0.12), transparent 55%)`,
-      }}
-    >
+    <div style={themeStyle} className="relative min-h-screen">
+      {/* Ana sehife ile EYNI qaydada: tam-sehife foto fonu + tund overlay.
+          Ferq: burada restoranın OZ theme_color-u ile rengli radial
+          gradient elave olunur (SAD-in "her restoran ucun ferqli ton"
+          telebi ile bu sehifenin "tam fon" telebi birlesir). */}
+      <div className="fixed inset-0 -z-20" aria-hidden="true">
+        <Image src="/images/hero-restaurant.jpg" alt="" fill priority sizes="100vw" className="object-cover object-center" />
+        <div className="absolute inset-0 bg-black/70" />
+        <div
+          className="absolute inset-0 opacity-50"
+          style={{ background: `radial-gradient(circle at 50% 0%, rgb(var(--accent) / 0.3), transparent 55%)` }}
+        />
+      </div>
+
       <MenuView
         restaurant={restaurant}
         categories={categories as unknown as { id: string; name: Record<string, string>; sort_order: number }[]}
