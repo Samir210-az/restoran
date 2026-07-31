@@ -163,11 +163,21 @@ export default async function PlatformOverviewPage({
             <CardDescription>Müştəri ilə razılaşandan sonra birbaşa hesab yaradın — e-poçt təsdiqi olmadan dərhal aktivdir</CardDescription>
           </div>
         </CardHeader>
-        <form action={createRestaurantWithOwnerAction} className="flex flex-col gap-3">
+        <form action={createRestaurantWithOwnerAction} className="flex flex-col gap-3" encType="multipart/form-data">
           <Input name="restaurant_name" placeholder="Restoranın adı" required />
           <Input name="owner_full_name" placeholder="Sahibin adı soyadı" required />
           <Input name="owner_email" type="email" placeholder="E-poçt (istəyə bağlı — boş qalsa avtomatik yaradılır)" />
           <Input name="password" type="password" placeholder="Şifrə (ən azı 6 simvol)" minLength={6} required />
+          <label className="flex flex-col gap-1.5 text-sm">
+            <span className="font-medium text-text-primary">Loqo (istəyə bağlı)</span>
+            <input
+              type="file"
+              name="logo"
+              accept="image/png,image/jpeg,image/webp"
+              className="text-xs text-text-secondary file:mr-3 file:rounded-md file:border-0 file:bg-accent-soft file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-accent hover:file:opacity-90"
+            />
+            <span className="text-xs text-text-muted">PNG, JPEG və ya WEBP — maks 2MB. Sonra /settings-dən də dəyişilə bilər</span>
+          </label>
           <SubmitButton className="self-start">Restoranı yarat</SubmitButton>
         </form>
       </Card>

@@ -89,6 +89,26 @@ export async function createRestaurantWithOwnerAction(formData: FormData) {
 
   const restaurantId = newRestaurant.id;
 
+  // Loqo (isteye bagli) - restoran yaradilan KIMI elave olunsun deye.
+  // serviceClient (service_role) istifade olunur - storage RLS-i
+  // (owner_id=auth.uid() yoxlamasi) bypass edir, ona gore bu, platform
+  // admin-in OZ sessiyasindan asili olmadan islek olur.
+  const logoFile = formData.get("logo");
+  const ALLOWED_LOGO_TYPES: Record<string, string> = { "image/png": "png", "image/jpeg": "jpg", "image/webp": "webp" };
+  if (logoFile instanceof File && logoFile.size > 0 && logoFile.size <= 2 * 1024 * 1024) {
+    const ext = ALLOWED_LOGO_TYPES[logoFile.type];
+    if (ext) {
+      const path = `${restaurantId}/logo-${Date.now()}.${ext}`;
+      const { error: uploadError } = await serviceClient.storage
+        .from("restaurant-logos")
+        .upload(path, logoFile, { contentType: logoFile.type, upsert: false });
+      if (!uploadError) {
+        const { data: publicUrlData } = serviceClient.storage.from("restaurant-logos").getPublicUrl(path);
+        await serviceClient.from("restaurants").update({ logo_url: publicUrlData.publicUrl }).eq("id", restaurantId);
+      }
+    }
+  }
+
   await serviceClient.from("branches").insert({ restaurant_id: restaurantId, name: restaurantName, is_active: true });
 
   await serviceClient.from("staff_members").insert({
