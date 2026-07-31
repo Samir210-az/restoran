@@ -60,7 +60,7 @@ export default async function HomePage() {
             alt=""
             width={200}
             height={300}
-            className="mx-auto h-16 w-auto animate-float drop-shadow-lg md:h-20"
+            className="mx-auto h-64 w-auto animate-float drop-shadow-2xl md:h-80"
           />
           <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white md:text-5xl">
             Sevimli restoranınızı seçin
