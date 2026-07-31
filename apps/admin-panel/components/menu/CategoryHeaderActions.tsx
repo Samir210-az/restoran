@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Pencil, Trash2, Check, X } from "lucide-react";
 import { updateCategoryAction, deleteCategoryAction } from "@/app/(dashboard)/menu/actions";
 
@@ -15,6 +16,7 @@ export function CategoryHeaderActions({
 }) {
   const [isEditing, setEditing] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
   if (isEditing) {
     return (
@@ -23,6 +25,7 @@ export function CategoryHeaderActions({
           startTransition(async () => {
             await updateCategoryAction(formData);
             setEditing(false);
+            router.refresh();
           });
         }}
         className="flex items-center gap-2"
@@ -61,7 +64,10 @@ export function CategoryHeaderActions({
               ? `Bu kateqoriyada ${itemCount} yemək var. Sildikdə onlar da silinəcək. Əminsiniz?`
               : "Bu kateqoriyanı silmək istədiyinizə əminsiniz?";
           if (window.confirm(message)) {
-            startTransition(() => deleteCategoryAction(categoryId));
+            startTransition(async () => {
+              await deleteCategoryAction(categoryId);
+              router.refresh();
+            });
           }
         }}
         aria-label="Kateqoriyanı sil"

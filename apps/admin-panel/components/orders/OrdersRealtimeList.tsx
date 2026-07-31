@@ -63,16 +63,32 @@ export function OrdersRealtimeList({
   const [orders, setOrders] = useState(initialOrders);
   const [isPending, startTransition] = useTransition();
 
+  // Ehtiyat: server (Next.js) yeni initialOrders-le render etsə (mes.
+  // baska sebeble sehife yenidense) - client-deki local state de
+  // sinxronlasin. Adeten Realtime bunu artiq edir, bu YALNIZ elave
+  // tehlukesizlikdir.
+  useEffect(() => {
+    setOrders(initialOrders);
+  }, [initialOrders]);
+
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
     const channel = supabase
       .channel(`orders-${restaurantId}`)
       .on(
+        // DIQQET: `payload.new` sifarişin BUTUN sutunlarini (status,
+        // courier_id, courier_name, courier_phone, delivery_address,
+        // total ve s.) ehtiva edir - evvelki versiya YALNIZ `status`-u
+        // goturürdu, ona gore kuryer teyinati kimi deyisikliklər canli
+        // gorunmurdu (yeniden yuklemek lazim gelirdi). Indi TAM setiri
+        // birleşdiririk - `table_number`/`payment_method`/`payment_status`
+        // kimi JOIN-le gelen sahələr toxunulmaz qalir (payload.new-de
+        // olmadigi ucun).
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "orders", filter: `restaurant_id=eq.${restaurantId}` },
         (payload) => {
-          const updated = payload.new as { id: string; status: string };
-          setOrders((prev) => prev.map((o) => (o.id === updated.id ? { ...o, status: updated.status } : o)));
+          const updated = payload.new as Record<string, unknown>;
+          setOrders((prev) => prev.map((o) => (o.id === updated.id ? ({ ...o, ...updated } as OrderRow) : o)));
         }
       )
       .on(

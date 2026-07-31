@@ -1,11 +1,13 @@
 "use client";
 
 import { useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
 import { deleteExpenseAction } from "@/app/(dashboard)/reports/actions";
 
 export function DeleteExpenseButton({ expenseId }: { expenseId: string }) {
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
   return (
     <button
@@ -13,7 +15,10 @@ export function DeleteExpenseButton({ expenseId }: { expenseId: string }) {
       disabled={isPending}
       onClick={() => {
         if (confirm("Bu xərci silmək istədiyinizə əminsiniz?")) {
-          startTransition(() => deleteExpenseAction(expenseId));
+          startTransition(async () => {
+            await deleteExpenseAction(expenseId);
+            router.refresh();
+          });
         }
       }}
       aria-label="Xərci sil"

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Badge } from "@restoran/ui";
 import { Wallet } from "lucide-react";
 import { ROLE_LABELS, STAFF_ROLES, type StaffRole } from "@restoran/types";
@@ -18,6 +19,7 @@ interface StaffRowProps {
 
 export function StaffRow({ staffId, fullName, email, role, isActive, isSelf, canManage }: StaffRowProps) {
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
   const [isPayFormOpen, setPayFormOpen] = useState(false);
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
@@ -32,6 +34,7 @@ export function StaffRow({ staffId, fullName, email, role, isActive, isSelf, can
       setAmount("");
       setNote("");
       setPayFormOpen(false);
+      router.refresh();
       setTimeout(() => setPaidMsg(null), 4000);
     });
   }
@@ -64,7 +67,10 @@ export function StaffRow({ staffId, fullName, email, role, isActive, isSelf, can
                 value={role}
                 disabled={isPending}
                 onChange={(e) =>
-                  startTransition(() => updateStaffRoleAction(staffId, e.target.value as StaffRole))
+                  startTransition(async () => {
+                    await updateStaffRoleAction(staffId, e.target.value as StaffRole);
+                    router.refresh();
+                  })
                 }
                 className="h-8 rounded-md border border-border-strong bg-bg px-2 text-xs text-text-primary"
               >
@@ -77,7 +83,12 @@ export function StaffRow({ staffId, fullName, email, role, isActive, isSelf, can
 
               <button
                 disabled={isPending}
-                onClick={() => startTransition(() => toggleStaffActiveAction(staffId, !isActive))}
+                onClick={() =>
+                  startTransition(async () => {
+                    await toggleStaffActiveAction(staffId, !isActive);
+                    router.refresh();
+                  })
+                }
                 className="rounded-md border border-border-strong px-2.5 py-1.5 text-xs font-medium text-text-secondary hover:bg-bg-muted"
               >
                 {isActive ? "Deaktiv et" : "Aktivləşdir"}

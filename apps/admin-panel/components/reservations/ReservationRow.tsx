@@ -62,6 +62,8 @@ export function ReservationRow({ reservation, tables }: ReservationRowProps) {
       await seatReservationAction(reservation.id, selectedTable || null);
       if (selectedTable) {
         router.push(`/order-new?table=${selectedTable}`);
+      } else {
+        router.refresh();
       }
     });
   }
@@ -96,7 +98,10 @@ export function ReservationRow({ reservation, tables }: ReservationRowProps) {
               size="sm"
               variant="outline"
               disabled={isPending}
-              onClick={() => startTransition(() => confirmReservationAction(reservation.id))}
+              onClick={() => startTransition(async () => {
+                await confirmReservationAction(reservation.id);
+                router.refresh();
+              })}
             >
               Təsdiqlə
             </Button>
@@ -123,7 +128,10 @@ export function ReservationRow({ reservation, tables }: ReservationRowProps) {
             size="sm"
             variant="ghost"
             disabled={isPending}
-            onClick={() => startTransition(() => markNoShowAction(reservation.id))}
+            onClick={() => startTransition(async () => {
+              await markNoShowAction(reservation.id);
+              router.refresh();
+            })}
           >
             Gəlmədi
           </Button>
@@ -131,7 +139,10 @@ export function ReservationRow({ reservation, tables }: ReservationRowProps) {
             size="sm"
             variant="danger"
             disabled={isPending}
-            onClick={() => startTransition(() => cancelReservationAction(reservation.id))}
+            onClick={() => startTransition(async () => {
+              await cancelReservationAction(reservation.id);
+              router.refresh();
+            })}
           >
             Ləğv et
           </Button>

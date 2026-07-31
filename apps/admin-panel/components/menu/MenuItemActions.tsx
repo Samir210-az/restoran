@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Pencil, Trash2, Check, X } from "lucide-react";
 import { updateMenuItemAction, deleteMenuItemAction } from "@/app/(dashboard)/menu/actions";
 
@@ -15,6 +16,7 @@ export function MenuItemActions({
 }) {
   const [isEditing, setEditing] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
   if (isEditing) {
     return (
@@ -23,6 +25,7 @@ export function MenuItemActions({
           startTransition(async () => {
             await updateMenuItemAction(formData);
             setEditing(false);
+            router.refresh();
           });
         }}
         className="flex flex-1 items-center gap-2"
@@ -65,7 +68,10 @@ export function MenuItemActions({
         disabled={isPending}
         onClick={() => {
           if (window.confirm(`"${currentName}" silinsin?`)) {
-            startTransition(() => deleteMenuItemAction(itemId));
+            startTransition(async () => {
+              await deleteMenuItemAction(itemId);
+              router.refresh();
+            });
           }
         }}
         aria-label="Yeməyi sil"
