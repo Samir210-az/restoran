@@ -36,19 +36,39 @@ export default async function HomePage() {
 
   return (
     <div className="flex flex-col">
-      <section className="relative overflow-hidden px-4 py-16 text-center md:py-20">
+      {/* HERO: restoran foto foni. `next/image` + `fill` istifade olunur
+          (raw CSS background-image evezine) - Next.js avtomatik olaraq
+          WebP/AVIF-e cevirir, responsive srcset yaradir ve CLS-i qarsisini
+          alir (parent-de sabit hündürlük olduğu ucun). `priority` verilib
+          (lazy YOX) - bu, hero LCP (Largest Contentful Paint) şəkli
+          olduğu ucun Next.js-in oz tövsiyesidir: ilk ekranda gorunen
+          şəkilleri lazy-load etmek performansı PISLƏŞDİRİR (LCP gecikir).
+          `background-attachment:fixed` QESDEN istifade OLUNMUR - bu,
+          xüsusile mobil Safari-de melum performans/jank problemleri
+          yaradir; onun evezine sadece statik cover-fit istifade olunur. */}
+      <section className="relative isolate flex min-h-[85vh] items-center overflow-hidden px-4 py-20 text-center md:min-h-screen md:py-28">
+        <Image
+          src="/images/hero-restaurant.jpg"
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="-z-20 object-cover object-center"
+        />
+        {/* Tund overlay - oxunaqliligi temin edir (WCAG AA), şəklin
+            ozunun parlaqligindan asili olmayaraq metn HEMISE kontrastli
+            qalir. */}
+        <div className="absolute inset-0 -z-10 bg-black/65" aria-hidden="true" />
         <div
-          className="pointer-events-none absolute inset-0 opacity-30"
-          style={{
-            background: "radial-gradient(circle at 50% 0%, rgb(var(--accent) / 0.2), transparent 50%)",
-          }}
+          className="pointer-events-none absolute inset-0 -z-10 opacity-40"
+          style={{ background: "radial-gradient(circle at 50% 0%, rgb(var(--accent) / 0.25), transparent 55%)" }}
           aria-hidden="true"
         />
         <div className="relative z-10 mx-auto max-w-2xl">
-          <h1 className="text-3xl font-semibold tracking-tight text-text-primary md:text-5xl">
+          <h1 className="text-3xl font-semibold tracking-tight text-white md:text-5xl">
             Sevimli restoranınızı seçin
           </h1>
-          <p className="mt-4 text-base text-text-secondary md:text-lg">
+          <p className="mt-4 text-base text-white/85 md:text-lg">
             QR menyu, ağıllı tövsiyələr və anında sifariş — hamısı bir yerdə
           </p>
         </div>
