@@ -5,6 +5,7 @@ import { Card, Badge } from "@restoran/ui";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
 import { SubmitButton } from "@/components/forms/SubmitButton";
 import { ResetRestaurantButton } from "@/components/platform/ResetRestaurantButton";
+import { DeleteRestaurantButton } from "@/components/platform/DeleteRestaurantButton";
 import { setRestaurantStatusAction } from "../actions";
 
 export const metadata = { title: "Restoran Detalları" };
@@ -138,6 +139,16 @@ export default async function PlatformRestaurantDetailPage({
           </p>
         </div>
         <ResetRestaurantButton restaurantId={restaurant.id} restaurantName={restaurant.name} />
+      </Card>
+
+      <Card className="max-w-md border-danger/50">
+        <div className="mb-3">
+          <p className="font-medium text-danger">Restoranı həmişəlik sil</p>
+          <p className="mt-1 text-xs text-text-secondary">
+            Restoranın özü — menyu, işçilər, masalar, brendinq daxil, HAMISI — həmişəlik silinir. Qayıdılmazdır.
+          </p>
+        </div>
+        <DeleteRestaurantButton restaurantId={restaurant.id} restaurantName={restaurant.name} />
       </Card>
     </div>
   );

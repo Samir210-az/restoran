@@ -1717,6 +1717,10 @@ export type Database = {
           total: number
         }[]
       }
+      platform_delete_restaurant: {
+        Args: { _restaurant_id: string }
+        Returns: undefined
+      }
       platform_reset_restaurant_data: {
         Args: { _restaurant_id: string }
         Returns: undefined

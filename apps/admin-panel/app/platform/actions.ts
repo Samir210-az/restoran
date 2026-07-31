@@ -129,3 +129,29 @@ export async function resetRestaurantDataAction(restaurantId: string, confirmNam
   revalidatePath("/platform", "layout");
   redirect(`/platform/${restaurantId}?rreset=` + encodeURIComponent(expectedName));
 }
+
+/**
+ * HƏMİŞƏLİK silmə - restoranin OZUNU (menyu, isciler, masalar,
+ * brendinq DAXIL, HAMISI) silir. "Sıfırla"-dan (yalniz test/emeliyyat
+ * melumatlari) tamamile ferqli - bu QAYIDILMAZDIR. Emeliyyatdan sonra
+ * restoran artiq movcud olmadigi ucun ana siyahiya (/platform) qayidir.
+ */
+export async function deleteRestaurantAction(restaurantId: string, confirmName: string, expectedName: string) {
+  await requirePlatformAdmin();
+
+  if (confirmName.trim().toLowerCase() !== expectedName.trim().toLowerCase()) {
+    redirect(`/platform/${restaurantId}?rerror=` + encodeURIComponent("Restoran adı düzgün yazılmadı, silmə ləğv edildi"));
+  }
+
+  const supabase = getSupabaseServerClient();
+  const { error } = await (
+    supabase as unknown as { rpc: (fn: string, args: unknown) => Promise<{ error: { message: string } | null }> }
+  ).rpc("platform_delete_restaurant", { _restaurant_id: restaurantId });
+
+  if (error) {
+    redirect(`/platform/${restaurantId}?rerror=` + encodeURIComponent("Silmə uğursuz oldu: " + error.message));
+  }
+
+  revalidatePath("/platform", "layout");
+  redirect("/platform?rdeleted=" + encodeURIComponent(expectedName));
+}

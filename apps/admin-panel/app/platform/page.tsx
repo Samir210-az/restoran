@@ -30,7 +30,7 @@ const STATUS_LABEL: Record<string, string> = {
 export default async function PlatformOverviewPage({
   searchParams,
 }: {
-  searchParams: { rcreated?: string; rerror?: string; rreset?: string };
+  searchParams: { rcreated?: string; rerror?: string; rreset?: string; rdeleted?: string };
 }) {
   const supabase = getSupabaseServerClient();
   const { data: restaurants } = await supabase.rpc("get_platform_overview");
@@ -56,6 +56,12 @@ export default async function PlatformOverviewPage({
         <div className="flex items-center gap-2 rounded-md border border-success/30 bg-success/10 px-3 py-2 text-sm text-success">
           <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" />
           <span className="font-medium">{searchParams.rreset}</span> sıfırlandı — bütün test məlumatları silindi.
+        </div>
+      )}
+      {searchParams.rdeleted && (
+        <div className="flex items-center gap-2 rounded-md border border-success/30 bg-success/10 px-3 py-2 text-sm text-success">
+          <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" />
+          <span className="font-medium">{searchParams.rdeleted}</span> həmişəlik silindi.
         </div>
       )}
       {searchParams.rerror && (
