@@ -123,6 +123,128 @@ export async function createRestaurantWithOwnerAction(formData: FormData) {
 }
 
 /**
+ * Restoranin SAHIBLIYINI baska bir sexse otur.
+ *
+ * KOK SEBEB (bax: SAD tehlukesizlik bolmesi): restaurants.owner_id
+ * YALNIZ yaradilan anda tesis olunurdu ve sonradan HEC BIR yerde
+ * yenilenmirdi - hetta staff_members-de kimise "owner" rolu verilse
+ * belə. Bu, iki problem yaradirdi: (1) Platform panelinde "Sahib"
+ * kartinda HEMISE ilk yaradan sexs gorunurdu, (2) restaurants UPDATE
+ * RLS policy-si (owner_id=auth.uid()) kohne sahibden basqa hec kimin
+ * /settings-i yadda saxlamasina icaze vermirdi (sukutla 0 setir
+ * yenilenirdi, error de gorunmurdu). RLS policy ve get_platform_overview
+ * artiq staff_members.role='owner'-i TEK heqiqet menbeyi kimi
+ * istifade edir (bax: fix_owner_permission_source_of_truth migrasiyasi) -
+ * bu funksiya da eyni prinsiple YENI sahibi tesis edir VE kohne
+ * sahib(ler)i "manager"-e endirir (tam kilidlemir - staff girisi qalir,
+ * sadece "owner" hüquqlari goturulur), owner_id sutununu da (legacy/
+ * ehtiyat ucun) sinxronlashdirir.
+ */
+export async function transferRestaurantOwnerAction(formData: FormData) {
+  await requirePlatformAdmin();
+
+  const restaurantId = String(formData.get("restaurant_id") ?? "");
+  const ownerFullName = String(formData.get("new_owner_full_name") ?? "").trim();
+  const password = String(formData.get("new_owner_password") ?? "");
+  const ownerEmail = String(formData.get("new_owner_email") ?? "").trim().toLowerCase();
+
+  if (!restaurantId || !ownerEmail) {
+    redirect(`/platform/${restaurantId}?rerror=` + encodeURIComponent("Yeni sahibin e-poçtu tələb olunur"));
+  }
+
+  const serviceClient = createSupabaseServiceClient();
+
+  const { data: existingUsers } = await serviceClient.auth.admin.listUsers();
+  const existingUser = existingUsers?.users?.find((u) => u.email?.toLowerCase() === ownerEmail);
+
+  let newOwnerId: string;
+
+  if (existingUser) {
+    // Bu e-poctla artiq hesab var - ancaq platformada YALNIZ bir
+    // restorana bagli ola bilme qaydasina (bax: get-current-staff-context)
+    // hormet etmek ucun, bu sexsin BASQA restoranda aktiv staff sətri
+    // olmamalidir (bu restoranda olmasi problem deyil - sadece rolu
+    // deyisdirilecek).
+    const { data: otherStaffRow } = await serviceClient
+      .from("staff_members")
+      .select("id, restaurant_id")
+      .eq("user_id", existingUser.id)
+      .eq("is_active", true)
+      .neq("restaurant_id", restaurantId)
+      .maybeSingle();
+
+    if (otherStaffRow) {
+      redirect(
+        `/platform/${restaurantId}?rerror=` +
+          encodeURIComponent("Bu e-poçt artıq başqa bir restoranın işçisidir - hazırda bir istifadəçi yalnız bir restorana bağlı ola bilər")
+      );
+    }
+
+    newOwnerId = existingUser.id;
+
+    const { data: sameRestaurantRow } = await serviceClient
+      .from("staff_members")
+      .select("id")
+      .eq("user_id", newOwnerId)
+      .eq("restaurant_id", restaurantId)
+      .maybeSingle();
+
+    if (sameRestaurantRow) {
+      await serviceClient
+        .from("staff_members")
+        .update({ role: "owner", is_active: true })
+        .eq("id", sameRestaurantRow.id);
+    } else {
+      await serviceClient
+        .from("staff_members")
+        .insert({ user_id: newOwnerId, restaurant_id: restaurantId, role: "owner", is_active: true });
+    }
+  } else {
+    if (!ownerFullName || password.length < 6) {
+      redirect(
+        `/platform/${restaurantId}?rerror=` +
+          encodeURIComponent("Bu e-poçtla hesab yoxdur - yeni hesab yaratmaq üçün ad və ən azı 6 simvollu şifrə lazımdır")
+      );
+    }
+
+    const { data: created, error: createError } = await serviceClient.auth.admin.createUser({
+      email: ownerEmail,
+      password,
+      email_confirm: true,
+      user_metadata: { full_name: ownerFullName },
+    });
+
+    if (createError || !created.user) {
+      redirect(
+        `/platform/${restaurantId}?rerror=` +
+          encodeURIComponent("Yeni sahib hesabı yaradıla bilmədi: " + (createError?.message ?? "naməlum xəta"))
+      );
+    }
+
+    newOwnerId = created!.user!.id;
+    await serviceClient
+      .from("staff_members")
+      .insert({ user_id: newOwnerId, restaurant_id: restaurantId, role: "owner", is_active: true });
+  }
+
+  // Kohne sahib(ler)i "manager"-e endir - giris hüququ qalir, amma
+  // artiq YALNIZ BIR aktiv "owner" olur (ikili sahiblik qarisiqligi
+  // aradan qalxir).
+  await serviceClient
+    .from("staff_members")
+    .update({ role: "manager" })
+    .eq("restaurant_id", restaurantId)
+    .eq("role", "owner")
+    .neq("user_id", newOwnerId);
+
+  // Legacy/ehtiyat sutunu sinxronlashdir.
+  await serviceClient.from("restaurants").update({ owner_id: newOwnerId }).eq("id", restaurantId);
+
+  revalidatePath("/platform", "layout");
+  redirect(`/platform/${restaurantId}?rowner=` + encodeURIComponent(ownerEmail));
+}
+
+/**
  * Restoranin BUTUN test/emeliyyat melumatlarini (sifarisler,
  * rezervasiyalar, musteriler, xercler ve s.) sildirir, qurulusu
  * (menyu, isciler, masalar, brendinq) SAXLAYIR. YALNIZ platform admin

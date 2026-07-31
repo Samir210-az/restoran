@@ -1,12 +1,12 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Building2, Users, UtensilsCrossed, ShoppingBag, Mail, Calendar, CheckCircle2, AlertCircle } from "lucide-react";
-import { Card, Badge } from "@restoran/ui";
+import { ArrowLeft, Building2, Users, UtensilsCrossed, ShoppingBag, Mail, Calendar, CheckCircle2, AlertCircle, UserCog } from "lucide-react";
+import { Card, Badge, Input } from "@restoran/ui";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
 import { SubmitButton } from "@/components/forms/SubmitButton";
 import { ResetRestaurantButton } from "@/components/platform/ResetRestaurantButton";
 import { DeleteRestaurantButton } from "@/components/platform/DeleteRestaurantButton";
-import { setRestaurantStatusAction } from "../actions";
+import { setRestaurantStatusAction, transferRestaurantOwnerAction } from "../actions";
 
 export const metadata = { title: "Restoran Detalları" };
 
@@ -36,7 +36,7 @@ export default async function PlatformRestaurantDetailPage({
   searchParams,
 }: {
   params: { restaurantId: string };
-  searchParams: { rreset?: string; rerror?: string };
+  searchParams: { rreset?: string; rerror?: string; rowner?: string };
 }) {
   const supabase = getSupabaseServerClient();
   const { data: restaurants } = await supabase.rpc("get_platform_overview");
@@ -64,6 +64,12 @@ export default async function PlatformRestaurantDetailPage({
         <div className="flex items-center gap-2 rounded-md border border-success/30 bg-success/10 px-3 py-2 text-sm text-success">
           <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" />
           <span className="font-medium">{searchParams.rreset}</span> sıfırlandı — bütün test məlumatları silindi.
+        </div>
+      )}
+      {searchParams.rowner && (
+        <div className="flex items-center gap-2 rounded-md border border-success/30 bg-success/10 px-3 py-2 text-sm text-success">
+          <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" />
+          Sahiblik <span className="font-medium">{searchParams.rowner}</span>-a ötürüldü.
         </div>
       )}
       {searchParams.rerror && (
@@ -113,6 +119,26 @@ export default async function PlatformRestaurantDetailPage({
         </div>
         <p className="text-sm text-text-secondary">{restaurant.owner_email}</p>
         <p className="mt-1 text-xs capitalize text-text-muted">Plan: {restaurant.subscription_plan}</p>
+      </Card>
+
+      <Card className="max-w-md">
+        <div className="mb-3 flex items-center gap-2">
+          <UserCog className="h-4 w-4 text-accent" aria-hidden="true" />
+          <p className="font-medium text-text-primary">Sahibliyi ötür</p>
+        </div>
+        <p className="mb-3 text-xs text-text-secondary">
+          Mövcud e-poçt daxil etsəniz, həmin hesab sahib təyin olunur. Yeni e-poçt daxil etsəniz, tam ad və şifrə ilə yeni sahib
+          hesabı yaradılır. Köhnə sahib avtomatik olaraq menecer roluna keçir (girişi qalır, sahiblik hüquqları götürülür).
+        </p>
+        <form action={transferRestaurantOwnerAction} className="flex flex-col gap-2.5">
+          <input type="hidden" name="restaurant_id" value={restaurant.id} />
+          <Input name="new_owner_email" type="email" placeholder="Yeni sahibin e-poçtu" required />
+          <Input name="new_owner_full_name" placeholder="Yeni sahibin adı soyadı (yalnız yeni hesab üçün)" />
+          <Input name="new_owner_password" type="password" placeholder="Şifrə, min. 6 simvol (yalnız yeni hesab üçün)" minLength={6} />
+          <SubmitButton variant="outline" className="self-start">
+            Sahibliyi ötür
+          </SubmitButton>
+        </form>
       </Card>
 
       <Card className="max-w-md">
