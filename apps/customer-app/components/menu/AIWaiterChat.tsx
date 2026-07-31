@@ -101,22 +101,22 @@ export function AIWaiterChat({ restaurantId, items, onAddToCart }: AIWaiterChatP
       <div className="fixed bottom-20 right-4 z-20">
         <button
           onClick={() => setOpen(true)}
-          className="flex items-center gap-2 rounded-full bg-accent py-3 pl-14 pr-5 text-accent-foreground shadow-elevated transition-transform hover:scale-105 hover:opacity-90"
+          className="flex items-center gap-2 rounded-full bg-accent py-3 pl-16 pr-5 text-accent-foreground shadow-elevated transition-transform hover:scale-105 hover:opacity-90"
           aria-label="AI Ofisiantla söhbət et"
         >
           <span className="text-sm font-medium">AI Ofisiant</span>
         </button>
-        {/* Duymenin OZU boyudulmur (eyni py-3/pl-14/pr-5 qalir) - YALNIZ
-            maskot boyudulub (h-20, 80px) ve mövqeyi elə hesablanib ki,
-            hündürlüyünün TEQRIBEN YARISI duymenin ustunden kenara cixsin
-            (-top-10 = 80px-in yarisi), qalan yarisi duymenin ustune
-            "oturmus" nişan kimi gorunsun. */}
+        {/* Maskotun AYAĞI duymenin ALT xetti ile beraberlesir (bottom-0,
+            eyni "fixed" wrapper-in daxilinde), boyu ise (h-32, ~128px)
+            duymenin oz hündürlüyünden (~48px) qat-qat boyukdur - belece
+            yuxari hissesi acdiq-aydin şəkilde duymeden yuxari cixir,
+            ekrandan da kesilmir (bottom-20 ile kifayet qeder boşluq var). */}
         <Image
           src="/images/ai-waiter-icon.png"
           alt=""
-          width={80}
-          height={80}
-          className="pointer-events-none absolute -left-3 -top-10 h-20 w-20 animate-float drop-shadow-lg"
+          width={200}
+          height={300}
+          className="pointer-events-none absolute bottom-0 left-0 h-32 w-auto animate-float drop-shadow-lg"
           priority={false}
         />
       </div>
