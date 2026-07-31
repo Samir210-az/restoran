@@ -125,12 +125,13 @@ export function AIWaiterChat({ restaurantId, items, onAddToCart }: AIWaiterChatP
         isOpen={isOpen}
         onClose={() => setOpen(false)}
         title={
-          <span className="flex items-center gap-2">
+          <span className="flex flex-col items-center gap-1">
             {/* Eyni maskot + eyni terpenme animasiyasi - duyme ile AI
                 sohbet bolmesi arasinda vizual ardıcıllıq (brend elementi
-                tekrarlanir). */}
-            <Image src="/images/ai-waiter-icon.png" alt="" width={80} height={120} className="h-8 w-auto animate-float" />
-            AI Ofisiant
+                tekrarlanir). Boyuk olcude (h-32) oldugu ucun mətnlə YAN-YANA
+                yox, ÜST-ÜSTƏ düzülüb ki, başlıq nizamli gorunsun. */}
+            <Image src="/images/ai-waiter-icon.png" alt="" width={80} height={120} className="h-32 w-auto animate-float" />
+            <span>AI Ofisiant</span>
           </span>
         }
         className="flex h-[80vh] max-h-[600px] flex-col"

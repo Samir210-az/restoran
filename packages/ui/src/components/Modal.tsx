@@ -51,7 +51,7 @@ export function Modal({ isOpen, onClose, title, description, children, className
           className
         )}
       >
-        <div className="mb-4 flex items-start justify-between">
+        <div className="mb-4 flex items-center justify-between">
           <div>
             {title && (
               <h2 id="modal-title" className="text-lg font-semibold text-text-primary">
