@@ -4,7 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import { Card, Badge, Button } from "@restoran/ui";
 import { MapPin } from "lucide-react";
 import { createSupabaseBrowserClient } from "@restoran/supabase-client";
-import { advanceOrderStatusAction, cancelOrderAction, markPaymentReceivedAction } from "@/app/(dashboard)/orders/actions";
+import { advanceOrderStatusAction, cancelOrderAction, markPaymentReceivedAction, closeOrderAction } from "@/app/(dashboard)/orders/actions";
 import { CourierAssignment } from "@/components/orders/CourierAssignment";
 
 interface OrderRow {
@@ -156,7 +156,17 @@ export function OrdersRealtimeList({
                   disabled={isPending}
                   onClick={() => startTransition(() => markPaymentReceivedAction(order.id))}
                 >
-                  Ödəniş alındı
+                  Ödəniş alındı, bağla
+                </Button>
+              )}
+              {order.status === "served" && order.payment_status === "completed" && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={isPending}
+                  onClick={() => startTransition(() => closeOrderAction(order.id))}
+                >
+                  Sifarişi bağla
                 </Button>
               )}
               {order.status === "pending" && (
