@@ -1,22 +1,8 @@
-import { Building2, PlusCircle, CheckCircle2, AlertCircle } from "lucide-react";
+import { Building2, PlusCircle, CheckCircle2, AlertCircle, ChevronRight, Users, UtensilsCrossed, ShoppingBag } from "lucide-react";
 import Link from "next/link";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  Badge,
-  Input,
-  Table,
-  TableHead,
-  TableBody,
-  TableRow,
-  TableHeaderCell,
-  TableCell,
-} from "@restoran/ui";
+import { Card, CardHeader, CardTitle, CardDescription, Badge, Input } from "@restoran/ui";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
 import { SubmitButton } from "@/components/forms/SubmitButton";
-import { ResetRestaurantButton } from "@/components/platform/ResetRestaurantButton";
 import { setRestaurantStatusAction, createRestaurantWithOwnerAction } from "./actions";
 
 export const metadata = { title: "Platform Admin" };
@@ -102,60 +88,63 @@ export default async function PlatformOverviewPage({
           </div>
         </Card>
       ) : (
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableHeaderCell>Restoran</TableHeaderCell>
-              <TableHeaderCell>Sahib</TableHeaderCell>
-              <TableHeaderCell>Plan</TableHeaderCell>
-              <TableHeaderCell>Status</TableHeaderCell>
-              <TableHeaderCell>İşçi</TableHeaderCell>
-              <TableHeaderCell>Yemək</TableHeaderCell>
-              <TableHeaderCell>Sifariş</TableHeaderCell>
-              <TableHeaderCell>Əməliyyat</TableHeaderCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {rows.map((r) => (
-              <TableRow key={r.id}>
-                <TableCell>
-                  <Link href={`/platform/${r.id}`} className="font-medium text-text-primary hover:text-accent hover:underline">
-                    {r.name}
-                  </Link>
-                  <p className="text-xs text-text-muted">/{r.slug}</p>
-                </TableCell>
-                <TableCell className="text-text-secondary">{r.owner_email}</TableCell>
-                <TableCell className="capitalize">{r.subscription_plan}</TableCell>
-                <TableCell>
-                  <Badge variant={STATUS_BADGE[r.subscription_status] ?? "neutral"}>
-                    {STATUS_LABEL[r.subscription_status] ?? r.subscription_status}
-                  </Badge>
-                </TableCell>
-                <TableCell>{r.staff_count}</TableCell>
-                <TableCell>{r.menu_item_count}</TableCell>
-                <TableCell>{r.order_count}</TableCell>
-                <TableCell>
-                  <div className="flex flex-wrap items-start gap-2">
-                    {r.subscription_status === "suspended" ? (
-                      <form action={setRestaurantStatusAction.bind(null, r.id, "active")}>
-                        <SubmitButton size="sm" variant="outline">
-                          Aktivləşdir
-                        </SubmitButton>
-                      </form>
-                    ) : (
-                      <form action={setRestaurantStatusAction.bind(null, r.id, "suspended")}>
-                        <SubmitButton size="sm" variant="danger">
-                          Dayandır
-                        </SubmitButton>
-                      </form>
-                    )}
-                    <ResetRestaurantButton restaurantId={r.id} restaurantName={r.name} />
+        <div className="flex flex-col gap-3">
+          {rows.map((r) => (
+            <Card key={r.id} className="flex flex-col gap-3">
+              {/* Butun kart deyil, YALNIZ bu hisse Link-dir - "Aktivlesdir/
+                  Dayandır" duymesi asagida, Link-in KENARINDA (icinde
+                  DEYIL) yerlesir ki, form/duyme ile keçidin klik
+                  qarisiqligina sebeb olmasin. */}
+              <Link href={`/platform/${r.id}`} className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="font-semibold text-accent">{r.name}</p>
+                    <Badge variant={STATUS_BADGE[r.subscription_status] ?? "neutral"}>
+                      {STATUS_LABEL[r.subscription_status] ?? r.subscription_status}
+                    </Badge>
                   </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+                  <p className="text-xs text-text-muted">/{r.slug} · {r.owner_email}</p>
+                </div>
+                <ChevronRight className="h-5 w-5 shrink-0 text-text-muted" aria-hidden="true" />
+              </Link>
+
+              <div className="flex flex-wrap items-center gap-4 border-t border-border pt-3 text-xs text-text-secondary">
+                <span className="flex items-center gap-1">
+                  <Users className="h-3.5 w-3.5" aria-hidden="true" /> {r.staff_count} işçi
+                </span>
+                <span className="flex items-center gap-1">
+                  <UtensilsCrossed className="h-3.5 w-3.5" aria-hidden="true" /> {r.menu_item_count} yemək
+                </span>
+                <span className="flex items-center gap-1">
+                  <ShoppingBag className="h-3.5 w-3.5" aria-hidden="true" /> {r.order_count} sifariş
+                </span>
+                <span className="capitalize">{r.subscription_plan} plan</span>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {r.subscription_status === "suspended" ? (
+                  <form action={setRestaurantStatusAction.bind(null, r.id, "active")}>
+                    <SubmitButton size="sm" variant="outline">
+                      Aktivləşdir
+                    </SubmitButton>
+                  </form>
+                ) : (
+                  <form action={setRestaurantStatusAction.bind(null, r.id, "suspended")}>
+                    <SubmitButton size="sm" variant="danger">
+                      Dayandır
+                    </SubmitButton>
+                  </form>
+                )}
+                <Link
+                  href={`/platform/${r.id}`}
+                  className="flex items-center gap-1 rounded-md border border-border-strong px-2.5 py-1.5 text-xs font-medium text-text-secondary hover:bg-bg-muted"
+                >
+                  Detallara bax <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
+                </Link>
+              </div>
+            </Card>
+          ))}
+        </div>
       )}
 
       <Card className="max-w-sm">
