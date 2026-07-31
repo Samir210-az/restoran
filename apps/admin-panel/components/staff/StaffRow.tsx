@@ -44,7 +44,7 @@ export function StaffRow({ staffId, fullName, email, role, isActive, isSelf, can
           <p className="text-sm text-text-secondary">{email}</p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           {!isActive && <Badge variant="danger">Deaktiv</Badge>}
 
           {isSelf || !canManage ? (

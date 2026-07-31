@@ -94,7 +94,7 @@ export function OrdersRealtimeList({
     <div className="flex flex-col gap-3">
       {orders.map((order) => (
         <Card key={order.id} className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center gap-2">
               <span className="font-mono text-xs text-text-muted">
                 #{order.order_number} ·{" "}
@@ -119,7 +119,7 @@ export function OrdersRealtimeList({
               )}
             </p>
             {order.order_type === "delivery" && order.delivery_address && (
-              <p className="mt-1 flex items-start gap-1 text-xs text-text-muted">
+              <p className="mt-1 flex items-start gap-1 break-words text-xs text-text-muted">
                 <MapPin className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />
                 {order.delivery_address}
               </p>
@@ -138,7 +138,7 @@ export function OrdersRealtimeList({
             )}
 
             {ACTIVE_STATUSES.has(order.status) && (
-            <div className="flex gap-2">
+            <div className="flex flex-wrap justify-end gap-2">
               {order.status !== "served" && (
                 <Button
                   size="sm"
