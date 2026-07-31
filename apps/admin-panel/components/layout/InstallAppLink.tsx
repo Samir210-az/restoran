@@ -14,7 +14,7 @@ interface BeforeInstallPromptEvent extends Event {
  * (bax: next.config.js-deki next-pwa). iOS Safari-de bu hadise atilmir -
  * orada aciqlayici metn gosterilir.
  */
-export function InstallAppLink() {
+export function InstallAppLink({ variant = "sidebar" }: { variant?: "sidebar" | "centered" }) {
   const [installEvent, setInstallEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const [isIOS, setIsIOS] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
@@ -49,9 +49,13 @@ export function InstallAppLink() {
       <button
         type="button"
         onClick={handleInstall}
-        className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-text-secondary hover:bg-bg-muted hover:text-text-primary"
+        className={
+          variant === "centered"
+            ? "mx-auto flex items-center gap-1.5 text-xs font-medium text-accent hover:underline"
+            : "flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-text-secondary hover:bg-bg-muted hover:text-text-primary"
+        }
       >
-        <Download className="h-4 w-4 shrink-0" aria-hidden="true" />
+        <Download className={variant === "centered" ? "h-3.5 w-3.5" : "h-4 w-4 shrink-0"} aria-hidden="true" />
         Tətbiqi yüklə
       </button>
     );
@@ -59,7 +63,13 @@ export function InstallAppLink() {
 
   if (isIOS) {
     return (
-      <p className="flex items-center gap-2 px-3 py-2 text-xs text-text-muted">
+      <p
+        className={
+          variant === "centered"
+            ? "flex items-center justify-center gap-1.5 text-xs text-text-muted"
+            : "flex items-center gap-2 px-3 py-2 text-xs text-text-muted"
+        }
+      >
         <Share className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
         Paylaş → &quot;Ana ekrana əlavə et&quot;
       </p>

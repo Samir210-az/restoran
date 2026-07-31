@@ -1,4 +1,5 @@
 import { ThemeToggle } from "@restoran/ui";
+import { InstallAppLink } from "@/components/layout/InstallAppLink";
 
 /**
  * Auth sehifeleri (login/register) ucun ayrica, sadeleşdirilmiş layout -
@@ -29,6 +30,9 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         </div>
         <div className="glass-panel animate-slide-up rounded-xl p-8 shadow-elevated">
           {children}
+        </div>
+        <div className="mt-4 text-center">
+          <InstallAppLink variant="centered" />
         </div>
       </div>
     </div>
