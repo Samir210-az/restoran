@@ -21,5 +21,19 @@ export default function manifest(): MetadataRoute.Manifest {
       { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
       { src: "/icons/icon-512-maskable.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
     ],
+    // App qisayollari (Android: ikona basib saxlayanda, iOS 16.4+: eyni
+    // seklide). Restoran sahibi/menecer ucun Platform Admin adeten
+    // aid olmur, amma quraşdirilmış ikon HAMI ucun eynidir - bu qisayol
+    // yalniz platform admin olan istifadecinin ise yarayacaq, basqalari
+    // ucun sadece tikilmemiş bir link olaraq qalir (zererli deyil).
+    shortcuts: [
+      {
+        name: "Platform Admin",
+        short_name: "Platform",
+        description: "Bütün restoranların idarəetmə görünüşü",
+        url: "/platform",
+        icons: [{ src: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }],
+      },
+    ],
   };
 }
