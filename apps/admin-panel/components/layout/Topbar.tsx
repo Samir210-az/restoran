@@ -110,7 +110,7 @@ export function Topbar({ onMenuClick, restaurantName, restaurantId, role, isPlat
           </button>
 
           {isNotifOpen && (
-            <div className="absolute right-0 top-11 max-h-96 w-80 overflow-y-auto rounded-md border border-border bg-bg-elevated py-1 shadow-elevated animate-fade-in">
+            <div className="fixed inset-x-4 top-16 z-40 max-h-96 overflow-y-auto rounded-md border border-border bg-bg-elevated py-1 shadow-elevated animate-fade-in md:absolute md:inset-x-auto md:right-0 md:top-11 md:w-80">
               <p className="px-3 py-2 text-xs font-semibold text-text-secondary">Bildirişlər</p>
               {notifications.length === 0 ? (
                 <p className="px-3 py-6 text-center text-sm text-text-muted">Hələ bildiriş yoxdur</p>

@@ -227,20 +227,37 @@ export async function transferRestaurantOwnerAction(formData: FormData) {
       .insert({ user_id: newOwnerId, restaurant_id: restaurantId, role: "owner", is_active: true });
   }
 
-  // Kohne sahib(ler)i "manager"-e endir - giris hüququ qalir, amma
-  // artiq YALNIZ BIR aktiv "owner" olur (ikili sahiblik qarisiqligi
-  // aradan qalxir).
-  await serviceClient
+  // Kohne sahib(ler)i teyin et: eger platform admin-dirse (bax: SAD -
+  // platform admin restoran-scoped stafften TAMAM ayri olmalidir),
+  // staff setrini TAM deaktiv edirik ki, "Öz panelimə qayıt" kimi
+  // linkler onu artiq sahiblik etmediyi restorana aparmasin. Adi
+  // (platform admin olmayan) kohne sahib ucun ise "manager"-e endirmek
+  // kifayetdir - o hele bu restoranin biznesinde ise davam ede biler.
+  const { data: oldOwnerRows } = await serviceClient
     .from("staff_members")
-    .update({ role: "manager" })
+    .select("id, user_id")
     .eq("restaurant_id", restaurantId)
     .eq("role", "owner")
     .neq("user_id", newOwnerId);
+
+  for (const row of oldOwnerRows ?? []) {
+    const { data: isOldOwnerPlatformAdmin } = await serviceClient
+      .from("platform_admins")
+      .select("user_id")
+      .eq("user_id", row.user_id)
+      .maybeSingle();
+
+    await serviceClient
+      .from("staff_members")
+      .update(isOldOwnerPlatformAdmin ? { is_active: false } : { role: "manager" })
+      .eq("id", row.id);
+  }
 
   // Legacy/ehtiyat sutunu sinxronlashdir.
   await serviceClient.from("restaurants").update({ owner_id: newOwnerId }).eq("id", restaurantId);
 
   revalidatePath("/platform", "layout");
+  revalidatePath("/dashboard", "layout");
   redirect(`/platform/${restaurantId}?rowner=` + encodeURIComponent(ownerEmail));
 }
 

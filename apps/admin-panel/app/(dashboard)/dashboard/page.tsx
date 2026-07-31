@@ -168,11 +168,16 @@ export default async function DashboardPage() {
   const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
 
   const [todayOrders, activeOrders, newCustomers, thisMonthOrders, lastMonthOrders, recentOrders] = await Promise.all([
+    // QEYD (bug duzelisi): "satis" YALNIZ TAMAMLANMIŞ (odenishi alinmish,
+    // bağlanmış) sifarişləri əhatə etməlidir - sifariş verilən kimi hələ
+    // mətbəx hazırlamamış/ödəniş alınmamış ola-ola "satış" kimi
+    // göstərilməsi düzgün deyildi (əvvəlki versiya: status != 'cancelled'
+    // olan HƏR sifarişi sayırdı, yəni pending/preparing də daxil idi).
     supabase
       .from("orders")
       .select("total")
       .eq("restaurant_id", context.restaurantId)
-      .neq("status", "cancelled")
+      .eq("status", "completed")
       .gte("created_at", startOfToday),
     supabase
       .from("orders")
@@ -188,13 +193,13 @@ export default async function DashboardPage() {
       .from("orders")
       .select("total")
       .eq("restaurant_id", context.restaurantId)
-      .neq("status", "cancelled")
+      .eq("status", "completed")
       .gte("created_at", startOfThisMonth),
     supabase
       .from("orders")
       .select("total")
       .eq("restaurant_id", context.restaurantId)
-      .neq("status", "cancelled")
+      .eq("status", "completed")
       .gte("created_at", startOfLastMonth)
       .lt("created_at", startOfThisMonth),
     supabase
