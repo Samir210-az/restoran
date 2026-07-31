@@ -106,16 +106,17 @@ export function AIWaiterChat({ restaurantId, items, onAddToCart }: AIWaiterChatP
         >
           <span className="text-sm font-medium">AI Ofisiant</span>
         </button>
-        {/* Maskot QESDEN duymenin ICINDE deyil - absolute ile kenara/onune
-            cixarilib ve boyudulub (h-16), belece "duymenin ustunden asir"
-            effekti yaranir ve HEC vaxt kicik/gorunmez qalmir. pl-14 (duyme)
-            bu boyuk ikon ucun yer buraxir ki, metnle ust-uste dusmesin. */}
+        {/* Duymenin OZU boyudulmur (eyni py-3/pl-14/pr-5 qalir) - YALNIZ
+            maskot boyudulub (h-20, 80px) ve mövqeyi elə hesablanib ki,
+            hündürlüyünün TEQRIBEN YARISI duymenin ustunden kenara cixsin
+            (-top-10 = 80px-in yarisi), qalan yarisi duymenin ustune
+            "oturmus" nişan kimi gorunsun. */}
         <Image
           src="/images/ai-waiter-icon.png"
           alt=""
-          width={64}
-          height={64}
-          className="pointer-events-none absolute -left-2 -top-3 h-16 w-16 animate-float drop-shadow-lg"
+          width={80}
+          height={80}
+          className="pointer-events-none absolute -left-3 -top-10 h-20 w-20 animate-float drop-shadow-lg"
           priority={false}
         />
       </div>
