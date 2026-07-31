@@ -98,23 +98,27 @@ export function AIWaiterChat({ restaurantId, items, onAddToCart }: AIWaiterChatP
 
   return (
     <>
-      <button
-        onClick={() => setOpen(true)}
-        className="fixed bottom-20 right-4 z-20 flex items-center gap-2 rounded-full bg-accent py-2.5 pl-2.5 pr-4 text-accent-foreground shadow-elevated transition-transform hover:scale-105 hover:opacity-90"
-        aria-label="AI Ofisiantla söhbət et"
-      >
-        {/* Terpenen (float) animasiyali AI maskotu - butun ekranlarda
-            diqqeti ceker, "canli/interaktiv" hissi yaradir. */}
+      <div className="fixed bottom-20 right-4 z-20">
+        <button
+          onClick={() => setOpen(true)}
+          className="flex items-center gap-2 rounded-full bg-accent py-3 pl-14 pr-5 text-accent-foreground shadow-elevated transition-transform hover:scale-105 hover:opacity-90"
+          aria-label="AI Ofisiantla söhbət et"
+        >
+          <span className="text-sm font-medium">AI Ofisiant</span>
+        </button>
+        {/* Maskot QESDEN duymenin ICINDE deyil - absolute ile kenara/onune
+            cixarilib ve boyudulub (h-16), belece "duymenin ustunden asir"
+            effekti yaranir ve HEC vaxt kicik/gorunmez qalmir. pl-14 (duyme)
+            bu boyuk ikon ucun yer buraxir ki, metnle ust-uste dusmesin. */}
         <Image
           src="/images/ai-waiter-icon.png"
           alt=""
-          width={36}
-          height={36}
-          className="h-9 w-9 shrink-0 animate-float"
+          width={64}
+          height={64}
+          className="pointer-events-none absolute -left-2 -top-3 h-16 w-16 animate-float drop-shadow-lg"
           priority={false}
         />
-        <span className="text-sm font-medium">AI Ofisiant</span>
-      </button>
+      </div>
 
       <Modal isOpen={isOpen} onClose={() => setOpen(false)} title="AI Ofisiant" className="flex h-[80vh] max-h-[600px] flex-col">
         <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto py-2">
