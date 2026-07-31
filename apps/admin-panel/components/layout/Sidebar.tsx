@@ -20,6 +20,7 @@ import {
 import type { StaffRole } from "@restoran/types";
 import { cn } from "@restoran/utils";
 import { LogoutButton } from "./LogoutButton";
+import { InstallAppLink } from "./InstallAppLink";
 
 /**
  * Her naviqasiya maddesi hansi rollara gorunecegini `roles` sahesinde
@@ -104,6 +105,7 @@ export function Sidebar({ className, onNavigate, restaurantName, role }: Sidebar
       </div>
 
       <div className="mt-auto border-t border-border pt-2">
+        <InstallAppLink />
         <LogoutButton />
       </div>
     </nav>

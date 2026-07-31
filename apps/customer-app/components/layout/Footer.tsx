@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Instagram } from "lucide-react";
+import { InstallAppLink } from "./InstallAppLink";
 
 /**
  * Butun musteri-uzlu sehifelerde sabit footer.
@@ -28,6 +29,7 @@ export function Footer() {
           </Link>
         </p>
       )}
+      <InstallAppLink />
     </footer>
   );
 }

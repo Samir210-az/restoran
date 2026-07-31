@@ -34,3 +34,10 @@ Thumbs.db
 supabase/.branches
 supabase/.temp
 *.tsbuildinfo
+
+# next-pwa (build zamani avtomatik generasiya olunur)
+apps/*/public/sw.js
+apps/*/public/workbox-*.js
+apps/*/public/sw.js.map
+apps/*/public/worker-*.js
+apps/*/public/fallback-*.js

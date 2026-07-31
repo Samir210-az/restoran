@@ -10,6 +10,19 @@ export const metadata: Metadata = {
     template: "%s | Restoran",
   },
   description: "QR menyu, onlayn sifariş və rezervasiya",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Restoran",
+  },
+  icons: {
+    apple: "/icons/apple-touch-icon.png",
+  },
+};
+
+export const viewport = {
+  themeColor: "#B48428",
 };
 
 const THEME_INIT_SCRIPT = `

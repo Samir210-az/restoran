@@ -8,6 +8,19 @@ export const metadata: Metadata = {
     template: "%s | Restoran",
   },
   description: "AI dəstəkli restoran idarəetmə platforması",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Restoran Admin",
+  },
+  icons: {
+    apple: "/icons/apple-touch-icon.png",
+  },
+};
+
+export const viewport = {
+  themeColor: "#B48428",
 };
 
 /**
