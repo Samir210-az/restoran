@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CheckCircle2, Circle, ChefHat, Clock, Bike } from "lucide-react";
+import { CheckCircle2, Circle, ChefHat, Clock, Bike, Copy, Check, CreditCard } from "lucide-react";
 import { Card, Badge } from "@restoran/ui";
 import { cn } from "@restoran/utils";
 import { createSupabasePublicClient } from "@restoran/supabase-client";
@@ -21,14 +21,22 @@ export interface OrderTrackingRow {
   id: string;
   order_number: number;
   restaurant_name: string;
+  restaurant_id: string;
   status: OrderStatus;
   order_type: string;
   total: number;
   created_at: string;
   items: OrderItemJson[];
   payment_status: string | null;
+  payment_method: string | null;
   courier_name: string | null;
   courier_phone: string | null;
+}
+
+interface CardTransferInfo {
+  card_number: string;
+  card_holder_name: string | null;
+  bank_name: string | null;
 }
 
 const STEPS: { status: OrderStatus; label: string; icon: typeof Clock }[] = [
@@ -50,6 +58,8 @@ const POLL_INTERVAL_MS = 4000;
  */
 export function OrderTracker({ orderId, initialOrder }: { orderId: string; initialOrder: OrderTrackingRow }) {
   const [order, setOrder] = useState(initialOrder);
+  const [cardInfo, setCardInfo] = useState<CardTransferInfo | null>(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const supabase = createSupabasePublicClient();
@@ -60,6 +70,26 @@ export function OrderTracker({ orderId, initialOrder }: { orderId: string; initi
 
     return () => clearInterval(interval);
   }, [orderId]);
+
+  // Musteri "Kartla" secib, amma odenis hele tesdiqlenmeyibse - restoranin
+  // kartdan-karta melumatlarini gostermek ucun getiiririk (yalniz LAZIM
+  // olanda, her sifarisde avtomatik cekilmir).
+  useEffect(() => {
+    if (order.payment_method !== "card" || order.payment_status === "completed") return;
+    const supabase = createSupabasePublicClient();
+    supabase
+      .rpc("get_public_card_transfer_info", { _restaurant_id: order.restaurant_id })
+      .then(({ data }) => {
+        if (data?.[0]) setCardInfo(data[0] as unknown as CardTransferInfo);
+      });
+  }, [order.restaurant_id, order.payment_method, order.payment_status]);
+
+  async function handleCopyCard() {
+    if (!cardInfo) return;
+    await navigator.clipboard.writeText(cardInfo.card_number.replace(/\s+/g, ""));
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }
 
   const isCancelled = order.status === "cancelled";
   const currentStepIndex = STEPS.findIndex((s) => s.status === order.status);
@@ -103,6 +133,34 @@ export function OrderTracker({ orderId, initialOrder }: { orderId: string; initi
             );
           })}
         </div>
+      )}
+
+      {cardInfo && (
+        <Card className="mb-4 flex flex-col gap-3 border-accent/40 bg-accent-soft">
+          <div className="flex items-center gap-2">
+            <CreditCard className="h-4 w-4 text-accent" aria-hidden="true" />
+            <p className="text-sm font-semibold text-text-primary">Ödəniş üçün bu karta köçürün</p>
+          </div>
+          <div className="rounded-md bg-bg px-3 py-2.5">
+            <p className="font-mono text-lg font-semibold tracking-wider text-text-primary">{cardInfo.card_number}</p>
+            {(cardInfo.card_holder_name || cardInfo.bank_name) && (
+              <p className="mt-0.5 text-xs text-text-secondary">
+                {[cardInfo.card_holder_name, cardInfo.bank_name].filter(Boolean).join(" · ")}
+              </p>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={handleCopyCard}
+            className="flex items-center justify-center gap-1.5 rounded-md border border-accent/40 px-3 py-2 text-sm font-medium text-accent hover:bg-accent/10"
+          >
+            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+            {copied ? "Kopyalandı" : "Kart nömrəsini kopyala"}
+          </button>
+          <p className="text-xs text-text-secondary">
+            {Number(order.total).toFixed(2)} ₼ məbləğini öz bank tətbiqinizlə köçürün. Restoran ödənişi görəndə sifarişiniz təsdiqlənəcək.
+          </p>
+        </Card>
       )}
 
       {order.order_type === "delivery" && order.courier_name && (

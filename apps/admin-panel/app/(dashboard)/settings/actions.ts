@@ -121,3 +121,51 @@ export async function updatePaymentSettingsAction(formData: FormData) {
   revalidatePath("/settings");
   redirect("/settings?saved=1");
 }
+
+/**
+ * Kartdan-karta (elle) odenis ucun restoranin bank karti melumatlarini
+ * saxlayir. Bu, Payriff-den ferqli olaraq HEC bir API teleb etmir -
+ * musteri sadece bu kart nomresine oz bank tetbiqi ile kocurme edir,
+ * kassir sonra "Ödəniş alındı" duymesi ile tesdiqleyir (bax: orders/actions.ts).
+ */
+export async function updateCardTransferAction(formData: FormData) {
+  const context = await getCurrentStaffContext();
+
+  if (context.role !== "owner") {
+    redirect("/settings?error=" + encodeURIComponent("Ödəniş parametrlərini yalnız restoran sahibi dəyişə bilər"));
+  }
+
+  const cardNumberRaw = String(formData.get("card_number") ?? "").replace(/\s+/g, "");
+  const cardHolderName = String(formData.get("card_holder_name") ?? "").trim();
+  const bankName = String(formData.get("bank_name") ?? "").trim();
+  const isActive = formData.get("card_is_active") === "on";
+
+  if (cardNumberRaw && !/^\d{16}$/.test(cardNumberRaw)) {
+    redirect("/settings?error=" + encodeURIComponent("Kart nömrəsi 16 rəqəmdən ibarət olmalıdır"));
+  }
+  if (isActive && !cardNumberRaw) {
+    redirect("/settings?error=" + encodeURIComponent("Aktiv etmək üçün kart nömrəsi tələb olunur"));
+  }
+
+  // Oxunaqli formatda saxlayiriq: "XXXX XXXX XXXX XXXX"
+  const formattedCardNumber = cardNumberRaw ? cardNumberRaw.match(/.{1,4}/g)?.join(" ") ?? cardNumberRaw : "";
+
+  const supabase = getSupabaseServerClient();
+  const { error: cardError } = await supabase.from("restaurant_card_transfer").upsert(
+    {
+      restaurant_id: context.restaurantId,
+      card_number: formattedCardNumber || null,
+      card_holder_name: cardHolderName || null,
+      bank_name: bankName || null,
+      is_active: isActive,
+    },
+    { onConflict: "restaurant_id" }
+  );
+
+  if (cardError) {
+    redirect("/settings?error=" + encodeURIComponent("Kart məlumatları yadda saxlanıla bilmədi"));
+  }
+
+  revalidatePath("/settings");
+  redirect("/settings?saved=1");
+}

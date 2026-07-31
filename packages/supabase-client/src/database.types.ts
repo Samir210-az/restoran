@@ -1139,6 +1139,41 @@ export type Database = {
           },
         ]
       }
+      restaurant_card_transfer: {
+        Row: {
+          bank_name: string | null
+          card_holder_name: string | null
+          card_number: string | null
+          is_active: boolean
+          restaurant_id: string
+          updated_at: string
+        }
+        Insert: {
+          bank_name?: string | null
+          card_holder_name?: string | null
+          card_number?: string | null
+          is_active?: boolean
+          restaurant_id: string
+          updated_at?: string
+        }
+        Update: {
+          bank_name?: string | null
+          card_holder_name?: string | null
+          card_number?: string | null
+          is_active?: boolean
+          restaurant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurant_card_transfer_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: true
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       restaurant_order_counters: {
         Row: {
           counter_date: string
@@ -1536,7 +1571,9 @@ export type Database = {
           items: Json
           order_number: number
           order_type: Database["public"]["Enums"]["order_type"]
+          payment_method: Database["public"]["Enums"]["payment_method"]
           payment_status: Database["public"]["Enums"]["payment_status"]
+          restaurant_id: string
           restaurant_name: string
           status: Database["public"]["Enums"]["order_status"]
           total: number
@@ -1564,6 +1601,14 @@ export type Database = {
           staff_count: number
           subscription_plan: Database["public"]["Enums"]["subscription_plan"]
           subscription_status: Database["public"]["Enums"]["subscription_status"]
+        }[]
+      }
+      get_public_card_transfer_info: {
+        Args: { _restaurant_id: string }
+        Returns: {
+          bank_name: string
+          card_holder_name: string
+          card_number: string
         }[]
       }
       get_public_restaurant_by_slug: {

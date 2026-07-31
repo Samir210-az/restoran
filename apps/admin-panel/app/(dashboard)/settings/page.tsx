@@ -1,10 +1,10 @@
-import { Palette, ImageIcon, ExternalLink, CreditCard, ShieldCheck } from "lucide-react";
+import { Palette, ImageIcon, ExternalLink, CreditCard, ShieldCheck, Landmark } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, Input, Badge } from "@restoran/ui";
 import { getCurrentStaffContext } from "@/lib/get-current-staff-context";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
 import { SubmitButton } from "@/components/forms/SubmitButton";
 import { ThemeColorPicker } from "@/components/settings/ThemeColorPicker";
-import { updateRestaurantBrandingAction, updatePaymentSettingsAction } from "./actions";
+import { updateRestaurantBrandingAction, updatePaymentSettingsAction, updateCardTransferAction } from "./actions";
 
 export const metadata = { title: "Parametrlər" };
 
@@ -15,7 +15,7 @@ export default async function SettingsPage({
 }) {
   const context = await getCurrentStaffContext();
   const supabase = getSupabaseServerClient();
-  const [{ data: restaurant }, { data: paymentStatusRows }] = await Promise.all([
+  const [{ data: restaurant }, { data: paymentStatusRows }, { data: cardTransfer }] = await Promise.all([
     supabase.from("restaurants").select("name, slug, logo_url, theme_color").eq("id", context.restaurantId).maybeSingle(),
     (
       supabase as unknown as {
@@ -25,6 +25,11 @@ export default async function SettingsPage({
         ) => Promise<{ data: { provider: string; merchant_id: string | null; is_active: boolean; has_secret: boolean }[] | null }>;
       }
     ).rpc("get_payment_settings_status", { _restaurant_id: context.restaurantId }),
+    supabase
+      .from("restaurant_card_transfer")
+      .select("card_number, card_holder_name, bank_name, is_active")
+      .eq("restaurant_id", context.restaurantId)
+      .maybeSingle(),
   ]);
   const paymentStatus = paymentStatusRows?.[0] ?? null;
 
@@ -160,6 +165,69 @@ export default async function SettingsPage({
             <label className="flex items-center gap-2 text-sm text-text-primary">
               <input type="checkbox" name="is_active" defaultChecked={paymentStatus?.is_active ?? false} className="h-4 w-4 rounded border-border-strong" />
               Kartla ödənişi aktiv et
+            </label>
+
+            <SubmitButton className="self-start">Yadda saxla</SubmitButton>
+          </form>
+        )}
+      </Card>
+
+      <Card className="max-w-md">
+        <CardHeader>
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Landmark className="h-4 w-4 text-accent" aria-hidden="true" />
+              Kartdan-karta ödəniş
+            </CardTitle>
+            <CardDescription>
+              Payriff qoşulana qədər (və ya onun əvəzinə) — kart nömrənizi yazın, müştəri "Kartla" seçəndə bu nömrəni görüb öz
+              bank tətbiqi ilə köçürmə edir
+            </CardDescription>
+          </div>
+        </CardHeader>
+
+        {context.role !== "owner" ? (
+          <p className="text-sm text-text-secondary">Ödəniş parametrlərini yalnız restoran sahibi dəyişə bilər.</p>
+        ) : (
+          <form action={updateCardTransferAction} className="flex flex-col gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-text-secondary">Status:</span>
+              {cardTransfer?.is_active && cardTransfer.card_number ? (
+                <Badge variant="success">Aktiv</Badge>
+              ) : (
+                <Badge variant="neutral">Qoşulmayıb</Badge>
+              )}
+            </div>
+
+            <Input
+              label="Kart nömrəsi"
+              name="card_number"
+              placeholder="0000 0000 0000 0000"
+              inputMode="numeric"
+              maxLength={19}
+              defaultValue={cardTransfer?.card_number ?? ""}
+            />
+            <Input
+              label="Kart sahibinin adı (istəyə bağlı)"
+              name="card_holder_name"
+              placeholder="Məs. Samir Axundov"
+              defaultValue={cardTransfer?.card_holder_name ?? ""}
+            />
+            <Input
+              label="Bank adı (istəyə bağlı)"
+              name="bank_name"
+              placeholder="Məs. Kapital Bank"
+              defaultValue={cardTransfer?.bank_name ?? ""}
+            />
+
+            <label className="flex items-center gap-2 text-sm text-text-primary">
+              <input
+                type="checkbox"
+                name="card_is_active"
+                defaultChecked={cardTransfer?.is_active ?? false}
+                className="h-4 w-4 rounded border-border-strong"
+              />
+              Kartdan-karta ödənişi aktiv et
             </label>
 
             <SubmitButton className="self-start">Yadda saxla</SubmitButton>
