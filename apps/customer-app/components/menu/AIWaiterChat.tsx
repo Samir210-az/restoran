@@ -101,7 +101,7 @@ export function AIWaiterChat({ restaurantId, items, onAddToCart }: AIWaiterChatP
       <div className="fixed bottom-20 right-4 z-20">
         <button
           onClick={() => setOpen(true)}
-          className="flex items-center gap-2 rounded-full bg-accent py-3 pl-16 pr-5 text-accent-foreground shadow-elevated transition-transform hover:scale-105 hover:opacity-90"
+          className="flex items-center gap-2 whitespace-nowrap rounded-full bg-accent py-3 pl-16 pr-6 text-accent-foreground shadow-elevated transition-transform hover:scale-105 hover:opacity-90"
           aria-label="AI Ofisiantla söhbət et"
         >
           <span className="text-sm font-medium">AI Ofisiant</span>

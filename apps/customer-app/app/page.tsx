@@ -51,18 +51,18 @@ export default async function HomePage() {
         />
       </div>
 
-      <section className="relative flex items-center px-4 pb-10 pt-4 text-center md:pb-14 md:pt-6">
+      <section className="relative flex items-center px-4 pb-6 pt-2 text-center md:pb-8 md:pt-3">
         <div className="relative z-10 mx-auto max-w-2xl">
-          {/* Kloş/qapaq ikonu - yazinin ustunde, teqriben ayni terpenme
-              animasiyasi ile (SAD-daki AI maskotu ile eyni brend dili). */}
+          {/* Kloş/qapaq ikonu HERFI menada yazinin "qapağı" kimi - menfi
+              margin ile basliqla UST-USTE oturdulub (sanki yazini ortur). */}
           <Image
             src="/images/hero-cloche-icon.png"
             alt=""
             width={200}
             height={300}
-            className="mx-auto h-64 w-auto animate-float drop-shadow-2xl md:h-80"
+            className="relative z-10 mx-auto -mb-14 h-64 w-auto animate-float drop-shadow-2xl md:-mb-20 md:h-80"
           />
-          <h1 className="-mt-4 text-3xl font-semibold tracking-tight text-white md:-mt-6 md:text-5xl">
+          <h1 className="text-3xl font-semibold tracking-tight text-white md:text-5xl">
             Sevimli restoranınızı seçin
           </h1>
           <p className="mt-4 text-base text-white/85 md:text-lg">
