@@ -61,7 +61,7 @@ export default async function OrdersPage() {
         <h1 className="text-2xl font-semibold text-text-primary">Sifarişlər</h1>
         <p className="text-sm text-text-secondary">Son 50 sifariş, canlı yenilənir</p>
       </div>
-      <OrdersRealtimeList restaurantId={restaurantId} initialOrders={orderRows} couriers={couriers} canDiscount={role === "owner" || role === "manager"} />
+      <OrdersRealtimeList restaurantId={restaurantId} initialOrders={orderRows} couriers={couriers} role={role} />
     </div>
   );
 }

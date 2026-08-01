@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Card, Badge, Button } from "@restoran/ui";
 import { MapPin, Receipt, Tag } from "lucide-react";
 import { createSupabaseBrowserClient } from "@restoran/supabase-client";
-import { advanceOrderStatusAction, cancelOrderAction, markPaymentReceivedAction, closeOrderAction } from "@/app/(dashboard)/orders/actions";
+import { cancelOrderAction, markPaymentReceivedAction, closeOrderAction, markOrderServedAction } from "@/app/(dashboard)/orders/actions";
 import { CourierAssignment } from "@/components/orders/CourierAssignment";
 import { OrderDiscountForm } from "@/components/orders/OrderDiscountForm";
 
@@ -58,13 +58,16 @@ export function OrdersRealtimeList({
   restaurantId,
   initialOrders,
   couriers,
-  canDiscount,
+  role,
 }: {
   restaurantId: string;
   initialOrders: OrderRow[];
   couriers: { id: string; full_name: string | null }[];
-  canDiscount: boolean;
+  role: string;
 }) {
+  const canDiscount = role === "owner" || role === "manager";
+  const canServe = role === "owner" || role === "manager" || role === "waiter";
+  const canTakePayment = role === "owner" || role === "manager" || role === "cashier";
   const [orders, setOrders] = useState(initialOrders);
   const [openDiscountId, setOpenDiscountId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -206,21 +209,18 @@ export function OrdersRealtimeList({
               >
                 <Receipt className="h-3.5 w-3.5" aria-hidden="true" /> Qəbz
               </Link>
-              {ACTIVE_STATUSES.has(order.status) && order.status !== "served" && (
+              {ACTIVE_STATUSES.has(order.status) && order.status === "ready" && canServe && (
                 <Button
                   size="sm"
                   variant="outline"
                   disabled={isPending}
-                  onClick={() => startTransition(() => advanceOrderStatusAction(order.id, order.status))}
+                  onClick={() => startTransition(() => markOrderServedAction(order.id))}
                 >
-                  Növbəti mərhələ
+                  Stola verildi
                 </Button>
               )}
-              {/* Bu duyme QESDEN ACTIVE_STATUSES-e baglı deyil - eger her
-                  hansi sebebden (kohne test melumati, ehtimal olunmayan
-                  hal) status "Tamamlandı" olub odenis hele "Gözləyir"
-                  gorunse, staff-in bunu duzeltmeye YOLU olsun deye. */}
-              {order.status !== "cancelled" &&
+              {(order.status === "served" || order.status === "ready") &&
+                canTakePayment &&
                 (order.payment_method === "cash" || order.payment_method === "card") &&
                 order.payment_status !== "completed" && (
                   <Button
@@ -232,7 +232,7 @@ export function OrdersRealtimeList({
                     Ödəniş alındı, bağla
                   </Button>
                 )}
-              {ACTIVE_STATUSES.has(order.status) && order.status === "served" && order.payment_status === "completed" && (
+              {ACTIVE_STATUSES.has(order.status) && order.status === "served" && order.payment_status === "completed" && canTakePayment && (
                 <Button
                   size="sm"
                   variant="outline"

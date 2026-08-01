@@ -5,30 +5,29 @@ import { getSupabaseServerClient } from "@/lib/supabase-server";
 import { getCurrentStaffContext } from "@/lib/get-current-staff-context";
 
 /**
- * SAD (real restoran proseduru): sifariş mətbəxdən kecib masaya/musteriye/
- * kuryere TESLIM olunur ("served") - bu, mueyyen SON MENUEL merhele-dir.
- * Sifarişin "Tamamlandı" olmasi ARTIQ "Növbəti mərhələ" duymesi ile DEYIL,
- * YALNIZ odenis qebulu ile bas verir (bax: markPaymentReceivedAction) -
- * cunki restoranda musteri HEMISE yeyib/goturub/kuryer teslim aldiqdan
- * SONRA odeyir, kassir pulu alan kimi ticket-i baglayir. Evvelki versiyada
- * bu iki emeliyyat (odenis + baglama) bir-birinden ayri idi - sifaris
- * hec vaxt "Tamamlandı" olmurdu, "Təqdim edildi"de eebedi qalirdi.
+ * Mətbəx-sifariş avtomatik sinxronizasiyası (bax: kitchen/actions.ts)
+ * artıq pending->preparing->ready keçidlərini ÖZÜ idarə edir - burada
+ * ümumi "Növbəti mərhələ" düyməsinə artıq EHTİYAC YOXDUR (əksinə, hər
+ * kəsə açıq olması aşpazın avtomatik axını ilə toqquşub qarışıqlıq
+ * yaradırdı). Qalan YEGANƏ iki əl ilə addım aydın rol bağlıdır:
+ * ofisiant "Stola verildi" deyir, kassir/sahib "Ödəniş alındı" deyir.
  */
-const NEXT_STATUS: Record<string, "confirmed" | "preparing" | "ready" | "served"> = {
-  pending: "confirmed",
-  confirmed: "preparing",
-  preparing: "ready",
-  ready: "served",
-};
-
-export async function advanceOrderStatusAction(orderId: string, currentStatus: string) {
-  const { restaurantId } = await getCurrentStaffContext();
-  const nextStatus = NEXT_STATUS[currentStatus];
-  if (!nextStatus) return;
+export async function markOrderServedAction(orderId: string) {
+  const { restaurantId, role } = await getCurrentStaffContext();
+  if (role !== "owner" && role !== "manager" && role !== "waiter") {
+    throw new Error("FORBIDDEN: yalnız ofisiant/menecer/sahib sifarişi təhvil verə bilər");
+  }
 
   const supabase = getSupabaseServerClient();
-  await supabase.from("orders").update({ status: nextStatus }).eq("id", orderId).eq("restaurant_id", restaurantId);
+  await supabase
+    .from("orders")
+    .update({ status: "served" })
+    .eq("id", orderId)
+    .eq("restaurant_id", restaurantId)
+    .eq("status", "ready");
+
   revalidatePath("/orders");
+  revalidatePath("/dashboard");
 }
 
 export async function cancelOrderAction(orderId: string) {
@@ -47,7 +46,10 @@ export async function cancelOrderAction(orderId: string) {
  * Legv edilmis sifarisi toxunmuruq (neq status cancelled).
  */
 export async function markPaymentReceivedAction(orderId: string) {
-  const { restaurantId } = await getCurrentStaffContext();
+  const { restaurantId, role } = await getCurrentStaffContext();
+  if (role !== "owner" && role !== "manager" && role !== "cashier") {
+    throw new Error("FORBIDDEN: yalnız kassir/menecer/sahib ödəniş qəbul edə bilər");
+  }
   const supabase = getSupabaseServerClient();
 
   await supabase
@@ -76,7 +78,10 @@ export async function markPaymentReceivedAction(orderId: string) {
  * avtomatik edir - bu, YALNIZ "ilişmiş" sifarisler ucun ehtiyatdir.
  */
 export async function closeOrderAction(orderId: string) {
-  const { restaurantId } = await getCurrentStaffContext();
+  const { restaurantId, role } = await getCurrentStaffContext();
+  if (role !== "owner" && role !== "manager" && role !== "cashier") {
+    throw new Error("FORBIDDEN: yalnız kassir/menecer/sahib sifarişi bağlaya bilər");
+  }
   const supabase = getSupabaseServerClient();
   await supabase
     .from("orders")

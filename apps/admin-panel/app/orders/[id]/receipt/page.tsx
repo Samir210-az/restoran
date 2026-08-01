@@ -1,4 +1,6 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { getCurrentStaffContext } from "@/lib/get-current-staff-context";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
 import { PrintButton } from "@/components/orders/PrintButton";
@@ -54,7 +56,14 @@ export default async function ReceiptPage({ params }: { params: { id: string } }
 
   return (
     <div className="mx-auto flex min-h-screen max-w-sm flex-col bg-bg px-4 py-8 print:max-w-full print:px-0 print:py-0">
-      <div className="mb-4 flex justify-end print:hidden">
+      <div className="mb-4 flex items-center justify-between print:hidden">
+        <Link
+          href="/orders"
+          className="flex items-center gap-1.5 rounded-md border border-border-strong px-3 py-2 text-sm font-medium text-text-secondary hover:bg-bg-muted"
+        >
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+          Sifarişlərə qayıt
+        </Link>
         <PrintButton />
       </div>
 
