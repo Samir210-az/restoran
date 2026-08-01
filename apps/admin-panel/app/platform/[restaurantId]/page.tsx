@@ -1,12 +1,12 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Building2, Users, UtensilsCrossed, ShoppingBag, Mail, Calendar, CheckCircle2, AlertCircle, UserCog } from "lucide-react";
+import { ArrowLeft, Building2, Users, UtensilsCrossed, ShoppingBag, Mail, Calendar, CheckCircle2, AlertCircle, UserCog, KeyRound } from "lucide-react";
 import { Card, Badge, Input } from "@restoran/ui";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
 import { SubmitButton } from "@/components/forms/SubmitButton";
 import { ResetRestaurantButton } from "@/components/platform/ResetRestaurantButton";
 import { DeleteRestaurantButton } from "@/components/platform/DeleteRestaurantButton";
-import { setRestaurantStatusAction, transferRestaurantOwnerAction } from "../actions";
+import { setRestaurantStatusAction, transferRestaurantOwnerAction, regenerateAccessCodeAction } from "../actions";
 
 export const metadata = { title: "Restoran Detalları" };
 
@@ -36,7 +36,7 @@ export default async function PlatformRestaurantDetailPage({
   searchParams,
 }: {
   params: { restaurantId: string };
-  searchParams: { rreset?: string; rerror?: string; rowner?: string };
+  searchParams: { rreset?: string; rerror?: string; rowner?: string; rcode?: string };
 }) {
   const supabase = getSupabaseServerClient();
   const { data: restaurants } = await supabase.rpc("get_platform_overview");
@@ -70,6 +70,12 @@ export default async function PlatformRestaurantDetailPage({
         <div className="flex items-center gap-2 rounded-md border border-success/30 bg-success/10 px-3 py-2 text-sm text-success">
           <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" />
           Sahiblik <span className="font-medium">{searchParams.rowner}</span>-a ötürüldü.
+        </div>
+      )}
+      {searchParams.rcode && (
+        <div className="flex items-center gap-2 rounded-md border border-success/30 bg-success/10 px-3 py-2 text-sm text-success">
+          <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" />
+          Yeni restoran kodu: <span className="font-mono font-medium">{searchParams.rcode}</span> — indi qeyd edin, bir daha göstərilməyəcək.
         </div>
       )}
       {searchParams.rerror && (
@@ -146,6 +152,19 @@ export default async function PlatformRestaurantDetailPage({
           <SubmitButton variant="outline" className="self-start">
             Sahibliyi ötür
           </SubmitButton>
+        </form>
+      </Card>
+
+      <Card className="max-w-md">
+        <div className="mb-3 flex items-center gap-2">
+          <KeyRound className="h-4 w-4 text-accent" aria-hidden="true" />
+          <p className="font-medium text-text-primary">Restoran girişi kodu</p>
+        </div>
+        <p className="mb-3 text-xs text-text-secondary">
+          İşçilər cihazlarını bu restorana "ad + kod" ilə bağlayır. Kod gizli saxlanılır, yalnız yeniləndiyi an bir dəfə göstərilir.
+        </p>
+        <form action={regenerateAccessCodeAction.bind(null, restaurant.id)}>
+          <SubmitButton variant="outline">Yeni kod yarat</SubmitButton>
         </form>
       </Card>
 

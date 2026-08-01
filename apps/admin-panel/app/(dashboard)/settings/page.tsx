@@ -1,17 +1,17 @@
-import { Palette, ImageIcon, ExternalLink, CreditCard, ShieldCheck, Landmark } from "lucide-react";
+import { Palette, ImageIcon, ExternalLink, CreditCard, ShieldCheck, Landmark, KeyRound } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, Input, Badge } from "@restoran/ui";
 import { getCurrentStaffContext } from "@/lib/get-current-staff-context";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
 import { SubmitButton } from "@/components/forms/SubmitButton";
 import { ThemeColorPicker } from "@/components/settings/ThemeColorPicker";
-import { updateRestaurantBrandingAction, updatePaymentSettingsAction, updateCardTransferAction } from "./actions";
+import { updateRestaurantBrandingAction, updatePaymentSettingsAction, updateCardTransferAction, regenerateOwnAccessCodeAction } from "./actions";
 
 export const metadata = { title: "Parametrlər" };
 
 export default async function SettingsPage({
   searchParams,
 }: {
-  searchParams: { saved?: string; error?: string };
+  searchParams: { saved?: string; error?: string; code?: string };
 }) {
   const context = await getCurrentStaffContext();
   const supabase = getSupabaseServerClient();
@@ -53,6 +53,33 @@ export default async function SettingsPage({
           {searchParams.error}
         </div>
       )}
+      {searchParams.code && (
+        <div className="rounded-md border border-success/30 bg-success/10 px-3 py-2 text-sm text-success">
+          Yeni restoran kodu: <span className="font-mono font-medium">{searchParams.code}</span> — indi qeyd edin, bir daha göstərilməyəcək.
+        </div>
+      )}
+
+      <Card className="max-w-md">
+        <CardHeader>
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <KeyRound className="h-4 w-4 text-accent" aria-hidden="true" />
+              Restoran girişi kodu
+            </CardTitle>
+            <CardDescription>
+              İşçiləriniz cihazlarını restorana "ad + kod" ilə bağlayır (bax: Daxil ol səhifəsi). Kodu yeni işçi cihazı üçün
+              paylaşın.
+            </CardDescription>
+          </div>
+        </CardHeader>
+        {context.role !== "owner" ? (
+          <p className="text-sm text-text-secondary">Kodu yalnız restoran sahibi yeniləyə bilər.</p>
+        ) : (
+          <form action={regenerateOwnAccessCodeAction}>
+            <SubmitButton variant="outline">Yeni kod yarat</SubmitButton>
+          </form>
+        )}
+      </Card>
 
       <Card className="max-w-md">
         <CardHeader>

@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { getCurrentStaffContext } from "@/lib/get-current-staff-context";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
+import { createSupabaseServiceClient } from "@restoran/supabase-client";
+import { generateAccessCode } from "@restoran/utils";
 
 const MAX_LOGO_BYTES = 2 * 1024 * 1024; // 2MB
 const ALLOWED_LOGO_TYPES: Record<string, string> = {
@@ -12,6 +14,28 @@ const ALLOWED_LOGO_TYPES: Record<string, string> = {
   "image/webp": "webp",
 };
 const HEX_COLOR_PATTERN = /^#[0-9a-fA-F]{6}$/;
+
+/**
+ * Restoranin cihaz-giris kodunu (bax: RestaurantPicker "ad+kod")
+ * yeniləyir - YALNIZ owner. Kod set_restaurant_access_code RPC-si
+ * ilə hash-lənərək saxlanılır, `regenerateAccessCodeAction`-un
+ * platform admin versiyası ilə EYNİ prinsip (bax: platform/actions.ts).
+ */
+export async function regenerateOwnAccessCodeAction() {
+  const context = await getCurrentStaffContext();
+  if (context.role !== "owner") {
+    redirect("/settings?error=" + encodeURIComponent("Kodu yalnız restoran sahibi yeniləyə bilər"));
+  }
+
+  const serviceClient = createSupabaseServiceClient();
+  const accessCode = generateAccessCode();
+  await (
+    serviceClient as unknown as { rpc: (fn: string, args: unknown) => Promise<{ error: unknown }> }
+  ).rpc("set_restaurant_access_code", { _restaurant_id: context.restaurantId, _code: accessCode });
+
+  revalidatePath("/settings");
+  redirect("/settings?code=" + encodeURIComponent(accessCode));
+}
 
 /**
  * Restoranin musteri-uzlu brendinqini (loqo + tema rengi) yeniler.

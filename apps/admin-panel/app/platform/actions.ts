@@ -5,7 +5,18 @@ import { revalidatePath } from "next/cache";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
 import { requirePlatformAdmin } from "@/lib/get-current-platform-admin";
 import { createSupabaseServiceClient } from "@restoran/supabase-client";
-import { slugifyUnique } from "@restoran/utils";
+import { slugifyUnique, generateAccessCode } from "@restoran/utils";
+
+export async function regenerateAccessCodeAction(restaurantId: string) {
+  await requirePlatformAdmin();
+  const serviceClient = createSupabaseServiceClient();
+  const accessCode = generateAccessCode();
+  await (
+    serviceClient as unknown as { rpc: (fn: string, args: unknown) => Promise<{ error: unknown }> }
+  ).rpc("set_restaurant_access_code", { _restaurant_id: restaurantId, _code: accessCode });
+  revalidatePath(`/platform/${restaurantId}`);
+  redirect(`/platform/${restaurantId}?rcode=` + encodeURIComponent(accessCode));
+}
 
 export async function setRestaurantStatusAction(restaurantId: string, status: string) {
   await requirePlatformAdmin();
@@ -158,8 +169,24 @@ export async function createRestaurantWithOwnerAction(formData: FormData) {
     is_active: true,
   });
 
+  // Cihaz-giris kodu (bax: RestaurantPicker "ad+kod" ekrani) - burada
+  // yaradilib BIR DEFE ugur mesajinda gosterilir, cunki hash-lendikden
+  // sonra bir daha DUZ METN kimi geri oxuna bilmez. Sahib bunu
+  // /settings-den istediyi zaman yenileye biler.
+  const accessCode = generateAccessCode();
+  const { error: rpcError } = await (
+    serviceClient as unknown as { rpc: (fn: string, args: unknown) => Promise<{ error: unknown }> }
+  ).rpc("set_restaurant_access_code", { _restaurant_id: restaurantId, _code: accessCode });
+  if (rpcError) {
+    // Kodu tesis etmek alinmasa da, restoran ozu artiq yaradilib -
+    // sahib /settings-den sonradan tesis ede biler, prosesi dayandirmiriq.
+  }
+
   revalidatePath("/platform");
-  redirect("/platform?rcreated=" + encodeURIComponent(`${restaurantName} (giriş: ${ownerEmail})`));
+  redirect(
+    "/platform?rcreated=" +
+      encodeURIComponent(`${restaurantName} — giriş: ${ownerEmail} / PIN: ${password} — Restoran kodu: ${accessCode}`)
+  );
 }
 
 /**

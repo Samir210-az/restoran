@@ -9,16 +9,34 @@ const DEVICE_COOKIE = "device_restaurant_slug";
 const DEVICE_COOKIE_MAX_AGE = 60 * 60 * 24 * 400; // ~400 gün - brauzerlərin icazə verdiyi maksimum
 
 /**
- * Bu cihazi (planşet/kassa kompüteri) BİR restorana bağlayır - Samir-in
- * qərarı: hər restoranın öz ayrıca cihazı olacaq, cihaz həmişə eyni
- * restoranda qalacaq. Bir dəfə seçiləndən sonra bir daha restoran
- * seçmə ekranı görünmür, birbaşa "kim daxil olur" (ad+PIN) ekranına keçir.
+ * Bu cihazi (planşet/kassa kompüteri) BİR restorana bağlayır - "ad +
+ * gizli kod" ilə (Samir-in qərarı: ictimai siyahıdan seçim YOX, çünki
+ * bu, bütün restoranların adlarını hər kəsə açar - ad+kod daha
+ * təhlükəsizdir). Kod `verify_restaurant_access` SECURITY DEFINER
+ * RPC-si ilə yoxlanılır (bax: migrasiya) - ad və ya kod yanlışdırsa
+ * eyni ümumi xəta göstərilir (hansının səhv olduğunu bildirmir).
  */
 export async function selectDeviceRestaurantAction(formData: FormData) {
-  const slug = String(formData.get("slug") ?? "").trim();
-  if (!slug) redirect("/login");
+  const name = String(formData.get("restaurant_name") ?? "").trim();
+  const code = String(formData.get("restaurant_code") ?? "").trim();
 
-  cookies().set(DEVICE_COOKIE, slug, {
+  if (!name || !code) {
+    redirect("/login?error=" + encodeURIComponent("Restoran adı və kodu tələb olunur"));
+  }
+
+  const supabase = createSupabasePublicClient();
+  const { data } = await (
+    supabase as unknown as {
+      rpc: (fn: string, args: unknown) => Promise<{ data: LoginDirectoryRestaurant[] | null }>;
+    }
+  ).rpc("verify_restaurant_access", { _name: name, _code: code });
+
+  const match = data?.[0];
+  if (!match) {
+    redirect("/login?error=" + encodeURIComponent("Restoran adı və ya kod yanlışdır"));
+  }
+
+  cookies().set(DEVICE_COOKIE, match!.slug, {
     maxAge: DEVICE_COOKIE_MAX_AGE,
     path: "/",
     httpOnly: true,
@@ -102,14 +120,10 @@ export async function getDeviceRestaurantSlug(): Promise<string | null> {
 /** Cihaza bağlı restoranın (id/ad/loqo) məlumatını gətirir. */
 export async function getBoundRestaurant(slug: string): Promise<LoginDirectoryRestaurant | null> {
   const supabase = createSupabasePublicClient();
-  const { data } = await supabase.rpc("get_public_restaurant_directory");
-  return ((data ?? []) as LoginDirectoryRestaurant[]).find((r) => r.slug === slug) ?? null;
-}
-
-export async function getRestaurantDirectory(): Promise<LoginDirectoryRestaurant[]> {
-  const supabase = createSupabasePublicClient();
-  const { data } = await supabase.rpc("get_public_restaurant_directory");
-  return (data ?? []) as LoginDirectoryRestaurant[];
+  const { data } = await supabase.rpc("get_public_restaurant_by_slug", { _slug: slug });
+  const row = data?.[0];
+  if (!row) return null;
+  return { id: row.id, name: row.name, slug: row.slug, logo_url: row.logo_url, theme_color: row.theme_color };
 }
 
 /** Seçilmiş restoranın aktiv işçilərinin adlarını (email YOX) gətirir. */

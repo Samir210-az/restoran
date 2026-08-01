@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AlertCircle, Shield, Users, ClipboardList, ChefHat, Wallet, ChevronLeft, Delete } from "lucide-react";
+import { AlertCircle, Shield, Users, ClipboardList, ChefHat, Wallet, Bike, ChevronLeft, Delete } from "lucide-react";
 import { createSupabasePublicClient } from "@restoran/supabase-client";
 import {
   staffPinLoginAction,
@@ -16,6 +16,7 @@ const ROLE_TILES = [
   { key: "waiter", label: "Ofisiant", icon: ClipboardList },
   { key: "chef", label: "Aşpaz", icon: ChefHat },
   { key: "cashier", label: "Kassir", icon: Wallet },
+  { key: "courier", label: "Kuryer", icon: Bike },
 ] as const;
 
 const PIN_LENGTH = 6;
