@@ -1,66 +1,16 @@
-import Link from "next/link";
-import { AlertCircle } from "lucide-react";
-import { Button, Input } from "@restoran/ui";
-import { registerAction } from "./actions";
+import { redirect } from "next/navigation";
 
 export const metadata = { title: "Qeydiyyat" };
 
-export default function RegisterPage({
-  searchParams,
-}: {
-  searchParams: { error?: string };
-}) {
-  const error = searchParams.error;
-
-  return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-xl font-semibold text-text-primary">Restoranınızı qeydiyyatdan keçirin</h1>
-        <p className="mt-1 text-sm text-text-secondary">Bir neçə dəqiqədə platformaya başlayın</p>
-      </div>
-
-      {error && (
-        <div className="flex items-start gap-2 rounded-md bg-danger/10 p-3 text-sm text-danger">
-          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-          <span>{error}</span>
-        </div>
-      )}
-
-      <form action={registerAction} className="flex flex-col gap-4">
-        <Input label="Restoran adı" type="text" name="restaurantName" placeholder="Məs. Ləzzət Sarayı" required />
-        <Input label="Ad Soyad" type="text" name="fullName" placeholder="Adınız Soyadınız" required />
-        <Input label="E-poçt" type="email" name="email" placeholder="siz@restoran.az" autoComplete="email" required />
-        <Input
-          label="Şifrə"
-          type="password"
-          name="password"
-          placeholder="Minimum 8 simvol"
-          autoComplete="new-password"
-          minLength={8}
-          required
-        />
-
-        <label className="flex items-start gap-2 text-sm text-text-secondary">
-          <input type="checkbox" name="terms" required className="mt-0.5 h-4 w-4 rounded border-border-strong accent-accent" />
-          <span>
-            <Link href="/terms" className="font-medium text-accent hover:underline">
-              İstifadə şərtləri
-            </Link>{" "}
-            ilə razıyam
-          </span>
-        </label>
-
-        <Button type="submit" className="w-full" size="lg">
-          Hesab yarat
-        </Button>
-      </form>
-
-      <p className="text-center text-sm text-text-secondary">
-        Artıq hesabınız var?{" "}
-        <Link href="/login" className="font-medium text-accent hover:underline">
-          Daxil olun
-        </Link>
-      </p>
-    </div>
-  );
+/**
+ * QEYD (bug duzelisi): bu sehife defelerle YANLIŞLIQLA bos/tekrarlanan
+ * restoranlarin yaranmasina sebeb olub - Samir (platform admin) bura
+ * tesadufen dushub ad yazanda hemin an YENI restoran yaranirdi. Hazirda
+ * BUTUN restoranlar Samir terefinden /platform-dan yaradilir (musteri
+ * ozu-qeydiyyat axini aktiv istifade olunmur), ona gore bu sehife
+ * muveqqeti bagli - /login-e yonlendirilir. Lazim olsa (real musteri
+ * oz-qeydiyyat axini isteyende) asanliqla geri acila biler.
+ */
+export default function RegisterPage() {
+  redirect("/login");
 }
