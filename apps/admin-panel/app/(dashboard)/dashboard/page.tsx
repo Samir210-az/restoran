@@ -55,15 +55,34 @@ export default async function DashboardPage() {
     const now = new Date();
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
 
-    const { data: myOrders } = await supabase
-      .from("orders")
-      .select("total")
-      .eq("restaurant_id", context.restaurantId)
-      .eq("created_by", context.userId)
-      .neq("status", "cancelled")
-      .gte("created_at", startOfToday);
+    const [{ data: myOrders }, { data: myOpenTableOrders }] = await Promise.all([
+      supabase
+        .from("orders")
+        .select("total")
+        .eq("restaurant_id", context.restaurantId)
+        .eq("created_by", context.userId)
+        .neq("status", "cancelled")
+        .gte("created_at", startOfToday),
+      // "Mənim masalarım" - Samir-in isteyi: ofisiant sifarişi ALANDA
+      // artiq onun adina baglanir (bax: order-new/actions.ts _created_by) -
+      // bu sadece hemin melumati ofisiantin ozune GORUNEN edir.
+      supabase
+        .from("orders")
+        .select("table_id, restaurant_tables(table_number)")
+        .eq("restaurant_id", context.restaurantId)
+        .eq("created_by", context.userId)
+        .not("table_id", "is", null)
+        .in("status", ACTIVE_STATUSES),
+    ]);
 
     const mySalesToday = (myOrders ?? []).reduce((sum, o) => sum + Number(o.total), 0);
+    const myTablesMap = new Map<string, string>();
+    for (const row of myOpenTableOrders ?? []) {
+      if (!row.table_id) continue;
+      const tableNumber = (row.restaurant_tables as unknown as { table_number: string } | null)?.table_number;
+      if (tableNumber && !myTablesMap.has(row.table_id)) myTablesMap.set(row.table_id, tableNumber);
+    }
+    const myTables = Array.from(myTablesMap.entries());
 
     return (
       <div className="flex flex-col gap-6">
@@ -73,6 +92,28 @@ export default async function DashboardPage() {
           </h1>
           <p className="text-sm text-text-secondary">{context.restaurantName}</p>
         </div>
+
+        {context.role === "waiter" && (
+          <div className="flex flex-col gap-2">
+            <h2 className="text-sm font-semibold text-text-secondary">Açıq masalarım ({myTables.length})</h2>
+            {myTables.length === 0 ? (
+              <p className="text-sm text-text-muted">Hazırda sizə bağlı açıq masa yoxdur</p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {myTables.map(([tableId, tableNumber]) => (
+                  <Link
+                    key={tableId}
+                    href={`/tables/${tableId}`}
+                    className="flex items-center gap-1.5 rounded-full border border-accent/40 bg-accent-soft px-3.5 py-2 text-sm font-medium text-accent hover:bg-accent/10"
+                  >
+                    <Table2 className="h-3.5 w-3.5" aria-hidden="true" />
+                    Masa {tableNumber}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         <Card>
           <div className="flex items-center gap-4">
