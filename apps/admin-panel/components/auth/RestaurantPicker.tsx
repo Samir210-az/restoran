@@ -56,9 +56,6 @@ export function RestaurantPicker({ error }: { error?: string }) {
           Qeydiyyat üçün müraciət edin
         </a>
       </p>
-      <a href="/login/admin" className="text-center text-xs text-text-muted hover:text-text-secondary hover:underline">
-        Platform admin girişi
-      </a>
     </div>
   );
 }

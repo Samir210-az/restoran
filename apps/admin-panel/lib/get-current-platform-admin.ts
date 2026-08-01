@@ -13,7 +13,7 @@ export async function requirePlatformAdmin() {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect("/login");
+    redirect("/login/admin");
   }
 
   const { data: isAdmin } = await supabase.rpc("is_platform_admin");
