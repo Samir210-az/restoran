@@ -149,7 +149,7 @@ export default async function TablesPage() {
             return (
               <Link
                 key={table.id}
-                href={`/order-new?table=${table.id}`}
+                href={`/tables/${table.id}`}
                 title={reservedTimeLabel ? `Rezervasiya saat ${reservedTimeLabel}` : STATUS_LABEL[status]}
                 className={cn(
                   "flex flex-col items-center justify-center gap-1 rounded-xl border-2 p-3 text-center transition-transform active:scale-95",

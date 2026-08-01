@@ -167,7 +167,7 @@ export default async function DashboardPage() {
   const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
   const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
 
-  const [todayOrders, activeOrders, newCustomers, thisMonthOrders, lastMonthOrders, recentOrders] = await Promise.all([
+  const [todayOrders, activeOrders, newCustomers, thisMonthOrders, lastMonthOrders, recentOrders, openTableOrders] = await Promise.all([
     // QEYD (bug duzelisi): "satis" YALNIZ TAMAMLANMIŞ (odenishi alinmish,
     // bağlanmış) sifarişləri əhatə etməlidir - sifariş verilən kimi hələ
     // mətbəx hazırlamamış/ödəniş alınmamış ola-ola "satış" kimi
@@ -208,6 +208,14 @@ export default async function DashboardPage() {
       .eq("restaurant_id", context.restaurantId)
       .order("created_at", { ascending: false })
       .limit(5),
+    // "Açıq masalar" - masaya baglı, hele bagliolmamış sifarişler (bax:
+    // Samir-in istegi - masa hesabı en usde gorunsun).
+    supabase
+      .from("orders")
+      .select("table_id, restaurant_tables(table_number)")
+      .eq("restaurant_id", context.restaurantId)
+      .not("table_id", "is", null)
+      .in("status", ACTIVE_STATUSES),
   ]);
 
   const todaySales = (todayOrders.data ?? []).reduce((sum, o) => sum + Number(o.total), 0);
@@ -229,6 +237,14 @@ export default async function DashboardPage() {
 
   const orders = recentOrders.data ?? [];
 
+  const openTablesMap = new Map<string, string>();
+  for (const row of openTableOrders.data ?? []) {
+    if (!row.table_id) continue;
+    const tableNumber = (row.restaurant_tables as unknown as { table_number: string } | null)?.table_number;
+    if (tableNumber && !openTablesMap.has(row.table_id)) openTablesMap.set(row.table_id, tableNumber);
+  }
+  const openTables = Array.from(openTablesMap.entries());
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
@@ -239,6 +255,24 @@ export default async function DashboardPage() {
           {context.restaurantName} idarə panelinə xoş gəldiniz.
         </p>
       </div>
+
+      {openTables.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <h2 className="text-sm font-semibold text-text-secondary">Açıq masalar ({openTables.length})</h2>
+          <div className="flex flex-wrap gap-2">
+            {openTables.map(([tableId, tableNumber]) => (
+              <Link
+                key={tableId}
+                href={`/tables/${tableId}`}
+                className="flex items-center gap-1.5 rounded-full border border-accent/40 bg-accent-soft px-3.5 py-2 text-sm font-medium text-accent hover:bg-accent/10"
+              >
+                <Table2 className="h-3.5 w-3.5" aria-hidden="true" />
+                Masa {tableNumber}
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
         {kpiCards.map(({ label, value, icon: Icon }) => (

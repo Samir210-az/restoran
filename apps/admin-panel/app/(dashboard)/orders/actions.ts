@@ -94,6 +94,42 @@ export async function closeOrderAction(orderId: string) {
 }
 
 /**
+ * Masanin butun ACIQ (odenmemis) sifarişlerini BIR DEFEYE baglayir -
+ * masa hesabi konsepti ucun (bax: /tables/[id]) - bir masaya bir
+ * neçe defe elave sifariş verilmiş ola biler (bax: musteri "elave
+ * sifariş ver" duymesi), kassir/sahib hamısını tek kliklə bağlaya bilir.
+ */
+export async function payAllTableOrdersAction(tableId: string) {
+  const { restaurantId, role } = await getCurrentStaffContext();
+  if (role !== "owner" && role !== "manager" && role !== "cashier") {
+    throw new Error("FORBIDDEN: yalnız kassir/menecer/sahib ödəniş qəbul edə bilər");
+  }
+
+  const supabase = getSupabaseServerClient();
+  const { data: openOrders } = await supabase
+    .from("orders")
+    .select("id")
+    .eq("restaurant_id", restaurantId)
+    .eq("table_id", tableId)
+    .in("status", ["ready", "served"]);
+
+  for (const o of openOrders ?? []) {
+    await supabase.from("payments").update({ status: "completed" }).eq("order_id", o.id).eq("restaurant_id", restaurantId);
+    await supabase
+      .from("orders")
+      .update({ status: "completed" })
+      .eq("id", o.id)
+      .eq("restaurant_id", restaurantId)
+      .neq("status", "cancelled");
+  }
+
+  revalidatePath(`/tables/${tableId}`);
+  revalidatePath("/tables");
+  revalidatePath("/orders");
+  revalidatePath("/dashboard");
+}
+
+/**
  * Sifarişə manual endirim tətbiq edir - YALNIZ owner/manager (kassir/
  * ofisiant/aşpaz bunu edə bilməz). Faiz ötürülübsə, o an ki `total`-a
  * gorə real məbləğə cevrilib saxlanılır (bax: orders.discount_amount) -
