@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getCurrentStaffContext } from "@/lib/get-current-staff-context";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
 import { PrintButton } from "@/components/orders/PrintButton";
+import { localize } from "@restoran/utils";
 
 export const metadata = { title: "Qəbz" };
 
@@ -42,7 +43,7 @@ export default async function ReceiptPage({ params }: { params: { id: string } }
   ]);
 
   const receiptItems: ReceiptItem[] = (items ?? []).map((i) => ({
-    name: (i.menu_items as unknown as { name: string } | null)?.name ?? "Yemək",
+    name: localize((i.menu_items as unknown as { name: Record<string, string> } | null)?.name, "az") || "Yemək",
     quantity: i.quantity,
     unit_price: Number(i.unit_price),
   }));
