@@ -109,6 +109,9 @@ export function RoleLoginGate({ restaurant, error }: { restaurant: LoginDirector
               Bu restoran deyil? Cihazı sıfırla
             </button>
           </form>
+          <a href="/login/admin" className="text-xs text-text-muted hover:text-text-secondary hover:underline">
+            Platform admin girişi
+          </a>
         </div>
       </div>
     );
