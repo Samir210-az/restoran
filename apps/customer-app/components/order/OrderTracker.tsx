@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CheckCircle2, Circle, ChefHat, Clock, Bike, Copy, Check, CreditCard } from "lucide-react";
+import Link from "next/link";
+import { CheckCircle2, Circle, ChefHat, Clock, Bike, Copy, Check, CreditCard, PlusCircle } from "lucide-react";
 import { Card, Badge } from "@restoran/ui";
 import { cn } from "@restoran/utils";
 import { createSupabasePublicClient } from "@restoran/supabase-client";
@@ -22,6 +23,9 @@ export interface OrderTrackingRow {
   order_number: number;
   restaurant_name: string;
   restaurant_id: string;
+  restaurant_slug: string;
+  table_id: string | null;
+  table_number: string | null;
   status: OrderStatus;
   order_type: string;
   total: number;
@@ -102,6 +106,16 @@ export function OrderTracker({ orderId, initialOrder }: { orderId: string; initi
           {order.restaurant_name} #{order.order_number}
         </p>
       </div>
+
+      {order.order_type === "dine_in" && order.table_id && order.status !== "cancelled" && (
+        <Link
+          href={`/${order.restaurant_slug}?table=${order.table_id}`}
+          className="mb-6 flex items-center justify-center gap-2 rounded-md border border-accent/40 bg-accent-soft px-4 py-2.5 text-sm font-medium text-accent hover:bg-accent/10"
+        >
+          <PlusCircle className="h-4 w-4" aria-hidden="true" />
+          Əlavə sifariş ver{order.table_number ? ` (Masa ${order.table_number})` : ""}
+        </Link>
+      )}
 
       {isCancelled ? (
         <Card className="mb-6 text-center">

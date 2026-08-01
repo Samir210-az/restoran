@@ -328,7 +328,10 @@ export type Database = {
           payment_status: Database["public"]["Enums"]["payment_status"]
           restaurant_id: string
           restaurant_name: string
+          restaurant_slug: string
           status: Database["public"]["Enums"]["order_status"]
+          table_id: string
+          table_number: string
           total: number
         }[]
       }
