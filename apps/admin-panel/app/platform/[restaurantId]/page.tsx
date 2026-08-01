@@ -3,10 +3,11 @@ import Link from "next/link";
 import { ArrowLeft, Building2, Users, UtensilsCrossed, ShoppingBag, Mail, Calendar, CheckCircle2, AlertCircle, UserCog, KeyRound } from "lucide-react";
 import { Card, Badge, Input } from "@restoran/ui";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
+import { createSupabaseServiceClient } from "@restoran/supabase-client";
 import { SubmitButton } from "@/components/forms/SubmitButton";
 import { ResetRestaurantButton } from "@/components/platform/ResetRestaurantButton";
 import { DeleteRestaurantButton } from "@/components/platform/DeleteRestaurantButton";
-import { setRestaurantStatusAction, transferRestaurantOwnerAction, regenerateAccessCodeAction } from "../actions";
+import { setRestaurantStatusAction, transferRestaurantOwnerAction, regenerateAccessCodeAction, resetStaffPinAction } from "../actions";
 
 export const metadata = { title: "Restoran Detalları" };
 
@@ -36,13 +37,20 @@ export default async function PlatformRestaurantDetailPage({
   searchParams,
 }: {
   params: { restaurantId: string };
-  searchParams: { rreset?: string; rerror?: string; rowner?: string; rcode?: string };
+  searchParams: { rreset?: string; rerror?: string; rowner?: string; rcode?: string; rpin?: string };
 }) {
   const supabase = getSupabaseServerClient();
   const { data: restaurants } = await supabase.rpc("get_platform_overview");
   const restaurant = (restaurants ?? []).find((r) => r.id === params.restaurantId);
 
   if (!restaurant) notFound();
+
+  const serviceClient = createSupabaseServiceClient();
+  const { data: staffList } = await serviceClient
+    .from("staff_members")
+    .select("id, user_id, role, is_active, profiles(full_name)")
+    .eq("restaurant_id", restaurant.id)
+    .order("created_at", { ascending: true });
 
   return (
     <div className="flex flex-col gap-6">
@@ -76,6 +84,12 @@ export default async function PlatformRestaurantDetailPage({
         <div className="flex items-center gap-2 rounded-md border border-success/30 bg-success/10 px-3 py-2 text-sm text-success">
           <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" />
           Yeni restoran kodu: <span className="font-mono font-medium">{searchParams.rcode}</span> — indi qeyd edin, bir daha göstərilməyəcək.
+        </div>
+      )}
+      {searchParams.rpin && (
+        <div className="flex items-center gap-2 rounded-md border border-success/30 bg-success/10 px-3 py-2 text-sm text-success">
+          <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" />
+          Yeni PIN: <span className="font-mono font-medium">{searchParams.rpin}</span> — bunu işçiyə bildirin.
         </div>
       )}
       {searchParams.rerror && (
@@ -166,6 +180,50 @@ export default async function PlatformRestaurantDetailPage({
         <form action={regenerateAccessCodeAction.bind(null, restaurant.id)}>
           <SubmitButton variant="outline">Yeni kod yarat</SubmitButton>
         </form>
+      </Card>
+
+      <Card className="max-w-md">
+        <div className="mb-3 flex items-center gap-2">
+          <Users className="h-4 w-4 text-accent" aria-hidden="true" />
+          <p className="font-medium text-text-primary">İşçilər — PIN sıfırla</p>
+        </div>
+        <p className="mb-3 text-xs text-text-secondary">
+          İşçi öz PIN-ini unudubsa (və ya köhnə, 6 rəqəmli olmayan şifrədirsə), burada 6 rəqəmli yeni PIN təyin edin.
+        </p>
+        <div className="flex flex-col divide-y divide-border">
+          {(staffList ?? []).map((s) => {
+            const fullName = (s.profiles as unknown as { full_name: string | null } | null)?.full_name ?? "İşçi";
+            return (
+              <div key={s.id} className="flex flex-col gap-2 py-3 first:pt-0 last:pb-0">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium text-text-primary">
+                    {fullName} <span className="text-xs font-normal capitalize text-text-muted">· {s.role}</span>
+                  </p>
+                  {!s.is_active && <Badge variant="neutral">Deaktiv</Badge>}
+                </div>
+                <form action={resetStaffPinAction} className="flex items-center gap-2">
+                  <input type="hidden" name="restaurant_id" value={restaurant.id} />
+                  <input type="hidden" name="staff_user_id" value={s.user_id} />
+                  <input
+                    type="text"
+                    name="new_pin"
+                    inputMode="numeric"
+                    pattern="[0-9]{6}"
+                    maxLength={6}
+                    minLength={6}
+                    placeholder="Yeni 6 rəqəmli PIN"
+                    required
+                    className="h-8 flex-1 rounded-md border border-border-strong bg-bg px-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+                  />
+                  <SubmitButton size="sm" variant="outline">
+                    Sıfırla
+                  </SubmitButton>
+                </form>
+              </div>
+            );
+          })}
+          {(staffList ?? []).length === 0 && <p className="py-3 text-sm text-text-secondary">Heç bir işçi tapılmadı.</p>}
+        </div>
       </Card>
 
       <Card className="max-w-md">

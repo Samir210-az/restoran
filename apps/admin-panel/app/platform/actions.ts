@@ -7,6 +7,39 @@ import { requirePlatformAdmin } from "@/lib/get-current-platform-admin";
 import { createSupabaseServiceClient } from "@restoran/supabase-client";
 import { slugifyUnique, generateAccessCode } from "@restoran/utils";
 
+export async function resetStaffPinAction(formData: FormData) {
+  await requirePlatformAdmin();
+
+  const restaurantId = String(formData.get("restaurant_id") ?? "");
+  const staffUserId = String(formData.get("staff_user_id") ?? "");
+  const newPin = String(formData.get("new_pin") ?? "");
+
+  if (!/^[0-9]{6}$/.test(newPin)) {
+    redirect(`/platform/${restaurantId}?rerror=` + encodeURIComponent("PIN düz 6 rəqəm olmalıdır"));
+  }
+
+  const serviceClient = createSupabaseServiceClient();
+
+  // Bu istifadecinin heqiqeten bu restorana aid oldugunu tesdiqleyirik
+  // (basqa restoranin PIN-ini sehven sifirlamamaq ucun).
+  const { data: staffRow } = await serviceClient
+    .from("staff_members")
+    .select("id")
+    .eq("user_id", staffUserId)
+    .eq("restaurant_id", restaurantId)
+    .maybeSingle();
+  if (!staffRow) {
+    redirect(`/platform/${restaurantId}?rerror=` + encodeURIComponent("İşçi tapılmadı"));
+  }
+
+  const { error } = await serviceClient.auth.admin.updateUserById(staffUserId, { password: newPin });
+  if (error) {
+    redirect(`/platform/${restaurantId}?rerror=` + encodeURIComponent("PIN sıfırlana bilmədi: " + error.message));
+  }
+
+  redirect(`/platform/${restaurantId}?rpin=` + encodeURIComponent(newPin));
+}
+
 export async function regenerateAccessCodeAction(restaurantId: string) {
   await requirePlatformAdmin();
   const serviceClient = createSupabaseServiceClient();
