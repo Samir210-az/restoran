@@ -127,13 +127,21 @@ export default async function StaffPage({
                 <UserPlus className="h-4 w-4 text-accent" aria-hidden="true" />
                 İşçi hesabı yarat
               </CardTitle>
-              <CardDescription>Ad və şifrə təyin edin — işçi dərhal daxil ola bilər</CardDescription>
+              <CardDescription>Ad və PIN təyin edin — heç bir e-poçt lazım deyil, işçi dərhal öz adını seçib PIN ilə daxil ola bilər</CardDescription>
             </div>
           </CardHeader>
           <form action={createStaffAccountAction} className="flex flex-col gap-3">
-            <Input name="full_name" placeholder="Ad Soyad" required />
-            <Input name="email" type="email" placeholder="E-poçt (istəyə bağlı — boş qalsa avtomatik yaradılır)" />
-            <Input name="password" type="password" placeholder="Şifrə (ən azı 6 simvol)" minLength={6} required />
+            <Input name="full_name" placeholder="Ad Soyad (məs. Həsən Əliyev)" required />
+            <Input
+              name="password"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]{6}"
+              maxLength={6}
+              placeholder="6 rəqəmli PIN (məs. 482913)"
+              minLength={6}
+              required
+            />
             <label className="flex flex-col gap-1.5">
               <span className="text-sm font-medium text-text-primary">Rol</span>
               <select

@@ -89,6 +89,49 @@ export async function closeOrderAction(orderId: string) {
 }
 
 /**
+ * Sifarişə manual endirim tətbiq edir - YALNIZ owner/manager (kassir/
+ * ofisiant/aşpaz bunu edə bilməz). Faiz ötürülübsə, o an ki `total`-a
+ * gorə real məbləğə cevrilib saxlanılır (bax: orders.discount_amount) -
+ * `total`-un ozune TOXUNULMUR (o, yemeklerin cemi olaraq qalir), qebz
+ * ve hesabatlarda "real gelir" = total - discount_amount kimi gosterilir.
+ */
+export async function applyOrderDiscountAction(
+  orderId: string,
+  discount: { mode: "amount" | "percent"; value: number }
+) {
+  const { restaurantId, role } = await getCurrentStaffContext();
+  if (role !== "owner" && role !== "manager") {
+    throw new Error("FORBIDDEN: yalnız sahib və ya menecer endirim tətbiq edə bilər");
+  }
+  if (!Number.isFinite(discount.value) || discount.value < 0) return;
+
+  const supabase = getSupabaseServerClient();
+  const { data: order } = await supabase
+    .from("orders")
+    .select("total")
+    .eq("id", orderId)
+    .eq("restaurant_id", restaurantId)
+    .maybeSingle();
+  if (!order) return;
+
+  const orderTotal = Number(order.total);
+  const discountAmount =
+    discount.mode === "percent"
+      ? Math.min(orderTotal, (orderTotal * Math.min(discount.value, 100)) / 100)
+      : Math.min(orderTotal, discount.value);
+
+  await supabase
+    .from("orders")
+    .update({ discount_amount: discountAmount })
+    .eq("id", orderId)
+    .eq("restaurant_id", restaurantId);
+
+  revalidatePath("/orders");
+  revalidatePath("/dashboard");
+  revalidatePath("/reports");
+}
+
+/**
  * Catdirilma sifarisine kuryer tayin edir - ya restoranin OZ kuryer-rollu
  * isçisini (courier_id, staff_members-e istinad), ya da sistemde hesabi
  * olmayan ad-hoc kuryerin ad+telefonunu (courier_name/courier_phone).

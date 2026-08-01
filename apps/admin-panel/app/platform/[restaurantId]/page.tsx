@@ -134,7 +134,15 @@ export default async function PlatformRestaurantDetailPage({
           <input type="hidden" name="restaurant_id" value={restaurant.id} />
           <Input name="new_owner_email" type="email" placeholder="Yeni sahibin e-poçtu" required />
           <Input name="new_owner_full_name" placeholder="Yeni sahibin adı soyadı (yalnız yeni hesab üçün)" />
-          <Input name="new_owner_password" type="password" placeholder="Şifrə, min. 6 simvol (yalnız yeni hesab üçün)" minLength={6} />
+          <Input
+            name="new_owner_password"
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]{6}"
+            maxLength={6}
+            placeholder="6 rəqəmli PIN (yalnız yeni hesab üçün)"
+            minLength={6}
+          />
           <SubmitButton variant="outline" className="self-start">
             Sahibliyi ötür
           </SubmitButton>

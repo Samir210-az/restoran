@@ -167,7 +167,16 @@ export default async function PlatformOverviewPage({
           <Input name="restaurant_name" placeholder="Restoranın adı" required />
           <Input name="owner_full_name" placeholder="Sahibin adı soyadı" required />
           <Input name="owner_email" type="email" placeholder="E-poçt (istəyə bağlı — boş qalsa avtomatik yaradılır)" />
-          <Input name="password" type="password" placeholder="Şifrə (ən azı 6 simvol)" minLength={6} required />
+          <Input
+            name="password"
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]{6}"
+            maxLength={6}
+            placeholder="6 rəqəmli PIN"
+            minLength={6}
+            required
+          />
           <label className="flex flex-col gap-1.5 text-sm">
             <span className="font-medium text-text-primary">Loqo (istəyə bağlı)</span>
             <input

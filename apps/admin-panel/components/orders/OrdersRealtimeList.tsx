@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import Link from "next/link";
 import { Card, Badge, Button } from "@restoran/ui";
-import { MapPin } from "lucide-react";
+import { MapPin, Receipt, Tag } from "lucide-react";
 import { createSupabaseBrowserClient } from "@restoran/supabase-client";
 import { advanceOrderStatusAction, cancelOrderAction, markPaymentReceivedAction, closeOrderAction } from "@/app/(dashboard)/orders/actions";
 import { CourierAssignment } from "@/components/orders/CourierAssignment";
+import { OrderDiscountForm } from "@/components/orders/OrderDiscountForm";
 
 interface OrderRow {
   id: string;
@@ -13,6 +15,7 @@ interface OrderRow {
   status: string;
   order_type: string;
   total: number;
+  discount_amount: number;
   created_at: string;
   table_number: string | null;
   payment_method: string | null;
@@ -55,12 +58,15 @@ export function OrdersRealtimeList({
   restaurantId,
   initialOrders,
   couriers,
+  canDiscount,
 }: {
   restaurantId: string;
   initialOrders: OrderRow[];
   couriers: { id: string; full_name: string | null }[];
+  canDiscount: boolean;
 }) {
   const [orders, setOrders] = useState(initialOrders);
+  const [openDiscountId, setOpenDiscountId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   // Ehtiyat: server (Next.js) yeni initialOrders-le render etsə (mes.
@@ -136,7 +142,15 @@ export function OrdersRealtimeList({
             <p className="mt-1 text-sm text-text-secondary">
               {order.table_number ? `Masa ${order.table_number}` : order.order_type === "takeaway" ? "Özün apar" : "Çatdırılma"}
               {" · "}
-              {Number(order.total).toFixed(2)} ₼
+              {order.discount_amount > 0 ? (
+                <>
+                  <span className="text-text-muted line-through">{Number(order.total).toFixed(2)} ₼</span>{" "}
+                  {(Number(order.total) - Number(order.discount_amount)).toFixed(2)} ₼
+                  <span className="ml-1 text-xs text-success">(-{Number(order.discount_amount).toFixed(2)} ₼ endirim)</span>
+                </>
+              ) : (
+                `${Number(order.total).toFixed(2)} ₼`
+              )}
               {order.payment_method && (
                 <>
                   {" · "}
@@ -168,7 +182,30 @@ export function OrdersRealtimeList({
               />
             )}
 
+            {canDiscount && order.status !== "cancelled" && (
+              <div className="flex flex-col items-end gap-1.5">
+                {openDiscountId === order.id ? (
+                  <OrderDiscountForm orderId={order.id} onApplied={() => setOpenDiscountId(null)} />
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setOpenDiscountId(order.id)}
+                    className="flex items-center gap-1 text-xs font-medium text-text-secondary hover:text-accent"
+                  >
+                    <Tag className="h-3 w-3" aria-hidden="true" /> Endirim
+                  </button>
+                )}
+              </div>
+            )}
+
             <div className="flex flex-wrap justify-end gap-2">
+              <Link
+                href={`/orders/${order.id}/receipt`}
+                target="_blank"
+                className="flex items-center gap-1.5 rounded-md border border-border-strong px-2.5 py-1.5 text-xs font-medium text-text-secondary hover:bg-bg-muted"
+              >
+                <Receipt className="h-3.5 w-3.5" aria-hidden="true" /> Qəbz
+              </Link>
               {ACTIVE_STATUSES.has(order.status) && order.status !== "served" && (
                 <Button
                   size="sm"

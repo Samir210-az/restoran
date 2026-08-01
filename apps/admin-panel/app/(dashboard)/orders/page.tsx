@@ -5,14 +5,14 @@ import { OrdersRealtimeList } from "@/components/orders/OrdersRealtimeList";
 export const metadata = { title: "Sifarişlər" };
 
 export default async function OrdersPage() {
-  const { restaurantId } = await getCurrentStaffContext();
+  const { restaurantId, role } = await getCurrentStaffContext();
   const supabase = getSupabaseServerClient();
 
   const [{ data: orders }, { data: courierStaff }] = await Promise.all([
     supabase
       .from("orders")
       .select(
-        "id, order_number, status, order_type, total, created_at, table_id, delivery_address, courier_id, courier_name, courier_phone"
+        "id, order_number, status, order_type, total, discount_amount, created_at, table_id, delivery_address, courier_id, courier_name, courier_phone"
       )
       .eq("restaurant_id", restaurantId)
       .order("created_at", { ascending: false })
@@ -44,6 +44,7 @@ export default async function OrdersPage() {
     status: o.status,
     order_type: o.order_type,
     total: o.total,
+    discount_amount: o.discount_amount,
     created_at: o.created_at,
     table_number: o.table_id ? tableNumberById.get(o.table_id) ?? null : null,
     payment_method: paymentByOrder.get(o.id)?.method ?? null,
@@ -60,7 +61,7 @@ export default async function OrdersPage() {
         <h1 className="text-2xl font-semibold text-text-primary">Sifarişlər</h1>
         <p className="text-sm text-text-secondary">Son 50 sifariş, canlı yenilənir</p>
       </div>
-      <OrdersRealtimeList restaurantId={restaurantId} initialOrders={orderRows} couriers={couriers} />
+      <OrdersRealtimeList restaurantId={restaurantId} initialOrders={orderRows} couriers={couriers} canDiscount={role === "owner" || role === "manager"} />
     </div>
   );
 }

@@ -59,6 +59,32 @@ export async function createRestaurantWithOwnerAction(formData: FormData) {
     ownerEmail = candidate;
   }
 
+  // TEHLUKESIZLIK YOXLAMASI (bug duzelisi): evvelce bura hec bir
+  // yoxlama olmadan gedirdi - eger daxil edilen e-poçt ARTIQ mövcud
+  // bir hesaba (xususen PLATFORM ADMIN-e) aid idise, Supabase Auth
+  // bezen xeta vermek evezine mövcud istifadəçini geri qaytara bilir -
+  // netice: platform admin (Samir) ozu bilmeden yeni restoranın
+  // "owner" staff sətrini alirdi ve giriş edende ora atilirdi (bax:
+  // SAD - platform admin restoran-scoped stafften TAM ayrı olmalıdır).
+  // Indi: email mövcuddursa YARADILMIR, aydın xeta gosterilir.
+  const { data: existingUsers } = await serviceClient.auth.admin.listUsers();
+  const alreadyExists = existingUsers?.users?.find((u) => u.email?.toLowerCase() === ownerEmail);
+  if (alreadyExists) {
+    const { data: isExistingPlatformAdmin } = await serviceClient
+      .from("platform_admins")
+      .select("user_id")
+      .eq("user_id", alreadyExists.id)
+      .maybeSingle();
+    redirect(
+      "/platform?rerror=" +
+        encodeURIComponent(
+          isExistingPlatformAdmin
+            ? "Bu e-poçt platform admin hesabına aiddir - restoran sahibi kimi istifadə edilə bilməz"
+            : "Bu e-poçt artıq istifadə olunur - fərqli e-poçt seçin, ya da boş buraxıb avtomatik yaratdırın"
+        )
+    );
+  }
+
   const { data: created, error: createError } = await serviceClient.auth.admin.createUser({
     email: ownerEmail,
     password,
@@ -74,6 +100,20 @@ export async function createRestaurantWithOwnerAction(formData: FormData) {
   }
 
   const ownerId = created!.user!.id;
+
+  // Ehtiyat qat: yuxarıdaki yoxlamadan hər hansı sebeble kecse belə,
+  // yaradilan hesab platform admin-e aiddirse (nezeri hal), burada
+  // dayandırırıq - restoran/staff setri YARADILMIR.
+  const { data: ownerIsPlatformAdmin } = await serviceClient
+    .from("platform_admins")
+    .select("user_id")
+    .eq("user_id", ownerId)
+    .maybeSingle();
+  if (ownerIsPlatformAdmin) {
+    redirect(
+      "/platform?rerror=" + encodeURIComponent("Bu e-poçt platform admin hesabına aiddir - restoran sahibi kimi istifadə edilə bilməz")
+    );
+  }
 
   const { data: newRestaurant, error: restaurantError } = await serviceClient
     .from("restaurants")
@@ -160,6 +200,21 @@ export async function transferRestaurantOwnerAction(formData: FormData) {
   let newOwnerId: string;
 
   if (existingUser) {
+    // Platform admin restoran-scoped stafften TAM ayrı olmalıdır (bax:
+    // SAD) - ona görə platform admin hesabı yeni "sahib" kimi TƏYİN
+    // OLUNA BİLMƏZ.
+    const { data: targetIsPlatformAdmin } = await serviceClient
+      .from("platform_admins")
+      .select("user_id")
+      .eq("user_id", existingUser.id)
+      .maybeSingle();
+    if (targetIsPlatformAdmin) {
+      redirect(
+        `/platform/${restaurantId}?rerror=` +
+          encodeURIComponent("Bu e-poçt platform admin hesabına aiddir - restoran sahibi kimi təyin edilə bilməz")
+      );
+    }
+
     // Bu e-poctla artiq hesab var - ancaq platformada YALNIZ bir
     // restorana bagli ola bilme qaydasina (bax: get-current-staff-context)
     // hormet etmek ucun, bu sexsin BASQA restoranda aktiv staff sətri
