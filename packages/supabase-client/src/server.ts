@@ -18,6 +18,10 @@ export function createSupabaseServerClient(cookieAdapter: CookieAdapter): Supaba
   // kombinasiyalarinda Schema-ni duzgun bagla bilmir (esas dependency movcuddur,
   // runtime-a tesiri yoxdur - bu, sirf compile-time tip annotasiyasidir).
   // Ona gore netice tipi acig sekilde teyin edirik.
+  //
+  // `global.fetch` ile no-store: bax public.ts-deki eyni izah - bezi
+  // RPC cagirislari GET kimi gedende Next.js Data Cache-i onlari
+  // keşleye bilir, dynamic="force-dynamic" olsa belə.
   return createServerClient<Database, "public">(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -26,6 +30,9 @@ export function createSupabaseServerClient(cookieAdapter: CookieAdapter): Supaba
         get: (name: string) => cookieAdapter.get(name),
         set: (name: string, value: string, options: CookieOptions) => cookieAdapter.set(name, value, options),
         remove: (name: string, options: CookieOptions) => cookieAdapter.remove(name, options),
+      },
+      global: {
+        fetch: (input: RequestInfo | URL, init?: RequestInit) => fetch(input, { ...init, cache: "no-store" }),
       },
     }
   ) as unknown as SupabaseClient<Database, "public">;
@@ -40,6 +47,11 @@ export function createSupabaseServiceClient(): SupabaseClient<Database, "public"
   return createClient<Database, "public">(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { persistSession: false } }
+    {
+      auth: { persistSession: false },
+      global: {
+        fetch: (input: RequestInfo | URL, init?: RequestInit) => fetch(input, { ...init, cache: "no-store" }),
+      },
+    }
   ) as unknown as SupabaseClient<Database, "public">;
 }
