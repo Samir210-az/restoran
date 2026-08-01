@@ -362,10 +362,16 @@ export async function transferRestaurantOwnerAction(formData: FormData) {
       .eq("user_id", row.user_id)
       .maybeSingle();
 
-    await serviceClient
-      .from("staff_members")
-      .update(isOldOwnerPlatformAdmin ? { is_active: false } : { role: "manager" })
-      .eq("id", row.id);
+    if (isOldOwnerPlatformAdmin) {
+      // Sadece deaktiv etmek kifayet DEYIL - deaktiv sətirler /staff
+      // siyahisinda "Deaktiv" olaraq görünməyə davam edir ve hətta
+      // restoran sahibi onu YENIDƏN AKTİVLƏŞDİRƏ bilər. Platform admin
+      // restoran-scoped stafften TAM ayrı olmalıdır (bax: SAD) - ona
+      // görə sətir tamamilə SİLİNİR, heç bir iz qalmır.
+      await serviceClient.from("staff_members").delete().eq("id", row.id);
+    } else {
+      await serviceClient.from("staff_members").update({ role: "manager" }).eq("id", row.id);
+    }
   }
 
   // Legacy/ehtiyat sutunu sinxronlashdir.
