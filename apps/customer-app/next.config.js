@@ -50,6 +50,22 @@ const nextConfig = {
   images: {
     remotePatterns: [{ protocol: "https", hostname: "*.supabase.co" }],
   },
+  /**
+   * QEYD (bug duzelisi - "köhnə cache silinmir" şikayətinin ƏSL
+   * KÖKÜ): Vercel/CDN sw.js faylını da statik fayl kimi UZUN MÜDDƏT
+   * keşləyə bilirdi - bu, brauzerin YENİ deploy olunmuş service
+   * worker-i belə fərq etməməsinə səbəb olurdu (istifadəçi "sil,
+   * yenidən yüklə" etsə də köhnə sw.js şəbəkədən deyil, keşdən
+   * gəlirdi). Endi sw.js HƏR SƏHİFƏ açılışında YENİDƏN yoxlanılır.
+   */
+  async headers() {
+    return [
+      {
+        source: "/sw.js",
+        headers: [{ key: "Cache-Control", value: "no-cache, no-store, must-revalidate" }],
+      },
+    ];
+  },
 };
 
 module.exports = withPWA(nextConfig);

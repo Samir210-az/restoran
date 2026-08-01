@@ -49,6 +49,16 @@ const nextConfig = {
       { protocol: "https", hostname: "*.supabase.co" },
     ],
   },
+  // Bax: customer-app/next.config.js-deki eyni izah - sw.js-in ozunun
+  // CDN-de uzun muddet keşlenmesinin qarşisini alir.
+  async headers() {
+    return [
+      {
+        source: "/sw.js",
+        headers: [{ key: "Cache-Control", value: "no-cache, no-store, must-revalidate" }],
+      },
+    ];
+  },
 };
 
 module.exports = withPWA(nextConfig);

@@ -3,6 +3,7 @@ import { Shield } from "lucide-react";
 import { ThemeToggle } from "@restoran/ui";
 import { requirePlatformAdmin } from "@/lib/get-current-platform-admin";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
+import { LogoutButton } from "@/components/layout/LogoutButton";
 
 /**
  * QEYD (bug duzelisi): platform admin restoran-scoped stafften TAMAM
@@ -41,6 +42,7 @@ export default async function PlatformLayout({ children }: { children: React.Rea
             </Link>
           )}
           <ThemeToggle />
+          <LogoutButton />
         </div>
       </header>
       <main className="p-4 md:p-6">{children}</main>
