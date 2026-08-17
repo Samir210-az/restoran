@@ -1,14 +1,29 @@
+import { redirect } from "next/navigation";
 import { Input } from "@restoran/ui";
 import { SubmitButton } from "@/components/forms/SubmitButton";
+import { getSupabaseServerClient } from "@/lib/supabase-server";
 import { completeOnboardingAction } from "./actions";
 
 export const metadata = { title: "Restoranınızı quraşdırın" };
 
-export default function OnboardingPage({
+/**
+ * PLATFORM ADMIN QORUMASI (bug duzelisi): platform admin restoran-scoped
+ * stafften TAM ayri olmalidir (bax: SAD) - o, hec vaxt bu sehifeni
+ * GORMEMELIDIR. Evvelce bu yoxlama yox idi - platform admin adi /login-den
+ * daxil olub aktiv staff setri tapilmayanda buraya dushurdu ve bilmeden
+ * ozune bagli test restorani yaradirdi (bax: HANDOFF.md).
+ */
+export default async function OnboardingPage({
   searchParams,
 }: {
   searchParams: { error?: string };
 }) {
+  const supabase = getSupabaseServerClient();
+  const { data: isPlatformAdmin } = await supabase.rpc("is_platform_admin");
+  if (isPlatformAdmin) {
+    redirect("/platform");
+  }
+
   return (
     <div className="flex flex-col gap-6">
       <div>
