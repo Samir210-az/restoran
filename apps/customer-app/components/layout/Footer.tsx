@@ -12,12 +12,12 @@ export function Footer() {
       <p className="text-sm text-text-secondary">
         By{" "}
         <Link
-          href="https://instagram.com/s_akhundoff"
+          href="https://instagram.com/securtiy_group"
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-1 font-medium text-accent hover:underline"
         >
-          s_akhundoff <Instagram className="h-3.5 w-3.5" aria-hidden="true" />
+          securtiy_group <Instagram className="h-3.5 w-3.5" aria-hidden="true" />
         </Link>
       </p>
       <InstallAppLink />
