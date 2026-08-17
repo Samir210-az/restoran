@@ -1,4 +1,5 @@
-import { Button, Input } from "@restoran/ui";
+import { Input } from "@restoran/ui";
+import { SubmitButton } from "@/components/forms/SubmitButton";
 import { completeOnboardingAction } from "./actions";
 
 export const metadata = { title: "Restoranınızı quraşdırın" };
@@ -29,9 +30,9 @@ export default function OnboardingPage({
           autoFocus
           required
         />
-        <Button type="submit" className="w-full" size="lg">
+        <SubmitButton className="w-full" size="lg">
           Davam et
-        </Button>
+        </SubmitButton>
       </form>
     </div>
   );
