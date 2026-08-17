@@ -25,6 +25,23 @@ export async function completeOnboardingAction(formData: FormData) {
     redirect("/login");
   }
 
+  // IDEMPOTENCY YOXLAMASI (bug duzelisi): bu addim evvelce yox idi -
+  // istifadeci hansi sebeble olursa olsun (yeniden giris, double-submit
+  // ve s.) bu sehifeye ikinci defe dushurse, forma HEC bir yoxlama
+  // olmadan HEMISE yeni restoran yaradirdi. Indi: aktiv staff setri
+  // artiq varsa, RPC cagirilmadan birbasa dashboard-a yonlendirilir.
+  const { data: existingStaffRow } = await supabase
+    .from("staff_members")
+    .select("id")
+    .eq("user_id", user!.id)
+    .eq("is_active", true)
+    .limit(1)
+    .maybeSingle();
+
+  if (existingStaffRow) {
+    redirect("/dashboard");
+  }
+
   const slug = slugifyUnique(restaurantName);
   const { error } = await (
     supabase as unknown as { rpc: (fn: string, args: unknown) => Promise<{ error: { message: string } | null }> }
