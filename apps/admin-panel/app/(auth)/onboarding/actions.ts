@@ -25,6 +25,16 @@ export async function completeOnboardingAction(formData: FormData) {
     redirect("/login");
   }
 
+  // PLATFORM ADMIN QORUMASI (ehtiyat qat): sehife artiq bunu yoxlayib
+  // yonlendirir, amma server action birbasa (sehife render olunmadan)
+  // cagirila bilerse deye burada da tekrar yoxlanilir.
+  const { data: isPlatformAdmin } = await (
+    supabase as unknown as { rpc: (fn: string) => Promise<{ data: boolean | null }> }
+  ).rpc("is_platform_admin");
+  if (isPlatformAdmin) {
+    redirect("/platform");
+  }
+
   // IDEMPOTENCY YOXLAMASI (bug duzelisi): bu addim evvelce yox idi -
   // istifadeci hansi sebeble olursa olsun (yeniden giris, double-submit
   // ve s.) bu sehifeye ikinci defe dushurse, forma HEC bir yoxlama
