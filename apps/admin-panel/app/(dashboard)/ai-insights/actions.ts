@@ -88,13 +88,14 @@ ${revenueChangePct !== null ? `(Qeyd: gəlir əvvəlki ${days} günə nisbətən
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
       body: JSON.stringify({
-        model: "llama-3.3-70b-versatile",
+        model: "openai/gpt-oss-120b",
+        reasoning_effort: "low",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: trimmedQuestion },
         ],
         temperature: 0.3,
-        max_tokens: 500,
+        max_tokens: 1200,
       }),
     });
 
