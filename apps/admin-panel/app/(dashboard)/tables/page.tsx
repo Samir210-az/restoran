@@ -1,7 +1,7 @@
 import { Plus, Table2, Download } from "lucide-react";
 import Link from "next/link";
 import QRCode from "qrcode";
-import { Card, CardHeader, CardTitle, Input, Sticker } from "@restoran/ui";
+import { Card, CardHeader, CardTitle, Input } from "@restoran/ui";
 import { cn } from "@restoran/utils";
 import { SubmitButton } from "@/components/forms/SubmitButton";
 import { getCurrentStaffContext } from "@/lib/get-current-staff-context";
@@ -133,7 +133,6 @@ export default async function TablesPage() {
       {tableRows.length === 0 ? (
         <Card>
           <div className="flex flex-col items-center gap-2 py-10 text-center">
-            <Sticker name="lamps-pair" size={96} />
             <p className="text-sm text-text-secondary">Hələ masa yoxdur</p>
           </div>
         </Card>
