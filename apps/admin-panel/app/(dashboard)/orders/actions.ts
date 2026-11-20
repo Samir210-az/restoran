@@ -13,7 +13,7 @@ import { getCurrentStaffContext } from "@/lib/get-current-staff-context";
  * ofisiant "Stola verildi" deyir, kassir/sahib "Ödəniş alındı" deyir.
  */
 export async function markOrderServedAction(orderId: string) {
-  const { restaurantId, role } = await getCurrentStaffContext();
+  const { restaurantId, role, userId } = await getCurrentStaffContext();
   if (role !== "owner" && role !== "manager" && role !== "waiter") {
     throw new Error("FORBIDDEN: yalnız ofisiant/menecer/sahib sifarişi təhvil verə bilər");
   }
@@ -21,7 +21,7 @@ export async function markOrderServedAction(orderId: string) {
   const supabase = getSupabaseServerClient();
   await supabase
     .from("orders")
-    .update({ status: "served" })
+    .update({ status: "served", served_at: new Date().toISOString(), served_by: userId })
     .eq("id", orderId)
     .eq("restaurant_id", restaurantId)
     .eq("status", "ready");
@@ -30,11 +30,59 @@ export async function markOrderServedAction(orderId: string) {
   revalidatePath("/dashboard");
 }
 
-export async function cancelOrderAction(orderId: string) {
-  const { restaurantId } = await getCurrentStaffContext();
+/**
+ * Legv: sebeb mutleqdir. Sahib/menecer odenilmemis istenilen sifarisi,
+ * kassir/ofisiant ise yalniz hele metbexe baslamamis ("pending")
+ * sifarisi legv ede biler. Odenisi alinmish sifarish legv olunmur.
+ */
+export async function cancelOrderAction(orderId: string, reason: string) {
+  const { restaurantId, role, userId } = await getCurrentStaffContext();
+  if (role === "chef" || role === "courier") {
+    throw new Error("FORBIDDEN: bu rol sifarişi ləğv edə bilməz");
+  }
+  const cleanReason = reason.trim();
+  if (cleanReason.length < 3) {
+    throw new Error("REASON_REQUIRED: ləğv səbəbi yazılmalıdır");
+  }
+
   const supabase = getSupabaseServerClient();
-  await supabase.from("orders").update({ status: "cancelled" }).eq("id", orderId).eq("restaurant_id", restaurantId);
+  const { data: order } = await supabase
+    .from("orders")
+    .select("status")
+    .eq("id", orderId)
+    .eq("restaurant_id", restaurantId)
+    .maybeSingle();
+  if (!order || order.status === "cancelled" || order.status === "completed") return;
+
+  const isManagement = role === "owner" || role === "manager";
+  if (!isManagement && order.status !== "pending") {
+    throw new Error("FORBIDDEN: mətbəxə keçmiş sifarişi yalnız menecer və ya sahib ləğv edə bilər");
+  }
+
+  const { data: paid } = await supabase
+    .from("payments")
+    .select("id")
+    .eq("order_id", orderId)
+    .eq("restaurant_id", restaurantId)
+    .eq("status", "completed")
+    .limit(1);
+  if (paid && paid.length > 0) {
+    throw new Error("PAID: ödənişi alınmış sifariş ləğv edilə bilməz");
+  }
+
+  await supabase
+    .from("orders")
+    .update({
+      status: "cancelled",
+      cancelled_at: new Date().toISOString(),
+      cancelled_by: userId,
+      cancel_reason: cleanReason,
+    })
+    .eq("id", orderId)
+    .eq("restaurant_id", restaurantId);
   revalidatePath("/orders");
+  revalidatePath("/kitchen");
+  revalidatePath("/bar");
 }
 
 /**
@@ -46,7 +94,7 @@ export async function cancelOrderAction(orderId: string) {
  * Legv edilmis sifarisi toxunmuruq (neq status cancelled).
  */
 export async function markPaymentReceivedAction(orderId: string) {
-  const { restaurantId, role } = await getCurrentStaffContext();
+  const { restaurantId, role, userId } = await getCurrentStaffContext();
   if (role !== "owner" && role !== "manager" && role !== "cashier") {
     throw new Error("FORBIDDEN: yalnız kassir/menecer/sahib ödəniş qəbul edə bilər");
   }
@@ -60,7 +108,7 @@ export async function markPaymentReceivedAction(orderId: string) {
 
   await supabase
     .from("orders")
-    .update({ status: "completed" })
+    .update({ status: "completed", paid_at: new Date().toISOString(), paid_by: userId })
     .eq("id", orderId)
     .eq("restaurant_id", restaurantId)
     .neq("status", "cancelled");
@@ -100,7 +148,7 @@ export async function closeOrderAction(orderId: string) {
  * sifariş ver" duymesi), kassir/sahib hamısını tek kliklə bağlaya bilir.
  */
 export async function payAllTableOrdersAction(tableId: string) {
-  const { restaurantId, role } = await getCurrentStaffContext();
+  const { restaurantId, role, userId } = await getCurrentStaffContext();
   if (role !== "owner" && role !== "manager" && role !== "cashier") {
     throw new Error("FORBIDDEN: yalnız kassir/menecer/sahib ödəniş qəbul edə bilər");
   }
@@ -117,7 +165,7 @@ export async function payAllTableOrdersAction(tableId: string) {
     await supabase.from("payments").update({ status: "completed" }).eq("order_id", o.id).eq("restaurant_id", restaurantId);
     await supabase
       .from("orders")
-      .update({ status: "completed" })
+      .update({ status: "completed", paid_at: new Date().toISOString(), paid_by: userId })
       .eq("id", o.id)
       .eq("restaurant_id", restaurantId)
       .neq("status", "cancelled");

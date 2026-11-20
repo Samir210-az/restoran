@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Clock, Flame, CheckCircle2 } from "lucide-react";
 import { Card, CardTitle, Badge, Button } from "@restoran/ui";
 import { createSupabaseBrowserClient } from "@restoran/supabase-client";
@@ -28,14 +29,27 @@ const COLUMN_META = {
  * `order_items` cedvelinde restaurant_id-e gore filterlenir ki, mətbəx
  * ekrani ani (saniyeler daxilinde) yenilensin - sehife yenilemeye ehtiyac yoxdur.
  */
-export function KitchenBoard({ restaurantId, initialItems }: { restaurantId: string; initialItems: KitchenItem[] }) {
+export function KitchenBoard({
+  restaurantId,
+  initialItems,
+  station,
+}: {
+  restaurantId: string;
+  initialItems: KitchenItem[];
+  station: "kitchen" | "bar";
+}) {
   const [items, setItems] = useState(initialItems);
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
+
+  useEffect(() => {
+    setItems(initialItems);
+  }, [initialItems]);
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
     const channel = supabase
-      .channel(`kitchen-${restaurantId}`)
+      .channel(`${station}-${restaurantId}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "order_items", filter: `restaurant_id=eq.${restaurantId}` },
@@ -46,9 +60,7 @@ export function KitchenBoard({ restaurantId, initialItems }: { restaurantId: str
               prev.map((item) => (item.id === updated.id ? { ...item, kitchen_status: updated.kitchen_status } : item))
             );
           }
-          // Yeni sifaris sethiri (INSERT) - siyahi novbeti serverden gelen
-          // revalidate ile yenilenecek (sehife novbeti navigasiyada); aninda
-          // gorunmesi vacibdirse, burda tam siyahini yenidden sorgulamaq olar.
+          if (payload.eventType === "INSERT") router.refresh();
         }
       )
       .subscribe();
@@ -56,7 +68,7 @@ export function KitchenBoard({ restaurantId, initialItems }: { restaurantId: str
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [restaurantId]);
+  }, [restaurantId, station, router]);
 
   function handleAdvance(itemId: string, status: string) {
     startTransition(() => {
@@ -64,10 +76,10 @@ export function KitchenBoard({ restaurantId, initialItems }: { restaurantId: str
     });
   }
 
-  const columns: Array<keyof typeof COLUMN_META> = ["queued", "cooking", "ready"];
+  const columns: Array<keyof typeof COLUMN_META> = station === "bar" ? ["queued", "ready"] : ["queued", "cooking", "ready"];
 
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+    <div className={`grid grid-cols-1 gap-4 ${station === "bar" ? "md:grid-cols-2" : "md:grid-cols-3"}`}>
       {columns.map((status) => {
         const meta = COLUMN_META[status];
         const Icon = meta.icon;
@@ -110,7 +122,7 @@ export function KitchenBoard({ restaurantId, initialItems }: { restaurantId: str
                       disabled={isPending}
                       onClick={() => handleAdvance(item.id, status)}
                     >
-                      {status === "queued" ? "Hazırlanmağa başla" : "Hazırdır olaraq işarələ"}
+                      {status === "queued" && station === "kitchen" ? "Hazırlanmağa başla" : "Hazırdır olaraq işarələ"}
                     </Button>
                   )}
                 </Card>

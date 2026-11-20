@@ -4,6 +4,9 @@ import { revalidatePath } from "next/cache";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
 import { getCurrentStaffContext } from "@/lib/get-current-staff-context";
 
+const KITCHEN_ROLES = ["owner", "manager", "chef"];
+const BAR_ROLES = ["owner", "manager", "cashier", "waiter"];
+
 const NEXT_STATUS: Record<string, "cooking" | "ready"> = {
   queued: "cooking",
   cooking: "ready",
@@ -30,22 +33,32 @@ const ORDER_STATUS_RANK: Record<string, number> = {
  * "hazirlanir"da qalirdi, bu da qarisiqliq yaradirdi. Indi:
  * - ilk mehsul "cooking"e kecende sifaris "preparing"e qalxir (eger geridedirse)
  * - BUTUN mehsullar "ready" olanda sifaris "ready"e qalxir (eger geridedirse)
+ *
+ * Bar mehsullari (su, kola) metbexe dusmur: bar ekraninda birbasa
+ * queued -> ready edilir (bax: /bar). Sifaris ancaq metbex VE bar
+ * hissesi tam hazir olanda "ready" olur.
  */
 export async function advanceKitchenItemStatusAction(itemId: string, currentStatus: string) {
-  const { restaurantId } = await getCurrentStaffContext();
-  const nextStatus = NEXT_STATUS[currentStatus];
-  if (!nextStatus) return;
+  const { restaurantId, role } = await getCurrentStaffContext();
 
   const supabase = getSupabaseServerClient();
 
   const { data: item } = await supabase
     .from("order_items")
-    .select("order_id")
+    .select("order_id, station, kitchen_status")
     .eq("id", itemId)
     .eq("restaurant_id", restaurantId)
     .maybeSingle();
 
   if (!item) return;
+
+  const allowedRoles = item.station === "bar" ? BAR_ROLES : KITCHEN_ROLES;
+  if (!allowedRoles.includes(role)) {
+    throw new Error("FORBIDDEN: bu ekranda əməliyyat etmək icazəniz yoxdur");
+  }
+
+  const nextStatus = item.station === "bar" && currentStatus === "queued" ? "ready" : NEXT_STATUS[currentStatus];
+  if (!nextStatus || item.kitchen_status !== currentStatus) return;
 
   await supabase
     .from("order_items")
@@ -78,6 +91,7 @@ export async function advanceKitchenItemStatusAction(itemId: string, currentStat
   }
 
   revalidatePath("/kitchen");
+  revalidatePath("/bar");
   revalidatePath("/orders");
   revalidatePath("/dashboard");
 }

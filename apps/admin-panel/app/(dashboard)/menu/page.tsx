@@ -30,7 +30,7 @@ export default async function MenuPage({ searchParams }: { searchParams: { error
       .order("sort_order", { ascending: true }),
     supabase
       .from("menu_items")
-      .select("id, name, price, is_available, category_id, tags, image_url")
+      .select("id, name, price, is_available, category_id, tags, image_url, prep_station")
       .eq("restaurant_id", restaurantId)
       .order("sort_order", { ascending: true }),
   ]);
@@ -93,7 +93,10 @@ export default async function MenuPage({ searchParams }: { searchParams: { error
                           )}
                           <div className="min-w-0">
                             <p className="text-sm font-medium text-text-primary">{itemName}</p>
-                            <p className="text-sm text-text-secondary">{Number(item.price).toFixed(2)} ₼</p>
+                            <p className="text-sm text-text-secondary">
+                              {Number(item.price).toFixed(2)} ₼
+                              {item.prep_station === "bar" && <span className="ml-2 text-xs text-text-muted">Bar</span>}
+                            </p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -105,6 +108,7 @@ export default async function MenuPage({ searchParams }: { searchParams: { error
                               currentName={itemName}
                               currentPrice={item.price}
                               hasImage={Boolean(item.image_url)}
+                              currentStation={item.prep_station}
                             />
                           )}
                         </div>
@@ -155,6 +159,17 @@ export default async function MenuPage({ searchParams }: { searchParams: { error
               </label>
               <Input name="name_az" placeholder="Məs. Toyuq Şaşlıq" required />
               <Input name="price" type="number" step="0.01" min="0" placeholder="Qiymət (₼)" required />
+              <label className="flex flex-col gap-1.5">
+                <span className="text-sm font-medium text-text-primary">Hazırlanma yeri</span>
+                <select
+                  name="prep_station"
+                  defaultValue="kitchen"
+                  className="h-10 rounded-md border border-border-strong bg-bg px-3 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+                >
+                  <option value="kitchen">Mətbəx (yemək, çay)</option>
+                  <option value="bar">Bar (su, kola, hazır içkilər)</option>
+                </select>
+              </label>
               <label className="flex flex-col gap-1.5 text-sm text-text-secondary">
                 Şəkil (istəyə bağlı)
                 <input

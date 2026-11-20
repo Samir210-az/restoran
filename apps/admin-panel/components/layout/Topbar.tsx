@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Menu, Bell, LogOut, Shield, ShoppingBag, CalendarCheck } from "lucide-react";
+import { Menu, Bell, LogOut, Shield, ShoppingBag, CalendarCheck, BellRing } from "lucide-react";
 import { ThemeToggle } from "@restoran/ui";
 import { ROLE_LABELS, type StaffRole } from "@restoran/types";
 import { createSupabaseBrowserClient } from "@restoran/supabase-client";
@@ -116,7 +116,7 @@ export function Topbar({ onMenuClick, restaurantName, restaurantId, role, isPlat
                 <p className="px-3 py-6 text-center text-sm text-text-muted">Hələ bildiriş yoxdur</p>
               ) : (
                 notifications.map((n) => {
-                  const Icon = n.type === "new_reservation" ? CalendarCheck : ShoppingBag;
+                  const Icon = n.type === "new_reservation" ? CalendarCheck : n.type === "order_ready" ? BellRing : ShoppingBag;
                   const href = n.type === "new_reservation" ? "/reservations" : "/orders";
                   return (
                     <Link

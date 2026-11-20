@@ -37,6 +37,7 @@ export default async function KitchenPage() {
     ? await supabase
         .from("order_items")
         .select("id, order_id, quantity, kitchen_status, special_instructions, created_at, menu_items(name)")
+        .eq("station", "kitchen")
         .in("order_id", orderIds)
         .order("created_at", { ascending: true })
     : { data: [] };
@@ -62,7 +63,7 @@ export default async function KitchenPage() {
         <h1 className="text-2xl font-semibold text-text-primary">Mətbəx Ekranı</h1>
         <p className="text-sm text-text-secondary">Sifarişlər avtomatik, canlı yenilənir</p>
       </div>
-      <KitchenBoard restaurantId={restaurantId} initialItems={items} />
+      <KitchenBoard restaurantId={restaurantId} initialItems={items} station="kitchen" />
     </div>
   );
 }
