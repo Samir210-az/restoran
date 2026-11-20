@@ -6,7 +6,7 @@ import Link from "next/link";
 import { ShoppingBag } from "lucide-react";
 import { ThemeToggle } from "@restoran/ui";
 
-const ADMIN_APP_URL = (process.env.NEXT_PUBLIC_ADMIN_APP_URL || "https://restoran-admin-panel.vercel.app").replace(/\/$/, "");
+const ADMIN_APP_URL = (process.env.NEXT_PUBLIC_ADMIN_APP_URL || "https://restoran-admin.aze-ai.az").replace(/\/$/, "");
 const SECRET_TAPS = 5;
 const MAX_TAP_GAP_MS = 1500;
 
