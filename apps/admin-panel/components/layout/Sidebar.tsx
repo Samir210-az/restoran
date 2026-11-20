@@ -16,6 +16,7 @@ import {
   Sparkles,
   Settings,
   Wallet,
+  Landmark,
   GlassWater,
 } from "lucide-react";
 import type { StaffRole } from "@restoran/types";
@@ -38,6 +39,7 @@ const NAV_ITEMS: Array<{
   { href: "/dashboard", label: "Ana Səhifə", icon: LayoutDashboard, roles: ["owner", "manager", "cashier", "chef", "waiter", "courier"] },
   { href: "/orders", label: "Sifarişlər", icon: ClipboardList, roles: ["owner", "manager", "cashier", "chef", "waiter", "courier"] },
   { href: "/kitchen", label: "Mətbəx Ekranı", icon: ChefHat, roles: ["owner", "manager", "chef"] },
+  { href: "/cash", label: "Kassa növbəsi", icon: Landmark, roles: ["owner", "manager", "cashier"] },
   { href: "/bar", label: "Bar Ekranı", icon: GlassWater, roles: ["owner", "manager", "cashier", "waiter"] },
   { href: "/reservations", label: "Rezervasiyalar", icon: CalendarCheck, roles: ["owner", "manager", "waiter"] },
   { href: "/menu", label: "Menyu", icon: UtensilsCrossed, roles: ["owner", "manager"] },

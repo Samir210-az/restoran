@@ -1,0 +1,3 @@
+-- Faza 4: kassa növbəsi. Bazaya MCP ilə tətbiq olunub (order_flow_phase4_cash_shifts).
+-- cash_shifts: restoran üzrə eyni anda yalnız bir açıq növbə (qismən unikal indeks),
+-- RLS: is_staff_of(restaurant_id).
