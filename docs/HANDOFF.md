@@ -23,7 +23,7 @@ Bu sessiyada aparılan araşdırma və nəticələr:
 - **Monorepo:** Turborepo + pnpm — GitHub: `Samir210-az/restoran` (main branch)
 - **Backend:** Supabase `qrbfpujqhrjtyvkrjygo` (eu-central-1)
 - **Frontend:** Next.js 14 App Router + TypeScript + Tailwind
-  - `apps/admin-panel` → https://restoran-admin-panel.vercel.app
+  - `apps/admin-panel` → https://restoran-admin.aze-ai.az
   - `apps/customer-app` → https://restoran-customer-app.vercel.app
 - **Hər iki tətbiq PWA-dır** (`next-pwa`, service worker, manifest, "Tətbiqi yüklə" düymələri)
 
