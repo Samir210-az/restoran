@@ -166,12 +166,7 @@ export function MenuView({ restaurant, categories, items, tableId, bestsellerIte
               className="h-11 w-11 shrink-0 rounded-full border border-border object-cover"
             />
           )}
-          <div>
-            <h1 className="text-2xl font-semibold text-text-primary">{restaurant.name} sizi salamlayır! 👋</h1>
-            <p className="text-sm text-text-secondary">
-              {tableId ? "Masanız üçün ləzzətli seçimlər hazırdır" : "Öz aparma sifarişiniz üçün buyurun"}
-            </p>
-          </div>
+          <h1 className="text-2xl font-semibold text-text-primary">{restaurant.name}</h1>
         </div>
         <Link
           href={`/${restaurant.slug}/reserve`}
@@ -224,7 +219,6 @@ export function MenuView({ restaurant, categories, items, tableId, bestsellerIte
 
       {visibleItems.length === 0 ? (
         <div className="flex flex-col items-center gap-3 py-12 text-center">
-          <Sticker name="teapot-cupcakes" size={96} />
           <p className="text-sm text-text-secondary">Bu kateqoriyada hələ məhsul yoxdur</p>
         </div>
       ) : (
