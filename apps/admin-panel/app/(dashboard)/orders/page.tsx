@@ -5,18 +5,25 @@ import { OrdersRealtimeList } from "@/components/orders/OrdersRealtimeList";
 export const metadata = { title: "Sifarişlər" };
 
 export default async function OrdersPage() {
-  const { restaurantId, role } = await getCurrentStaffContext();
+  const { restaurantId, role, staffId } = await getCurrentStaffContext();
   const supabase = getSupabaseServerClient();
 
+  let ordersQuery = supabase
+    .from("orders")
+    .select(
+      "id, order_number, status, order_type, total, discount_amount, created_at, table_id, delivery_address, courier_id, courier_name, courier_phone, picked_up_at, ready_at"
+    )
+    .eq("restaurant_id", restaurantId);
+
+  if (role === "courier") {
+    ordersQuery = ordersQuery
+      .eq("order_type", "delivery")
+      .or(`courier_id.eq.${staffId},courier_id.is.null`)
+      .not("status", "in", "(completed,cancelled)");
+  }
+
   const [{ data: orders }, { data: courierStaff }] = await Promise.all([
-    supabase
-      .from("orders")
-      .select(
-        "id, order_number, status, order_type, total, discount_amount, created_at, table_id, delivery_address, courier_id, courier_name, courier_phone"
-      )
-      .eq("restaurant_id", restaurantId)
-      .order("created_at", { ascending: false })
-      .limit(50),
+    ordersQuery.order("created_at", { ascending: false }).limit(50),
     (
       supabase as unknown as {
         rpc: (fn: string, args: unknown) => Promise<{ data: { id: string; full_name: string | null; role: string }[] | null }>;
@@ -53,6 +60,8 @@ export default async function OrdersPage() {
     courier_id: o.courier_id,
     courier_name: o.courier_name,
     courier_phone: o.courier_phone,
+    picked_up_at: o.picked_up_at,
+    ready_at: o.ready_at,
   }));
 
   return (
@@ -61,7 +70,7 @@ export default async function OrdersPage() {
         <h1 className="text-2xl font-semibold text-text-primary">Sifarişlər</h1>
         <p className="text-sm text-text-secondary">Son 50 sifariş, canlı yenilənir</p>
       </div>
-      <OrdersRealtimeList restaurantId={restaurantId} initialOrders={orderRows} couriers={couriers} role={role} />
+      <OrdersRealtimeList restaurantId={restaurantId} initialOrders={orderRows} couriers={couriers} role={role} staffId={staffId} />
     </div>
   );
 }

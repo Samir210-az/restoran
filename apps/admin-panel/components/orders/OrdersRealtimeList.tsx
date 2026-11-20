@@ -5,7 +5,13 @@ import Link from "next/link";
 import { Card, Badge, Button, Sticker } from "@restoran/ui";
 import { MapPin, Receipt, Tag } from "lucide-react";
 import { createSupabaseBrowserClient } from "@restoran/supabase-client";
-import { cancelOrderAction, markPaymentReceivedAction, closeOrderAction, markOrderServedAction } from "@/app/(dashboard)/orders/actions";
+import {
+  cancelOrderAction,
+  markPaymentReceivedAction,
+  closeOrderAction,
+  markOrderServedAction,
+  courierDeliveryStepAction,
+} from "@/app/(dashboard)/orders/actions";
 import { CourierAssignment } from "@/components/orders/CourierAssignment";
 import { OrderDiscountForm } from "@/components/orders/OrderDiscountForm";
 
@@ -24,6 +30,8 @@ interface OrderRow {
   courier_id: string | null;
   courier_name: string | null;
   courier_phone: string | null;
+  picked_up_at: string | null;
+  ready_at: string | null;
 }
 
 const PAYMENT_METHOD_LABEL: Record<string, string> = {
@@ -54,20 +62,32 @@ const STATUS_LABEL: Record<string, string> = {
 
 const ACTIVE_STATUSES = new Set(["pending", "confirmed", "preparing", "ready", "served"]);
 
+const UNCLAIMED_AFTER_MINUTES = 30;
+
 export function OrdersRealtimeList({
   restaurantId,
   initialOrders,
   couriers,
   role,
+  staffId,
 }: {
   restaurantId: string;
   initialOrders: OrderRow[];
   couriers: { id: string; full_name: string | null }[];
   role: string;
+  staffId: string;
 }) {
   const canDiscount = role === "owner" || role === "manager";
-  const canServe = role === "owner" || role === "manager" || role === "waiter";
-  const canTakePayment = role === "owner" || role === "manager" || role === "cashier";
+  const isManagement = role === "owner" || role === "manager";
+  const canServe = isManagement || role === "waiter";
+  const canTakePayment = isManagement || role === "cashier";
+  const isCourier = role === "courier";
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 60_000);
+    return () => clearInterval(timer);
+  }, []);
   const [orders, setOrders] = useState(initialOrders);
   const [openDiscountId, setOpenDiscountId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -144,6 +164,19 @@ export function OrdersRealtimeList({
                 {new Date(order.created_at).toLocaleDateString("az-AZ", { day: "numeric", month: "short" })}
               </span>
               <Badge variant={STATUS_BADGE[order.status] ?? "neutral"}>{STATUS_LABEL[order.status] ?? order.status}</Badge>
+              {order.order_type === "delivery" && order.picked_up_at && order.status === "ready" && (
+                <Badge variant="info">Yolda</Badge>
+              )}
+              {order.order_type === "takeaway" && order.status === "ready" && order.ready_at && (
+                <>
+                  <Badge variant="accent">Müştəri gözlənilir</Badge>
+                  {(now - new Date(order.ready_at).getTime()) / 60_000 >= UNCLAIMED_AFTER_MINUTES && (
+                    <Badge variant="danger">
+                      Götürülməyib · {Math.floor((now - new Date(order.ready_at).getTime()) / 60_000)} dəq
+                    </Badge>
+                  )}
+                </>
+              )}
             </div>
             <p className="mt-1 text-sm text-text-secondary">
               {order.table_number ? `Masa ${order.table_number}` : order.order_type === "takeaway" ? "Özün apar" : "Çatdırılma"}
@@ -212,7 +245,7 @@ export function OrdersRealtimeList({
               >
                 <Receipt className="h-3.5 w-3.5" aria-hidden="true" /> Qəbz
               </Link>
-              {ACTIVE_STATUSES.has(order.status) && order.status === "ready" && canServe && (
+              {ACTIVE_STATUSES.has(order.status) && order.status === "ready" && order.order_type === "dine_in" && canServe && (
                 <Button
                   size="sm"
                   variant="outline"
@@ -222,8 +255,42 @@ export function OrdersRealtimeList({
                   Stola verildi
                 </Button>
               )}
+              {order.order_type === "delivery" && (isCourier || isManagement) && ACTIVE_STATUSES.has(order.status) && (
+                <>
+                  {isCourier && !order.courier_id && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={isPending}
+                      onClick={() => startTransition(() => courierDeliveryStepAction(order.id, "claim"))}
+                    >
+                      Mən aparıram
+                    </Button>
+                  )}
+                  {order.status === "ready" && !order.picked_up_at && (!isCourier || order.courier_id === staffId) && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={isPending}
+                      onClick={() => startTransition(() => courierDeliveryStepAction(order.id, "picked_up"))}
+                    >
+                      Götürdüm, yoldayam
+                    </Button>
+                  )}
+                  {order.status === "ready" && order.picked_up_at && (!isCourier || order.courier_id === staffId) && (
+                    <Button
+                      size="sm"
+                      disabled={isPending}
+                      onClick={() => startTransition(() => courierDeliveryStepAction(order.id, "delivered"))}
+                    >
+                      Çatdırıldı
+                    </Button>
+                  )}
+                </>
+              )}
               {(order.status === "served" || order.status === "ready") &&
-                canTakePayment &&
+                (canTakePayment ||
+                  (isCourier && order.order_type === "delivery" && order.courier_id === staffId && order.status === "served")) &&
                 order.payment_status !== "completed" && (
                   <>
                     <Button
@@ -254,7 +321,10 @@ export function OrdersRealtimeList({
                   Sifarişi bağla
                 </Button>
               )}
-              {ACTIVE_STATUSES.has(order.status) && order.status === "pending" && (
+              {ACTIVE_STATUSES.has(order.status) &&
+                order.payment_status !== "completed" &&
+                !isCourier &&
+                (order.status === "pending" || (isManagement && order.status !== "served")) && (
                 <Button size="sm" variant="danger" disabled={isPending} onClick={() => {
                     const reason = window.prompt("Ləğv səbəbi nədir?");
                     if (reason && reason.trim().length >= 3) startTransition(() => cancelOrderAction(order.id, reason));
