@@ -1,4 +1,5 @@
 import { getSupabaseServerClient } from "@/lib/supabase-server";
+import { stickerUrl } from "@/lib/sticker-library";
 
 const BUCKET = "menu-item-images";
 const MAX_BYTES = 2 * 1024 * 1024;
@@ -31,4 +32,9 @@ export async function removeMenuItemImage(restaurantId: string, imageUrl: string
   const path = imageUrl.slice(index + marker.length);
   if (!path.startsWith(`${restaurantId}/`)) return;
   await getSupabaseServerClient().storage.from(BUCKET).remove([path]);
+}
+
+/** Formdan seçilmiş hazır stikerin ünvanı; seçilməyibsə və ya siyahıda yoxdursa null. */
+export function pickedStickerUrl(value: FormDataEntryValue | null) {
+  return typeof value === "string" && value ? stickerUrl(value) : null;
 }

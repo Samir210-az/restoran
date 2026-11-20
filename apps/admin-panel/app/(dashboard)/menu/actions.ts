@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
 import { getCurrentStaffContext } from "@/lib/get-current-staff-context";
-import { uploadMenuItemImage, removeMenuItemImage } from "@/lib/menu-item-image";
+import { uploadMenuItemImage, removeMenuItemImage, pickedStickerUrl } from "@/lib/menu-item-image";
 
 /**
  * Butun bu Action-lar RLS-e guvenir: `menu_categories_write_staff` ve
@@ -43,6 +43,7 @@ export async function createMenuItemAction(formData: FormData) {
 
   const image = await uploadMenuItemImage(restaurantId, formData.get("image"));
   if (image && "error" in image) redirect("/menu?error=" + encodeURIComponent(image.error));
+  const sticker = pickedStickerUrl(formData.get("sticker"));
 
   const supabase = getSupabaseServerClient();
   await supabase.from("menu_items").insert({
@@ -52,7 +53,7 @@ export async function createMenuItemAction(formData: FormData) {
     description: { az: "", en: "", ru: "" },
     price,
     prep_station: parseStation(formData.get("prep_station")),
-    ...(image ? { image_url: image.url } : {}),
+    ...(image ? { image_url: image.url } : sticker ? { image_url: sticker } : {}),
   });
 
   revalidatePath("/menu");
@@ -142,6 +143,7 @@ export async function updateMenuItemAction(formData: FormData) {
     prep_station: parseStation(formData.get("prep_station")),
   };
   if (image) updates.image_url = image.url;
+  else if (pickedStickerUrl(formData.get("sticker"))) updates.image_url = pickedStickerUrl(formData.get("sticker"));
   else if (formData.get("remove_image") === "on") updates.image_url = null;
 
   await supabase.from("menu_items").update(updates).eq("id", itemId).eq("restaurant_id", restaurantId);
