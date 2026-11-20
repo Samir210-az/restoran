@@ -35,6 +35,7 @@ export interface OrderTrackingRow {
   payment_method: string | null;
   courier_name: string | null;
   courier_phone: string | null;
+  picked_up_at: string | null;
 }
 
 interface CardTransferInfo {
@@ -50,6 +51,30 @@ const STEPS: { status: OrderStatus; label: string; icon: typeof Clock }[] = [
   { status: "ready", label: "Hazırdır", icon: CheckCircle2 },
   { status: "served", label: "Təqdim edildi", icon: CheckCircle2 },
 ];
+
+const TAKEAWAY_STEPS: { status: OrderStatus; label: string; icon: typeof Clock }[] = [
+  { status: "pending", label: "Qəbul edildi", icon: Clock },
+  { status: "preparing", label: "Hazırlanır", icon: ChefHat },
+  { status: "ready", label: "Hazırdır, kassadan götürün", icon: CheckCircle2 },
+  { status: "completed", label: "Təhvil verildi", icon: CheckCircle2 },
+];
+
+const DELIVERY_STEPS: { status: OrderStatus | "on_the_way"; label: string; icon: typeof Clock }[] = [
+  { status: "pending", label: "Qəbul edildi", icon: Clock },
+  { status: "preparing", label: "Hazırlanır", icon: ChefHat },
+  { status: "ready", label: "Hazırdır", icon: CheckCircle2 },
+  { status: "on_the_way", label: "Kuryer yoldadır", icon: Bike },
+  { status: "served", label: "Çatdırıldı", icon: CheckCircle2 },
+];
+
+const STATUS_RANK: Record<string, number> = {
+  pending: 0,
+  confirmed: 1,
+  preparing: 2,
+  ready: 3,
+  served: 4,
+  completed: 5,
+};
 
 const POLL_INTERVAL_MS = 4000;
 
@@ -96,7 +121,11 @@ export function OrderTracker({ orderId, initialOrder }: { orderId: string; initi
   }
 
   const isCancelled = order.status === "cancelled";
-  const currentStepIndex = STEPS.findIndex((s) => s.status === order.status);
+  const steps: { status: string; label: string; icon: typeof Clock }[] =
+    order.order_type === "takeaway" ? TAKEAWAY_STEPS : order.order_type === "delivery" ? DELIVERY_STEPS : STEPS;
+  const rank = STATUS_RANK[order.status] ?? 0;
+  const stepRank = (status: string) => (status === "on_the_way" ? 3.5 : STATUS_RANK[status] ?? 0);
+  const currentRank = order.status === "ready" && order.picked_up_at && order.order_type === "delivery" ? 3.5 : rank;
   const statusSticker =
     order.status === "preparing"
       ? "steamer-veg"
@@ -134,8 +163,8 @@ export function OrderTracker({ orderId, initialOrder }: { orderId: string; initi
         </Card>
       ) : (
         <div className="mb-6 flex flex-col gap-1">
-          {STEPS.map((step, index) => {
-            const isDone = index <= currentStepIndex;
+          {steps.map((step, index) => {
+            const isDone = stepRank(step.status) <= currentRank;
             const Icon = step.icon;
             return (
               <div key={step.status} className="flex items-center gap-3">
@@ -150,13 +179,22 @@ export function OrderTracker({ orderId, initialOrder }: { orderId: string; initi
                 <span className={cn("text-sm", isDone ? "font-medium text-text-primary" : "text-text-muted")}>
                   {step.label}
                 </span>
-                {index < STEPS.length - 1 && (
+                {index < steps.length - 1 && (
                   <div className={cn("ml-4 h-6 w-px", isDone ? "bg-accent" : "bg-border")} aria-hidden="true" />
                 )}
               </div>
             );
           })}
         </div>
+      )}
+
+      {order.order_type === "takeaway" && order.status === "ready" && (
+        <Card className="mb-4 border-accent/40 bg-accent-soft text-center">
+          <p className="text-sm font-semibold text-text-primary">Sifarişiniz hazırdır</p>
+          <p className="mt-1 text-sm text-text-secondary">
+            Nömrə <span className="font-semibold text-text-primary">#{order.order_number}</span>. Kassaya yaxınlaşın, ödənişi orada edirsiniz.
+          </p>
+        </Card>
       )}
 
       {cardInfo && (

@@ -94,8 +94,9 @@ export async function cancelOrderAction(orderId: string, reason: string) {
  * Legv edilmis sifarisi toxunmuruq (neq status cancelled).
  */
 export async function markPaymentReceivedAction(orderId: string, method: "cash" | "card") {
-  const { restaurantId, role, userId } = await getCurrentStaffContext();
-  if (role !== "owner" && role !== "manager" && role !== "cashier") {
+  const { restaurantId, role, userId, staffId } = await getCurrentStaffContext();
+  const isCashDesk = role === "owner" || role === "manager" || role === "cashier";
+  if (!isCashDesk && role !== "courier") {
     throw new Error("FORBIDDEN: yalnız kassir/menecer/sahib ödəniş qəbul edə bilər");
   }
   if (method !== "cash" && method !== "card") return;
@@ -103,12 +104,17 @@ export async function markPaymentReceivedAction(orderId: string, method: "cash" 
 
   const { data: current } = await supabase
     .from("orders")
-    .select("status")
+    .select("status, order_type, courier_id, served_at")
     .eq("id", orderId)
     .eq("restaurant_id", restaurantId)
     .maybeSingle();
   if (!current || (current.status !== "ready" && current.status !== "served")) {
     throw new Error("NOT_READY: sifariş hələ hazır deyil, ödəniş qəbul edilmir");
+  }
+  if (!isCashDesk) {
+    if (current.order_type !== "delivery" || current.courier_id !== staffId || current.status !== "served") {
+      throw new Error("FORBIDDEN: kuryer yalnız öz çatdırdığı sifarişin pulunu ala bilər");
+    }
   }
 
   await supabase
@@ -119,7 +125,14 @@ export async function markPaymentReceivedAction(orderId: string, method: "cash" 
 
   await supabase
     .from("orders")
-    .update({ status: "completed", paid_at: new Date().toISOString(), paid_by: userId })
+    .update({
+      status: "completed",
+      paid_at: new Date().toISOString(),
+      paid_by: userId,
+      ...(current.order_type === "takeaway" && !current.served_at
+        ? { served_at: new Date().toISOString(), served_by: userId }
+        : {}),
+    })
     .eq("id", orderId)
     .eq("restaurant_id", restaurantId)
     .neq("status", "cancelled");
@@ -255,6 +268,65 @@ export async function assignCourierAction(
     })
     .eq("id", orderId)
     .eq("restaurant_id", restaurantId);
+
+  revalidatePath("/orders");
+}
+
+/**
+ * Kuryerin oz telefonundan etdiyi addimlar: sifarisi uzerine gotur ("claim"),
+ * yemeyi gotur ("picked_up" = yoldadir), catdir ("delivered").
+ * Sahib/menecer de eyni addimlari ede biler. Kuryer yalniz oz (ve ya
+ * hele kimsəyə verilməmiş) sifarişi ile islaye biler.
+ */
+export async function courierDeliveryStepAction(orderId: string, step: "claim" | "picked_up" | "delivered") {
+  const { restaurantId, role, userId, staffId } = await getCurrentStaffContext();
+  if (role !== "courier" && role !== "owner" && role !== "manager") {
+    throw new Error("FORBIDDEN: bu əməliyyat yalnız kuryer üçündür");
+  }
+
+  const supabase = getSupabaseServerClient();
+  const { data: order } = await supabase
+    .from("orders")
+    .select("status, order_type, courier_id, picked_up_at")
+    .eq("id", orderId)
+    .eq("restaurant_id", restaurantId)
+    .maybeSingle();
+  if (!order || order.order_type !== "delivery") return;
+
+  const isManagement = role !== "courier";
+  if (!isManagement && order.courier_id && order.courier_id !== staffId) {
+    throw new Error("FORBIDDEN: bu sifariş başqa kuryerə verilib");
+  }
+
+  const now = new Date().toISOString();
+
+  if (step === "claim") {
+    if (order.courier_id) return;
+    await supabase
+      .from("orders")
+      .update({ courier_id: staffId, courier_name: null, courier_phone: null })
+      .eq("id", orderId)
+      .eq("restaurant_id", restaurantId)
+      .is("courier_id", null);
+  }
+
+  if (step === "picked_up") {
+    if (order.status !== "ready" || order.picked_up_at) return;
+    await supabase
+      .from("orders")
+      .update({ picked_up_at: now, ...(order.courier_id ? {} : { courier_id: staffId }) })
+      .eq("id", orderId)
+      .eq("restaurant_id", restaurantId);
+  }
+
+  if (step === "delivered") {
+    if (order.status !== "ready" || !order.picked_up_at) return;
+    await supabase
+      .from("orders")
+      .update({ status: "served", delivered_at: now, served_at: now, served_by: userId })
+      .eq("id", orderId)
+      .eq("restaurant_id", restaurantId);
+  }
 
   revalidatePath("/orders");
 }
