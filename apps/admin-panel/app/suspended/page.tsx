@@ -1,5 +1,6 @@
 import { ShieldOff } from "lucide-react";
 import { signOutAction } from "@/app/(dashboard)/actions";
+import { reactivationRequestUrl } from "@/lib/whatsapp";
 
 export const metadata = { title: "Giriş məhdudlaşdırılıb" };
 
@@ -22,7 +23,7 @@ export default function SuspendedPage() {
         </p>
       </div>
       <a
-        href="https://wa.me/994552107111"
+        href={reactivationRequestUrl}
         target="_blank"
         rel="noopener noreferrer"
         className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:opacity-90"
