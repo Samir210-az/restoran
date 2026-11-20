@@ -1,8 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
 import { getCurrentStaffContext } from "@/lib/get-current-staff-context";
+import { uploadMenuItemImage, removeMenuItemImage } from "@/lib/menu-item-image";
 
 /**
  * Butun bu Action-lar RLS-e guvenir: `menu_categories_write_staff` ve
@@ -35,6 +37,9 @@ export async function createMenuItemAction(formData: FormData) {
 
   if (!categoryId || !nameAz || Number.isNaN(price) || price < 0) return;
 
+  const image = await uploadMenuItemImage(restaurantId, formData.get("image"));
+  if (image && "error" in image) redirect("/menu?error=" + encodeURIComponent(image.error));
+
   const supabase = getSupabaseServerClient();
   await supabase.from("menu_items").insert({
     restaurant_id: restaurantId,
@@ -42,6 +47,7 @@ export async function createMenuItemAction(formData: FormData) {
     name: { az: nameAz, en: nameAz, ru: nameAz },
     description: { az: "", en: "", ru: "" },
     price,
+    ...(image ? { image_url: image.url } : {}),
   });
 
   revalidatePath("/menu");
@@ -110,11 +116,26 @@ export async function updateMenuItemAction(formData: FormData) {
   if (!itemId || !nameAz || Number.isNaN(price) || price < 0) return;
 
   const supabase = getSupabaseServerClient();
-  await supabase
+  const { data: current } = await supabase
     .from("menu_items")
-    .update({ name: { az: nameAz, en: nameAz, ru: nameAz }, price })
+    .select("image_url")
     .eq("id", itemId)
-    .eq("restaurant_id", restaurantId);
+    .eq("restaurant_id", restaurantId)
+    .maybeSingle();
+
+  const image = await uploadMenuItemImage(restaurantId, formData.get("image"));
+  if (image && "error" in image) redirect("/menu?error=" + encodeURIComponent(image.error));
+
+  const updates: { name: { az: string; en: string; ru: string }; price: number; image_url?: string | null } = {
+    name: { az: nameAz, en: nameAz, ru: nameAz },
+    price,
+  };
+  if (image) updates.image_url = image.url;
+  else if (formData.get("remove_image") === "on") updates.image_url = null;
+
+  await supabase.from("menu_items").update(updates).eq("id", itemId).eq("restaurant_id", restaurantId);
+
+  if ("image_url" in updates) await removeMenuItemImage(restaurantId, current?.image_url);
 
   revalidatePath("/menu");
 }
@@ -122,6 +143,13 @@ export async function updateMenuItemAction(formData: FormData) {
 export async function deleteMenuItemAction(itemId: string) {
   const { restaurantId } = await requireOwner();
   const supabase = getSupabaseServerClient();
+  const { data: current } = await supabase
+    .from("menu_items")
+    .select("image_url")
+    .eq("id", itemId)
+    .eq("restaurant_id", restaurantId)
+    .maybeSingle();
   await supabase.from("menu_items").delete().eq("id", itemId).eq("restaurant_id", restaurantId);
+  await removeMenuItemImage(restaurantId, current?.image_url);
   revalidatePath("/menu");
 }
