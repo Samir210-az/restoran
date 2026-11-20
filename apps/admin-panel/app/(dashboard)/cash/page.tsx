@@ -17,7 +17,7 @@ export default async function CashPage({ searchParams }: { searchParams: { error
   const shift = await getOpenShift(restaurantId);
   const totals = shift ? await getShiftTotals(restaurantId, shift.opened_at) : null;
   const history = await getRecentShifts(restaurantId);
-  const expected = shift && totals ? Number(shift.opening_cash) + totals.cash : 0;
+  const expected = shift && totals ? Number(shift.opening_cash) + totals.cash + totals.cashTips : 0;
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-4 p-4">
@@ -54,7 +54,20 @@ export default async function CashPage({ searchParams }: { searchParams: { error
             </dl>
             <p className="mt-3 border-t border-border pt-3 text-sm">
               Kassada olmalı olan nağd: <span className="font-semibold">{money(expected)}</span>
+              {totals.cashTips > 0 && <span className="text-text-secondary"> (nağd çay pulu {money(totals.cashTips)} daxildir)</span>}
             </p>
+            {totals.tipsByWaiter.length > 0 && (
+              <div className="mt-3 text-sm">
+                <p className="text-text-secondary">
+                  Çay pulu (gəlirə daxil deyil): nağd {money(totals.cashTips)}, kartla {money(totals.cardTips)}. Ofisiantlar üzrə:
+                </p>
+                <ul className="mt-1 flex flex-col gap-1">
+                  {totals.tipsByWaiter.map((t) => (
+                    <li key={t.name} className="flex justify-between"><span>{t.name}</span><span className="font-medium">{money(t.amount)}</span></li>
+                  ))}
+                </ul>
+              </div>
+            )}
             {totals.courierCash.length > 0 && (
               <div className="mt-3 text-sm">
                 <p className="text-text-secondary">Kuryerlərdən təhvil alınmalı nağd (bu məbləğ yuxarıdakı nağda daxildir):</p>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Card, Badge, Button, Sticker } from "@restoran/ui";
 import { MapPin, Receipt, Tag } from "lucide-react";
 import { createSupabaseBrowserClient } from "@restoran/supabase-client";
@@ -14,6 +15,7 @@ import {
 } from "@/app/(dashboard)/orders/actions";
 import { CourierAssignment } from "@/components/orders/CourierAssignment";
 import { OrderDiscountForm } from "@/components/orders/OrderDiscountForm";
+import { PaymentSettleForm } from "@/components/orders/PaymentSettleForm";
 
 interface OrderRow {
   id: string;
@@ -32,12 +34,16 @@ interface OrderRow {
   courier_phone: string | null;
   picked_up_at: string | null;
   ready_at: string | null;
+  payment_cash: number;
+  payment_card: number;
+  tip_amount: number;
 }
 
 const PAYMENT_METHOD_LABEL: Record<string, string> = {
   cash: "Nağd",
   card: "Kart",
   online: "Onlayn",
+  split: "Bölünmüş",
 };
 
 const STATUS_BADGE: Record<string, "neutral" | "warning" | "success" | "danger" | "info" | "accent"> = {
@@ -68,15 +74,18 @@ export function OrdersRealtimeList({
   restaurantId,
   initialOrders,
   couriers,
+  waiters,
   role,
   staffId,
 }: {
   restaurantId: string;
   initialOrders: OrderRow[];
   couriers: { id: string; full_name: string | null }[];
+  waiters: { id: string; full_name: string | null }[];
   role: string;
   staffId: string;
 }) {
+  const router = useRouter();
   const canDiscount = role === "owner" || role === "manager";
   const isManagement = role === "owner" || role === "manager";
   const canServe = isManagement || role === "waiter";
@@ -90,6 +99,7 @@ export function OrdersRealtimeList({
   }, []);
   const [orders, setOrders] = useState(initialOrders);
   const [openDiscountId, setOpenDiscountId] = useState<string | null>(null);
+  const [openSettleId, setOpenSettleId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   // Ehtiyat: server (Next.js) yeni initialOrders-le render etsə (mes.
@@ -129,10 +139,7 @@ export function OrdersRealtimeList({
         "postgres_changes",
         { event: "*", schema: "public", table: "payments", filter: `restaurant_id=eq.${restaurantId}` },
         (payload) => {
-          const updated = payload.new as { order_id: string; status: string; method: string };
-          setOrders((prev) =>
-            prev.map((o) => (o.id === updated.order_id ? { ...o, payment_status: updated.status, payment_method: updated.method } : o))
-          );
+          router.refresh();
         }
       )
       .subscribe();
@@ -140,7 +147,7 @@ export function OrdersRealtimeList({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [restaurantId]);
+  }, [restaurantId, router]);
 
   if (orders.length === 0) {
     return (
@@ -194,6 +201,7 @@ export function OrdersRealtimeList({
                 <>
                   {" · "}
                   {PAYMENT_METHOD_LABEL[order.payment_method] ?? order.payment_method}
+                  {order.payment_method === "split" && ` (nağd ${Number(order.payment_cash).toFixed(2)} + kart ${Number(order.payment_card).toFixed(2)})`}
                   {order.payment_status === "completed" ? (
                     <Badge variant="success" className="ml-1">Ödənilib</Badge>
                   ) : (
@@ -202,6 +210,9 @@ export function OrdersRealtimeList({
                 </>
               )}
             </p>
+            {Number(order.tip_amount) > 0 && (
+              <p className="text-xs text-text-secondary">Çay pulu: {Number(order.tip_amount).toFixed(2)} ₼ (gəlirə daxil deyil)</p>
+            )}
             {order.order_type === "delivery" && order.delivery_address && (
               <p className="mt-1 flex items-start gap-1 break-words text-xs text-text-muted">
                 <MapPin className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />
@@ -309,8 +320,22 @@ export function OrdersRealtimeList({
                     >
                       Kartla alındı
                     </Button>
+                    {canTakePayment && (
+                      <Button size="sm" variant="outline" disabled={isPending} onClick={() => setOpenSettleId(order.id)}>
+                        Bölünmüş / çay pulu
+                      </Button>
+                    )}
                   </>
                 )}
+              {openSettleId === order.id && canTakePayment && order.payment_status !== "completed" && (
+                <PaymentSettleForm
+                  orderId={order.id}
+                  due={Math.round((Number(order.total) - Number(order.discount_amount)) * 100) / 100}
+                  defaultWaiterId={null}
+                  waiters={waiters}
+                  onDone={() => setOpenSettleId(null)}
+                />
+              )}
               {ACTIVE_STATUSES.has(order.status) && order.status === "served" && order.payment_status === "completed" && canTakePayment && (
                 <Button
                   size="sm"

@@ -330,3 +330,46 @@ export async function courierDeliveryStepAction(orderId: string, step: "claim" |
 
   revalidatePath("/orders");
 }
+
+export interface SettlePaymentInput {
+  cash: number;
+  card: number;
+  tip: number;
+  tipMethod: "cash" | "card";
+  waiterId: string | null;
+}
+
+/**
+ * Bölünmüş ödəniş və çay pulu. Çay pulu sifarişin məbləğinə daxil deyil
+ * (gəlirə düşmür), ayrıca order_tips cədvəlində saxlanılır.
+ */
+export async function settlePaymentAction(orderId: string, input: SettlePaymentInput) {
+  const { role } = await getCurrentStaffContext();
+  if (role !== "owner" && role !== "manager" && role !== "cashier") {
+    throw new Error("FORBIDDEN: yalnız kassir/menecer/sahib ödəniş qəbul edə bilər");
+  }
+
+  const supabase = getSupabaseServerClient();
+  const { error } = await (
+    supabase as unknown as {
+      rpc: (fn: string, args: unknown) => Promise<{ error: { message: string } | null }>;
+    }
+  ).rpc("record_order_payment", {
+    _order_id: orderId,
+    _cash: input.cash,
+    _card: input.card,
+    _tip: input.tip,
+    _tip_method: input.tipMethod === "card" ? "card" : "cash",
+    _waiter_id: input.waiterId,
+  });
+  if (error) {
+    if (error.message.startsWith("AMOUNT_MISMATCH")) return { error: "Nağd və kart cəmi sifariş məbləğinə bərabər olmalıdır" };
+    if (error.message.startsWith("ALREADY_PAID")) return { error: "Bu sifariş artıq ödənilib" };
+    if (error.message.startsWith("NOT_READY")) return { error: "Sifariş hələ hazır deyil" };
+    return { error: "Ödəniş qeyd olunmadı, yenidən cəhd edin" };
+  }
+
+  revalidatePath("/orders");
+  revalidatePath("/cash");
+  return { error: null };
+}

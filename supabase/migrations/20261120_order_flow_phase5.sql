@@ -1,0 +1,4 @@
+-- Faza 5: çay pulu və bölünmüş ödəniş. Bazaya MCP ilə tətbiq olunub (order_flow_phase5_tips_split).
+-- order_tips: sifariş başına bir çay pulu, ofisiant və növ (nağd/kart), gəlirə daxil deyil.
+-- record_order_payment(): nağd + kart cəmi (məbləğ - endirim) olmalıdır, payments sətirləri bölünür,
+-- sifariş completed olur, çay pulu ayrıca yazılır. SECURITY INVOKER, RLS: is_staff_of.
