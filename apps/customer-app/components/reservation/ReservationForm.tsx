@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { CalendarCheck, CheckCircle2 } from "lucide-react";
-import { Card, Input, Button } from "@restoran/ui";
+import { CalendarCheck } from "lucide-react";
+import { Card, Input, Button, Sticker } from "@restoran/ui";
 import { requestReservation } from "@/lib/request-reservation";
 
 export function ReservationForm({ restaurant }: { restaurant: { id: string; name: string } }) {
@@ -39,7 +39,7 @@ export function ReservationForm({ restaurant }: { restaurant: { id: string; name
   if (isDone) {
     return (
       <Card className="mx-auto max-w-md text-center">
-        <CheckCircle2 className="mx-auto mb-2 h-10 w-10 text-success" aria-hidden="true" />
+        <Sticker name="champagne-tray" size={96} className="mx-auto mb-2" />
         <p className="font-medium text-text-primary">Sorğunuz göndərildi</p>
         <p className="mt-1 text-sm text-text-secondary">
           {restaurant.name} sizinlə tezliklə əlaqə saxlayıb rezervasiyanızı təsdiqləyəcək
@@ -55,6 +55,7 @@ export function ReservationForm({ restaurant }: { restaurant: { id: string; name
       <div className="mb-4 flex items-center gap-2">
         <CalendarCheck className="h-5 w-5 text-accent" aria-hidden="true" />
         <h1 className="text-lg font-semibold text-text-primary">Masa rezerv edin</h1>
+        <Sticker name="lamp-glow" size={56} className="ml-auto" />
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">

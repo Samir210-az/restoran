@@ -1,5 +1,5 @@
-import { Plus, UtensilsCrossed } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardDescription, Input, Badge } from "@restoran/ui";
+import { Plus } from "lucide-react";
+import { Card, CardHeader, CardTitle, CardDescription, Input, Badge, Sticker } from "@restoran/ui";
 import { SubmitButton } from "@/components/forms/SubmitButton";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
 import { getCurrentStaffContext } from "@/lib/get-current-staff-context";
@@ -50,7 +50,7 @@ export default async function MenuPage() {
       {categoryList.length === 0 ? (
         <Card>
           <div className="flex flex-col items-center gap-2 py-10 text-center">
-            <UtensilsCrossed className="h-8 w-8 text-text-muted" aria-hidden="true" />
+            <Sticker name="teapot-cupcakes" size={96} />
             <p className="text-sm font-medium text-text-primary">Hələ kateqoriya yoxdur</p>
             <p className="text-xs text-text-muted">Aşağıdakı formadan ilk kateqoriyanı əlavə edin</p>
           </div>

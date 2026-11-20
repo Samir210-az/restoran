@@ -1,5 +1,5 @@
-import { Package, AlertTriangle, Truck } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardDescription, Input, Badge } from "@restoran/ui";
+import { AlertTriangle, Truck } from "lucide-react";
+import { Card, CardHeader, CardTitle, CardDescription, Input, Badge, Sticker } from "@restoran/ui";
 import { getCurrentStaffContext } from "@/lib/get-current-staff-context";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
 import { SubmitButton } from "@/components/forms/SubmitButton";
@@ -52,7 +52,7 @@ export default async function InventoryPage({ searchParams }: { searchParams: { 
       {inventoryRows.length === 0 ? (
         <Card>
           <div className="flex flex-col items-center gap-2 py-10 text-center">
-            <Package className="h-8 w-8 text-text-muted" aria-hidden="true" />
+            <Sticker name="eggs-basket" size={96} />
             <p className="text-sm text-text-secondary">Hələ anbar maddəsi yoxdur</p>
           </div>
         </Card>

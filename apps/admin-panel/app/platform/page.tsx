@@ -1,6 +1,6 @@
-import { Building2, PlusCircle, CheckCircle2, AlertCircle, ChevronRight, Users, UtensilsCrossed, ShoppingBag } from "lucide-react";
+import { PlusCircle, CheckCircle2, AlertCircle, ChevronRight, Users, UtensilsCrossed, ShoppingBag } from "lucide-react";
 import Link from "next/link";
-import { Card, CardHeader, CardTitle, CardDescription, Badge, Input } from "@restoran/ui";
+import { Card, CardHeader, CardTitle, CardDescription, Badge, Input, Sticker } from "@restoran/ui";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
 import { SubmitButton } from "@/components/forms/SubmitButton";
 import { setRestaurantStatusAction, createRestaurantWithOwnerAction } from "./actions";
@@ -89,7 +89,7 @@ export default async function PlatformOverviewPage({
       {rows.length === 0 ? (
         <Card>
           <div className="flex flex-col items-center gap-2 py-10 text-center">
-            <Building2 className="h-8 w-8 text-text-muted" aria-hidden="true" />
+            <Sticker name="gift-basket" size={96} />
             <p className="text-sm text-text-secondary">Hələ restoran qeydiyyatdan keçməyib</p>
           </div>
         </Card>
