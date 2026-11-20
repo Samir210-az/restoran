@@ -114,7 +114,7 @@ export default async function TipsPage({ searchParams }: { searchParams: { p?: s
                 <div>
                   <p className="font-medium text-text-primary">{e.waiterName}</p>
                   <p className="text-text-secondary">
-                    {new Date(e.created_at).toLocaleString("az-AZ", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                    {new Date(e.created_at).toLocaleString("az-AZ", { timeZone, day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
                     {e.orderNumber !== null && ` · sifariş #${e.orderNumber}`}
                   </p>
                 </div>
