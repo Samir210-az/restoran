@@ -8,6 +8,16 @@ import { localize } from "@restoran/utils";
 
 export const metadata = { title: "Qəbz" };
 
+interface PaymentLine {
+  method: string;
+  amount: number;
+  status: string;
+  tendered_amount: number | null;
+  change_amount: number | null;
+}
+
+const METHOD_LABEL: Record<string, string> = { cash: "Nağd", card: "Kart", online: "Onlayn" };
+
 interface ReceiptItem {
   name: string;
   quantity: number;
@@ -49,6 +59,30 @@ export default async function ReceiptPage({ params }: { params: { id: string } }
     quantity: i.quantity,
     unit_price: Number(i.unit_price),
   }));
+
+  const { data: paymentRows } = await (
+    supabase as unknown as {
+      from: (t: "payments") => {
+        select: (c: string) => { eq: (c: string, v: string) => Promise<{ data: PaymentLine[] | null }> };
+      };
+    }
+  )
+    .from("payments")
+    .select("method, amount, status, tendered_amount, change_amount")
+    .eq("order_id", order.id);
+  const { data: tipRows } = await (
+    supabase as unknown as {
+      from: (t: "order_tips") => {
+        select: (c: string) => { eq: (c: string, v: string) => Promise<{ data: { amount: number; method: string }[] | null }> };
+      };
+    }
+  )
+    .from("order_tips")
+    .select("amount, method")
+    .eq("order_id", order.id);
+  const tip = tipRows?.[0];
+  const paid = (paymentRows ?? []).filter((p) => p.status === "completed");
+  const cashLine = paid.find((p) => p.method === "cash" && Number(p.change_amount ?? 0) > 0);
 
   const subtotal = receiptItems.reduce((sum, i) => sum + i.quantity * i.unit_price, 0);
   const discount = Number(order.discount_amount ?? 0);
@@ -110,6 +144,35 @@ export default async function ReceiptPage({ params }: { params: { id: string } }
             <span>{finalTotal.toFixed(2)} ₼</span>
           </div>
         </div>
+
+        {paid.length > 0 && (
+          <div className="space-y-1 border-t border-dashed border-gray-300 py-3 text-sm">
+            {paid.map((p, i) => (
+              <div key={i} className="flex justify-between text-gray-600">
+                <span>{METHOD_LABEL[p.method] ?? p.method} ödəniş</span>
+                <span>{Number(p.amount).toFixed(2)} ₼</span>
+              </div>
+            ))}
+            {tip && (
+              <div className="flex justify-between text-gray-600">
+                <span>Çay pulu ({tip.method === "card" ? "kartla" : "nağd"})</span>
+                <span>{Number(tip.amount).toFixed(2)} ₼</span>
+              </div>
+            )}
+            {cashLine && (
+              <>
+                <div className="flex justify-between text-gray-600">
+                  <span>Müştəri verdi</span>
+                  <span>{Number(cashLine.tendered_amount).toFixed(2)} ₼</span>
+                </div>
+                <div className="flex justify-between font-medium">
+                  <span>Qaytarılan qalıq</span>
+                  <span>{Number(cashLine.change_amount).toFixed(2)} ₼</span>
+                </div>
+              </>
+            )}
+          </div>
+        )}
 
         <p className="mt-4 text-center text-base font-semibold">Nuş olsun! 🍽️</p>
       </div>

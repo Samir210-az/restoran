@@ -337,6 +337,7 @@ export interface SettlePaymentInput {
   tip: number;
   tipMethod: "cash" | "card";
   waiterId: string | null;
+  tendered: number | null;
 }
 
 /**
@@ -361,9 +362,11 @@ export async function settlePaymentAction(orderId: string, input: SettlePaymentI
     _tip: input.tip,
     _tip_method: input.tipMethod === "card" ? "card" : "cash",
     _waiter_id: input.waiterId,
+    _cash_tendered: input.tendered,
   });
   if (error) {
     if (error.message.startsWith("AMOUNT_MISMATCH")) return { error: "Nağd və kart cəmi sifariş məbləğinə bərabər olmalıdır" };
+    if (error.message.startsWith("TENDERED_TOO_LOW")) return { error: "Müştərinin verdiyi məbləğ nağd hissədən azdır" };
     if (error.message.startsWith("ALREADY_PAID")) return { error: "Bu sifariş artıq ödənilib" };
     if (error.message.startsWith("NOT_READY")) return { error: "Sifariş hələ hazır deyil" };
     return { error: "Ödəniş qeyd olunmadı, yenidən cəhd edin" };

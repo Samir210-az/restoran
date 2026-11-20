@@ -14,15 +14,18 @@ export function PaymentSettleForm({
   due,
   defaultWaiterId,
   waiters,
+  cashOnly,
   onDone,
 }: {
   orderId: string;
   due: number;
   defaultWaiterId: string | null;
   waiters: Waiter[];
+  cashOnly: boolean;
   onDone: () => void;
 }) {
-  const [cash, setCash] = useState("");
+  const [cash, setCash] = useState(cashOnly ? due.toFixed(2) : "");
+  const [tendered, setTendered] = useState("");
   const [tip, setTip] = useState("");
   const [tipMethod, setTipMethod] = useState<"cash" | "card">("cash");
   const [waiterId, setWaiterId] = useState(defaultWaiterId ?? "");
@@ -32,7 +35,15 @@ export function PaymentSettleForm({
   const cashValue = Number(cash.replace(",", ".")) || 0;
   const card = Math.max(0, Math.round((due - cashValue) * 100) / 100);
   const tipValue = Number(tip.replace(",", ".")) || 0;
-  const invalid = cashValue < 0 || cashValue > due || tipValue < 0 || (tipValue > 0 && !waiterId);
+  const tenderedValue = Number(tendered.replace(",", ".")) || 0;
+  const cashNeeded = Math.round((cashValue + (tipMethod === "cash" ? tipValue : 0)) * 100) / 100;
+  const change = tenderedValue > 0 ? Math.round((tenderedValue - cashNeeded) * 100) / 100 : 0;
+  const invalid =
+    cashValue < 0 ||
+    cashValue > due ||
+    tipValue < 0 ||
+    (tipValue > 0 && !waiterId) ||
+    (tenderedValue > 0 && change < 0);
 
   function submit() {
     setError(null);
@@ -43,6 +54,7 @@ export function PaymentSettleForm({
         tip: tipValue,
         tipMethod,
         waiterId: waiterId || null,
+        tendered: tenderedValue > 0 ? tenderedValue : null,
       });
       if (result?.error) setError(result.error);
       else onDone();
@@ -55,7 +67,7 @@ export function PaymentSettleForm({
       <div className="grid grid-cols-2 gap-2">
         <label className="flex flex-col gap-1">
           <span>Nağd</span>
-          <Input type="number" inputMode="decimal" step="0.01" min="0" max={due} value={cash} onChange={(e) => setCash(e.target.value)} placeholder="0" />
+          <Input type="number" inputMode="decimal" step="0.01" min="0" max={due} value={cash} onChange={(e) => setCash(e.target.value)} placeholder="0" readOnly={cashOnly} />
         </label>
         <label className="flex flex-col gap-1">
           <span>Kart (qalan)</span>
@@ -73,6 +85,21 @@ export function PaymentSettleForm({
           </select>
         </label>
       </div>
+      {cashNeeded > 0 && (
+        <div className="flex flex-col gap-1 rounded-md bg-bg-muted p-2">
+          <label className="flex flex-col gap-1">
+            <span>Müştəri nağd verdi</span>
+            <Input type="number" inputMode="decimal" step="0.01" min="0" value={tendered} onChange={(e) => setTendered(e.target.value)} placeholder={cashNeeded.toFixed(2)} />
+          </label>
+          {tenderedValue > 0 && change >= 0 && (
+            <p className="text-base font-semibold text-text-primary">
+              Qaytarılmalı: {change.toFixed(2)} ₼
+              <span className="block text-xs font-normal text-text-secondary">Hesaba mədaxil: {cashValue.toFixed(2)} ₼</span>
+            </p>
+          )}
+          {tenderedValue > 0 && change < 0 && <p className="text-danger">Verilən məbləğ çatmır, {Math.abs(change).toFixed(2)} ₼ əskikdir</p>}
+        </div>
+      )}
       {tipValue > 0 && (
         <label className="flex flex-col gap-1">
           <span>Çay pulu kimə</span>
