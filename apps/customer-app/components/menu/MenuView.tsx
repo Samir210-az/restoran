@@ -7,7 +7,6 @@ import { Plus, Minus, ShoppingBag, CalendarCheck, Banknote, CreditCard, Flame, C
 import { Button, Modal, Input, Sticker } from "@restoran/ui";
 import { cn } from "@restoran/utils";
 import { placeOrder, type PaymentMethod } from "@/lib/place-order";
-import { pickMenuSticker } from "@/lib/menu-stickers";
 import { AIWaiterChat } from "./AIWaiterChat";
 
 interface CategoryRow {
@@ -73,10 +72,6 @@ export function MenuView({ restaurant, categories, items, tableId, bestsellerIte
   const [deliveryAddress, setDeliveryAddress] = useState("");
 
   const visibleItems = activeCategoryId ? items.filter((item) => item.category_id === activeCategoryId) : items;
-  const categoryNames = useMemo(
-    () => new Map(categories.map((category) => [category.id, category.name.az ?? category.name.en ?? ""])),
-    [categories]
-  );
 
   const cartEntries = Object.values(cart);
   const cartCount = cartEntries.reduce((sum, entry) => sum + entry.quantity, 0);
@@ -225,19 +220,12 @@ export function MenuView({ restaurant, categories, items, tableId, bestsellerIte
         <div className="flex flex-col divide-y divide-border">
           {visibleItems.map((item) => {
             const inCartQty = cart[item.id]?.quantity ?? 0;
-            const sticker = item.image_url ? null : pickMenuSticker(item.name.az ?? "", categoryNames.get(item.category_id), item.id);
             return (
               <div key={item.id} className="flex items-start justify-between gap-4 py-4">
                 <div className="flex min-w-0 items-start gap-3">
-                  {(item.image_url || sticker) && (
-                    <div className="flex h-16 w-16 shrink-0 items-center justify-center">
-                      {item.image_url ? (
-                        /* eslint-disable-next-line @next/next/no-img-element -- Supabase Storage-dan gələn kiçik önizləmə */
-                        <img src={item.image_url} alt={item.name.az} loading="lazy" className="h-16 w-16 rounded-lg object-cover" />
-                      ) : (
-                        sticker && <Sticker name={sticker} size={64} />
-                      )}
-                    </div>
+                  {item.image_url && (
+                    /* eslint-disable-next-line @next/next/no-img-element -- Supabase Storage-dan gələn kiçik önizləmə */
+                    <img src={item.image_url} alt={item.name.az} loading="lazy" className="h-16 w-16 shrink-0 rounded-lg object-cover" />
                   )}
                   <div className="min-w-0">
                     <p className="font-medium text-text-primary">{item.name.az}</p>
