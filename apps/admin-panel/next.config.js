@@ -43,6 +43,10 @@ const withPWA = require("next-pwa")({
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  experimental: {
+    // Loqo yükləməsi 2MB-a qədər icazəlidir, server action-ların standart limiti isə 1MB-dır.
+    serverActions: { bodySizeLimit: "3mb" },
+  },
   transpilePackages: ["@restoran/ui", "@restoran/utils", "@restoran/types", "@restoran/supabase-client"],
   images: {
     remotePatterns: [

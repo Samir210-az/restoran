@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowLeft, Building2, Users, UtensilsCrossed, ShoppingBag, Mail, Calendar, CheckCircle2, AlertCircle, UserCog, KeyRound } from "lucide-react";
 import { Card, Badge, Input } from "@restoran/ui";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
@@ -7,7 +8,13 @@ import { createSupabaseServiceClient } from "@restoran/supabase-client";
 import { SubmitButton } from "@/components/forms/SubmitButton";
 import { ResetRestaurantButton } from "@/components/platform/ResetRestaurantButton";
 import { DeleteRestaurantButton } from "@/components/platform/DeleteRestaurantButton";
-import { setRestaurantStatusAction, transferRestaurantOwnerAction, regenerateAccessCodeAction, resetStaffPinAction } from "../actions";
+import {
+  setRestaurantStatusAction,
+  transferRestaurantOwnerAction,
+  regenerateAccessCodeAction,
+  resetStaffPinAction,
+  updateRestaurantAction,
+} from "../actions";
 
 export const metadata = { title: "Restoran Detalları" };
 
@@ -37,7 +44,7 @@ export default async function PlatformRestaurantDetailPage({
   searchParams,
 }: {
   params: { restaurantId: string };
-  searchParams: { rreset?: string; rerror?: string; rowner?: string; rcode?: string; rpin?: string };
+  searchParams: { rreset?: string; rerror?: string; rowner?: string; rcode?: string; rpin?: string; rupdated?: string };
 }) {
   const supabase = getSupabaseServerClient();
   const { data: restaurants } = await supabase.rpc("get_platform_overview");
@@ -51,6 +58,8 @@ export default async function PlatformRestaurantDetailPage({
     .select("id, user_id, role, is_active, profiles(full_name)")
     .eq("restaurant_id", restaurant.id)
     .order("created_at", { ascending: true });
+
+  const { data: branding } = await serviceClient.from("restaurants").select("logo_url").eq("id", restaurant.id).maybeSingle();
 
   return (
     <div className="flex flex-col gap-6">
@@ -72,6 +81,12 @@ export default async function PlatformRestaurantDetailPage({
         <div className="flex items-center gap-2 rounded-md border border-success/30 bg-success/10 px-3 py-2 text-sm text-success">
           <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" />
           <span className="font-medium">{searchParams.rreset}</span> sıfırlandı — bütün test məlumatları silindi.
+        </div>
+      )}
+      {searchParams.rupdated && (
+        <div className="flex items-center gap-2 rounded-md border border-success/30 bg-success/10 px-3 py-2 text-sm text-success">
+          <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" />
+          Restoran məlumatları yeniləndi.
         </div>
       )}
       {searchParams.rowner && (
@@ -131,6 +146,43 @@ export default async function PlatformRestaurantDetailPage({
           </p>
         </Card>
       </div>
+
+      <Card className="max-w-md">
+        <div className="mb-3 flex items-center gap-2">
+          <Building2 className="h-4 w-4 text-accent" aria-hidden="true" />
+          <p className="font-medium text-text-primary">Restoranı redaktə et</p>
+        </div>
+        <form action={updateRestaurantAction} className="flex flex-col gap-2.5">
+          <input type="hidden" name="restaurant_id" value={restaurant.id} />
+          <Input name="restaurant_name" defaultValue={restaurant.name} placeholder="Restoranın adı" required />
+          <div className="flex items-center gap-3">
+            {branding?.logo_url ? (
+              <Image
+                src={branding.logo_url}
+                alt={restaurant.name}
+                width={56}
+                height={56}
+                className="h-14 w-14 shrink-0 rounded-full border border-border object-cover"
+              />
+            ) : (
+              <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-dashed border-border text-xs text-text-muted">
+                Loqo yoxdur
+              </span>
+            )}
+            <label className="flex min-w-0 flex-col gap-1.5 text-sm text-text-secondary">
+              {branding?.logo_url ? "Loqonu dəyiş" : "Loqo əlavə et"}
+              <input
+                type="file"
+                name="logo"
+                accept="image/png,image/jpeg,image/webp"
+                className="text-xs text-text-secondary file:mr-3 file:rounded-md file:border-0 file:bg-accent-soft file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-accent hover:file:opacity-90"
+              />
+              <span className="text-xs text-text-muted">PNG, JPEG və ya WEBP, maks 2MB</span>
+            </label>
+          </div>
+          <SubmitButton className="self-start">Yadda saxla</SubmitButton>
+        </form>
+      </Card>
 
       <Card className="max-w-md">
         <div className="mb-3 flex items-center gap-2">
