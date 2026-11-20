@@ -37,6 +37,10 @@ const RULES: { keywords: string[]; stickers: string[] }[] = [
   { keywords: ["pendir", "cheese"], stickers: ["cheese"] },
   { keywords: ["kolbasa", "sosis", "sucuk"], stickers: ["sausages"] },
   { keywords: ["toyuq", "chicken", "qizardilmis", "kfc"], stickers: ["fried-chicken"] },
+  {
+    keywords: ["kabab", "kebab", "lule", "sasliq", "dolma", "plov", "xash", "sorba", "dovga", "qutab", "qovurma", "quzu", "qoyun"],
+    stickers: ["bread-basket", "salad-bowl", "pickles", "onion-rings"],
+  },
   { keywords: ["sogan halqa", "onion ring"], stickers: ["onion-rings"] },
   { keywords: ["salat", "salad"], stickers: ["salad-bowl"] },
   { keywords: ["tursu", "konserv"], stickers: ["pickles"] },
@@ -59,6 +63,9 @@ function matches(text: string, keyword: string): boolean {
     .some((word) => word.startsWith(key) && word.length - key.length <= MAX_SUFFIX);
 }
 
+// Açar söz tapılmayan məhsullar boş qalmasın deyə neytral yemək stikerləri.
+const FALLBACK_STICKERS = ["bread-basket", "salad-bowl", "breakfast-tray", "fruit-bowl"];
+
 function hashSeed(seed: string): number {
   let hash = 0;
   for (let i = 0; i < seed.length; i++) {
@@ -71,14 +78,14 @@ function hashSeed(seed: string): number {
  * Yeməyin adına, sonra kateqoriya adına görə uyğun stiker seçir.
  * Eyni məhsul həmişə eyni stikeri alır (seed = məhsulun id-si), eyni növdən
  * bir neçə məhsul isə fərqli stiker göstərə bilər. Uyğun açar söz tapılmasa
- * null qaytarır və belə məhsulda şəkil göstərilmir.
+ * neytral ehtiyat stikerlərindən biri seçilir, ona görə stikersiz məhsul qalmır.
  */
-export function pickMenuSticker(itemName: string, categoryName: string | undefined, seed: string): string | null {
+export function pickMenuSticker(itemName: string, categoryName: string | undefined, seed: string): string {
   for (const source of [itemName, categoryName ?? ""]) {
     const text = normalize(source);
     if (!text) continue;
     const rule = RULES.find((r) => r.keywords.some((k) => matches(text, k)));
-    if (rule) return rule.stickers[hashSeed(seed) % rule.stickers.length] ?? null;
+    if (rule) return rule.stickers[hashSeed(seed) % rule.stickers.length];
   }
-  return null;
+  return FALLBACK_STICKERS[hashSeed(seed) % FALLBACK_STICKERS.length];
 }
