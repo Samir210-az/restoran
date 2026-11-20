@@ -20,6 +20,9 @@ export interface ShiftTotals {
   online: number;
   orderCount: number;
   courierCash: { name: string; amount: number }[];
+  cashTips: number;
+  cardTips: number;
+  tipsByWaiter: { name: string; amount: number }[];
 }
 
 type ShiftClient = {
@@ -70,7 +73,8 @@ export async function getShiftTotals(restaurantId: string, from: string, to?: st
   if (to) query = query.lte("paid_at", to);
   const { data: orders } = await query;
 
-  const totals: ShiftTotals = { cash: 0, card: 0, online: 0, orderCount: orders?.length ?? 0, courierCash: [] };
+  const totals: ShiftTotals = { cash: 0, card: 0, online: 0, orderCount: orders?.length ?? 0, courierCash: [], cashTips: 0, cardTips: 0, tipsByWaiter: [] };
+  await addTips(totals, restaurantId, from, to);
   if (!orders?.length) return totals;
 
   const { data: payments } = await supabase
@@ -99,14 +103,48 @@ export async function getShiftTotals(restaurantId: string, from: string, to?: st
   }
 
   if (courierIds.size) {
-    const { data: staff } = await (
-      supabase as unknown as {
-        rpc: (fn: string, args: unknown) => Promise<{ data: { id: string; full_name: string | null }[] | null }>;
-      }
-    ).rpc("get_staff_list", { _restaurant_id: restaurantId });
-    const names = new Map((staff ?? []).map((s) => [s.id, s.full_name]));
+    const names = await staffNames(restaurantId);
     totals.courierCash = Array.from(byCourier, ([id, amount]) => ({ name: names.get(id) ?? "Kuryer", amount }));
   }
 
   return totals;
+}
+
+async function staffNames(restaurantId: string) {
+  const supabase = getSupabaseServerClient();
+  const { data: staff } = await (
+    supabase as unknown as {
+      rpc: (fn: string, args: unknown) => Promise<{ data: { id: string; full_name: string | null }[] | null }>;
+    }
+  ).rpc("get_staff_list", { _restaurant_id: restaurantId });
+  return new Map((staff ?? []).map((s) => [s.id, s.full_name]));
+}
+
+type TipRow = { amount: number; method: string; waiter_id: string | null };
+type TipQuery = {
+  eq: (c: string, v: string) => TipQuery;
+  gte: (c: string, v: string) => TipQuery;
+  lte: (c: string, v: string) => TipQuery;
+  then: (cb: (r: { data: TipRow[] | null }) => unknown) => unknown;
+};
+
+async function addTips(totals: ShiftTotals, restaurantId: string, from: string, to?: string) {
+  const client = getSupabaseServerClient() as unknown as {
+    from: (t: "order_tips") => { select: (c: string) => TipQuery };
+  };
+  let query = client.from("order_tips").select("amount, method, waiter_id").eq("restaurant_id", restaurantId).gte("created_at", from);
+  if (to) query = query.lte("created_at", to);
+  const { data } = await (query as unknown as Promise<{ data: TipRow[] | null }>);
+  if (!data?.length) return;
+
+  const names = await staffNames(restaurantId);
+  const byWaiter = new Map<string, number>();
+  for (const t of data) {
+    const amount = Number(t.amount);
+    if (t.method === "card") totals.cardTips += amount;
+    else totals.cashTips += amount;
+    const name = (t.waiter_id && names.get(t.waiter_id)) || "Ofisiant seçilməyib";
+    byWaiter.set(name, (byWaiter.get(name) ?? 0) + amount);
+  }
+  totals.tipsByWaiter = Array.from(byWaiter, ([name, amount]) => ({ name, amount }));
 }
