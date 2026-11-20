@@ -49,7 +49,9 @@ export default async function PlatformOverviewPage({
       {searchParams.rcreated && (
         <div className="flex items-center gap-2 rounded-md border border-success/30 bg-success/10 px-3 py-2 text-sm text-success">
           <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" />
-          Restoran yaradıldı: <span className="font-medium">{searchParams.rcreated}</span> — giriş məlumatlarını sahibinə bildirin.
+          <p className="min-w-0 break-words">
+            Restoran yaradıldı: <span className="font-medium">{searchParams.rcreated}</span> — giriş məlumatlarını sahibinə bildirin.
+          </p>
         </div>
       )}
       {searchParams.rreset && (

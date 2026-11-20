@@ -435,3 +435,44 @@ export async function deleteRestaurantAction(restaurantId: string, confirmName: 
   revalidatePath("/platform", "layout");
   redirect("/platform?rdeleted=" + encodeURIComponent(expectedName));
 }
+
+const MAX_LOGO_BYTES = 2 * 1024 * 1024;
+const LOGO_TYPES: Record<string, string> = { "image/png": "png", "image/jpeg": "jpg", "image/webp": "webp" };
+
+/**
+ * Platform admin yaradılmış restoranın adını və loqosunu dəyişir.
+ * Slug (QR və keçid ünvanları) bilərəkdən dəyişdirilmir.
+ */
+export async function updateRestaurantAction(formData: FormData) {
+  await requirePlatformAdmin();
+
+  const restaurantId = String(formData.get("restaurant_id") ?? "");
+  const name = String(formData.get("restaurant_name") ?? "").trim();
+  const fail = (message: string): never => redirect(`/platform/${restaurantId}?rerror=` + encodeURIComponent(message));
+
+  if (!restaurantId || !name) fail("Restoran adı boş ola bilməz");
+
+  const serviceClient = createSupabaseServiceClient();
+  const updates: { name: string; logo_url?: string } = { name };
+
+  const logoFile = formData.get("logo");
+  if (logoFile instanceof File && logoFile.size > 0) {
+    const ext = LOGO_TYPES[logoFile.type];
+    if (!ext) fail("Loqo yalnız PNG, JPEG və ya WEBP ola bilər");
+    if (logoFile.size > MAX_LOGO_BYTES) fail("Loqo 2MB-dan böyük ola bilməz");
+
+    const path = `${restaurantId}/logo-${Date.now()}.${ext}`;
+    const { error: uploadError } = await serviceClient.storage
+      .from("restaurant-logos")
+      .upload(path, logoFile, { contentType: logoFile.type, upsert: false });
+    if (uploadError) fail("Loqo yüklənə bilmədi: " + uploadError.message);
+
+    updates.logo_url = serviceClient.storage.from("restaurant-logos").getPublicUrl(path).data.publicUrl;
+  }
+
+  const { error } = await serviceClient.from("restaurants").update(updates).eq("id", restaurantId);
+  if (error) fail("Yadda saxlanmadı: " + error.message);
+
+  revalidatePath("/platform", "layout");
+  redirect(`/platform/${restaurantId}?rupdated=1`);
+}
