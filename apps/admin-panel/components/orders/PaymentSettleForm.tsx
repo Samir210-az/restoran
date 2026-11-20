@@ -100,17 +100,15 @@ export function PaymentSettleForm({
           {tenderedValue > 0 && change < 0 && <p className="text-danger">Verilən məbləğ çatmır, {Math.abs(change).toFixed(2)} ₼ əskikdir</p>}
         </div>
       )}
-      {tipValue > 0 && (
-        <label className="flex flex-col gap-1">
-          <span>Çay pulu kimə</span>
-          <select className="h-10 rounded-md border border-border bg-surface px-2" value={waiterId} onChange={(e) => setWaiterId(e.target.value)}>
-            <option value="">Ofisiant seçin</option>
-            {waiters.map((w) => (
-              <option key={w.id} value={w.id}>{w.full_name ?? "Ofisiant"}</option>
-            ))}
-          </select>
-        </label>
-      )}
+      <label className="flex flex-col gap-1">
+        <span>{tipValue > 0 ? "Ofisiant (çay pulu və satış ona yazılır)" : "Ofisiant (satış ona yazılsın)"}</span>
+        <select className="h-10 rounded-md border border-border bg-surface px-2" value={waiterId} onChange={(e) => setWaiterId(e.target.value)}>
+          <option value="">{tipValue > 0 ? "Ofisiant seçin" : "Seçilməyib"}</option>
+          {waiters.map((w) => (
+            <option key={w.id} value={w.id}>{w.full_name ?? "Ofisiant"}</option>
+          ))}
+        </select>
+      </label>
       {error && <p className="text-danger">{error}</p>}
       <div className="flex gap-2">
         <Button size="sm" disabled={isPending || invalid} onClick={submit}>Ödənişi qeyd et</Button>

@@ -1,0 +1,3 @@
+-- Faza 7: ofisiantın satışı. Bazaya MCP ilə tətbiq olunub (order_flow_phase7_waiter_credit).
+-- orders.credited_waiter_id; record_order_payment() seçilmiş ofisianti sifarişə yazır.
+-- Mövcud çay pulu olan sifarişlər geriyə doğru ofisiantla əlaqələndirildi.
