@@ -26,11 +26,25 @@ export default async function NewOrderPage({ searchParams }: { searchParams: { t
       : Promise.resolve({ data: null }),
   ]);
 
+  const { data: openOrder } = searchParams.table
+    ? await supabase
+        .from("orders")
+        .select("order_number")
+        .eq("restaurant_id", restaurantId)
+        .eq("table_id", searchParams.table)
+        .not("status", "in", "(completed,cancelled)")
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle()
+    : { data: null };
+
   const tableLabel = table?.table_number ? `Masa ${table.table_number}` : "Özün apar";
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-semibold text-text-primary">Yeni Sifariş</h1>
+      <h1 className="text-2xl font-semibold text-text-primary">
+        {openOrder ? `Sifariş #${openOrder.order_number}-ə əlavə` : "Yeni Sifariş"}
+      </h1>
       <WaiterOrderForm
         categories={(categories ?? []) as unknown as { id: string; name: Record<string, string> }[]}
         items={(items ?? []) as unknown as { id: string; category_id: string; name: Record<string, string>; price: number }[]}

@@ -1,0 +1,3 @@
+-- Tətbiq olunub (Supabase MCP): order_flow_phase2_add_items + order_flow_phase2_add_items_fix
+-- order_items.is_addition boolean; add_items_to_order(_order_id uuid, _items jsonb):
+-- açıq sifarişə məhsul əlavə edir, cəmi və gözləyən ödənişi yeniləyir, hazır/təhvil verilmişi "preparing"ə qaytarır.

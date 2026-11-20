@@ -93,16 +93,27 @@ export async function cancelOrderAction(orderId: string, reason: string) {
  * (kassir pulu goturur VE ticket-i baglayir), ayri-ayri addim deyil.
  * Legv edilmis sifarisi toxunmuruq (neq status cancelled).
  */
-export async function markPaymentReceivedAction(orderId: string) {
+export async function markPaymentReceivedAction(orderId: string, method: "cash" | "card") {
   const { restaurantId, role, userId } = await getCurrentStaffContext();
   if (role !== "owner" && role !== "manager" && role !== "cashier") {
     throw new Error("FORBIDDEN: yalnız kassir/menecer/sahib ödəniş qəbul edə bilər");
   }
+  if (method !== "cash" && method !== "card") return;
   const supabase = getSupabaseServerClient();
+
+  const { data: current } = await supabase
+    .from("orders")
+    .select("status")
+    .eq("id", orderId)
+    .eq("restaurant_id", restaurantId)
+    .maybeSingle();
+  if (!current || (current.status !== "ready" && current.status !== "served")) {
+    throw new Error("NOT_READY: sifariş hələ hazır deyil, ödəniş qəbul edilmir");
+  }
 
   await supabase
     .from("payments")
-    .update({ status: "completed" })
+    .update({ status: "completed", method })
     .eq("order_id", orderId)
     .eq("restaurant_id", restaurantId);
 
@@ -147,11 +158,13 @@ export async function closeOrderAction(orderId: string) {
  * neçe defe elave sifariş verilmiş ola biler (bax: musteri "elave
  * sifariş ver" duymesi), kassir/sahib hamısını tek kliklə bağlaya bilir.
  */
-export async function payAllTableOrdersAction(tableId: string) {
+export async function payAllTableOrdersAction(tableId: string, method: "cash" | "card") {
   const { restaurantId, role, userId } = await getCurrentStaffContext();
   if (role !== "owner" && role !== "manager" && role !== "cashier") {
     throw new Error("FORBIDDEN: yalnız kassir/menecer/sahib ödəniş qəbul edə bilər");
   }
+
+  if (method !== "cash" && method !== "card") return;
 
   const supabase = getSupabaseServerClient();
   const { data: openOrders } = await supabase
@@ -162,7 +175,7 @@ export async function payAllTableOrdersAction(tableId: string) {
     .in("status", ["ready", "served"]);
 
   for (const o of openOrders ?? []) {
-    await supabase.from("payments").update({ status: "completed" }).eq("order_id", o.id).eq("restaurant_id", restaurantId);
+    await supabase.from("payments").update({ status: "completed", method }).eq("order_id", o.id).eq("restaurant_id", restaurantId);
     await supabase
       .from("orders")
       .update({ status: "completed", paid_at: new Date().toISOString(), paid_by: userId })

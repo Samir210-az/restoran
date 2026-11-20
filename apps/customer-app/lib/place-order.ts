@@ -65,3 +65,31 @@ export async function placeOrder(params: {
   const row = Array.isArray(data) ? data[0] : data;
   return { orderId: row.order_id, orderNumber: Number(row.order_number), total: Number(row.total) };
 }
+
+/**
+ * Movcud acig sifarise elave mehsul yazir (eyni nomre, eyni hesab).
+ * Metbexe/bara yalniz yeni mehsullar "elave" isaresi ile dushur.
+ */
+export async function addItemsToOrder(params: { orderId: string; items: CartLine[] }): Promise<PlaceOrderResult> {
+  const supabase = createSupabasePublicClient();
+
+  const { data, error } = await supabase.rpc("add_items_to_order", {
+    _order_id: params.orderId,
+    _items: params.items.map((line) => ({
+      menu_item_id: line.menuItemId,
+      variant_id: line.variantId ?? null,
+      quantity: line.quantity,
+      special_instructions: line.specialInstructions ?? null,
+    })),
+  });
+
+  if (error) {
+    if (error.message.startsWith("ORDER_CLOSED")) {
+      throw new Error("Bu sifariş artıq bağlanıb, yeni sifariş verin");
+    }
+    throw new Error("Əlavə göndərilmədi, yenidən cəhd edin");
+  }
+
+  const row = Array.isArray(data) ? data[0] : data;
+  return { orderId: row.order_id, orderNumber: Number(row.order_number), total: Number(row.total) };
+}

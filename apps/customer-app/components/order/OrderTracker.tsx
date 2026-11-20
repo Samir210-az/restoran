@@ -114,13 +114,16 @@ export function OrderTracker({ orderId, initialOrder }: { orderId: string; initi
         </p>
       </div>
 
-      {order.order_type === "dine_in" && order.table_id && order.status !== "cancelled" && (
+      {order.status !== "cancelled" &&
+        order.status !== "completed" &&
+        order.payment_status !== "completed" &&
+        (order.order_type === "dine_in" || order.status !== "served") && (
         <Link
-          href={`/${order.restaurant_slug}?table=${order.table_id}`}
+          href={`/${order.restaurant_slug}?${order.table_id ? `table=${order.table_id}&` : ""}order=${order.id}`}
           className="mb-6 flex items-center justify-center gap-2 rounded-md border border-accent/40 bg-accent-soft px-4 py-2.5 text-sm font-medium text-accent hover:bg-accent/10"
         >
           <PlusCircle className="h-4 w-4" aria-hidden="true" />
-          Əlavə sifariş ver{order.table_number ? ` (Masa ${order.table_number})` : ""}
+          Əlavə məhsul yaz{order.table_number ? ` (Masa ${order.table_number})` : ""}
         </Link>
       )}
 

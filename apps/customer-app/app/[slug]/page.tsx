@@ -9,7 +9,7 @@ import { MenuView } from "@/components/menu/MenuView";
 
 interface PageProps {
   params: { slug: string };
-  searchParams: { table?: string };
+  searchParams: { table?: string; order?: string };
 }
 
 /**
@@ -65,6 +65,22 @@ export default async function RestaurantMenuPage({ params, searchParams }: PageP
 
   const { restaurant, categories, items, bestsellerItemId, tables } = data;
 
+  let addToOrder: { id: string; number: number } | null = null;
+  if (searchParams.order) {
+    const { data: trackingRows } = await createSupabasePublicClient().rpc("get_order_tracking", {
+      _order_id: searchParams.order,
+    });
+    const tracked = trackingRows?.[0];
+    const isOpen =
+      tracked &&
+      tracked.restaurant_id === restaurant.id &&
+      tracked.status !== "completed" &&
+      tracked.status !== "cancelled" &&
+      tracked.payment_status !== "completed" &&
+      (tracked.order_type === "dine_in" || tracked.status !== "served");
+    if (tracked && isOpen) addToOrder = { id: tracked.id, number: tracked.order_number };
+  }
+
   // Her restoranin OZ tonlari: --accent/--accent-soft/--accent-foreground
   // bu wrapper-de theme_color-a esasen EVEZ olunur (root tokens.css-i
   // deyismir, yalnix bu alt-agacda override edir) + accent-den tureyen
@@ -105,6 +121,7 @@ export default async function RestaurantMenuPage({ params, searchParams }: PageP
           }[]
         }
         tableId={searchParams.table ?? null}
+        addToOrder={addToOrder}
         bestsellerItemId={bestsellerItemId}
         tables={tables as unknown as { id: string; table_number: string }[]}
       />

@@ -166,9 +166,9 @@ export type Database = {
         Relationships: [{ foreignKeyName: "notifications_restaurant_id_fkey"; columns: ["restaurant_id"]; isOneToOne: false; referencedRelation: "restaurants"; referencedColumns: ["id"] }]
       }
       order_items: {
-        Row: { created_at: string; id: string; kitchen_status: Database["public"]["Enums"]["kitchen_item_status"]; menu_item_id: string; order_id: string; quantity: number; ready_at: string | null; restaurant_id: string; selected_modifiers: Json; special_instructions: string | null; station: Database["public"]["Enums"]["prep_station"]; unit_price: number; variant_id: string | null }
-        Insert: { created_at?: string; id?: string; kitchen_status?: Database["public"]["Enums"]["kitchen_item_status"]; menu_item_id: string; order_id: string; quantity?: number; ready_at?: string | null; restaurant_id: string; selected_modifiers?: Json; special_instructions?: string | null; station?: Database["public"]["Enums"]["prep_station"]; unit_price: number; variant_id?: string | null }
-        Update: { created_at?: string; id?: string; kitchen_status?: Database["public"]["Enums"]["kitchen_item_status"]; menu_item_id?: string; order_id?: string; quantity?: number; ready_at?: string | null; restaurant_id?: string; selected_modifiers?: Json; special_instructions?: string | null; station?: Database["public"]["Enums"]["prep_station"]; unit_price?: number; variant_id?: string | null }
+        Row: { created_at: string; id: string; is_addition: boolean; kitchen_status: Database["public"]["Enums"]["kitchen_item_status"]; menu_item_id: string; order_id: string; quantity: number; ready_at: string | null; restaurant_id: string; selected_modifiers: Json; special_instructions: string | null; station: Database["public"]["Enums"]["prep_station"]; unit_price: number; variant_id: string | null }
+        Insert: { created_at?: string; id?: string; is_addition?: boolean; kitchen_status?: Database["public"]["Enums"]["kitchen_item_status"]; menu_item_id: string; order_id: string; quantity?: number; ready_at?: string | null; restaurant_id: string; selected_modifiers?: Json; special_instructions?: string | null; station?: Database["public"]["Enums"]["prep_station"]; unit_price: number; variant_id?: string | null }
+        Update: { created_at?: string; id?: string; is_addition?: boolean; kitchen_status?: Database["public"]["Enums"]["kitchen_item_status"]; menu_item_id?: string; order_id?: string; quantity?: number; ready_at?: string | null; restaurant_id?: string; selected_modifiers?: Json; special_instructions?: string | null; station?: Database["public"]["Enums"]["prep_station"]; unit_price?: number; variant_id?: string | null }
         Relationships: [
           { foreignKeyName: "order_items_menu_item_id_fkey"; columns: ["menu_item_id"]; isOneToOne: false; referencedRelation: "menu_items"; referencedColumns: ["id"] },
           { foreignKeyName: "order_items_order_id_fkey"; columns: ["order_id"]; isOneToOne: false; referencedRelation: "orders"; referencedColumns: ["id"] },
@@ -404,6 +404,10 @@ export type Database = {
           timezone: string
         }
         SetofOptions: { from: "*"; to: "restaurants"; isOneToOne: true; isSetofReturn: false }
+      }
+      add_items_to_order: {
+        Args: { _items: Json; _order_id: string }
+        Returns: { order_id: string; order_number: number; total: number }[]
       }
       place_order: {
         Args: {

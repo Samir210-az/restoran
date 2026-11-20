@@ -121,11 +121,18 @@ export default async function TableDetailPage({ params }: { params: { id: string
               </form>
             )}
             {(o.status === "ready" || o.status === "served") && canTakePayment && payment?.status !== "completed" && (
-              <form action={markPaymentReceivedAction.bind(null, o.id)}>
-                <SubmitButton size="sm" variant="outline">
-                  Ödəniş alındı
-                </SubmitButton>
-              </form>
+              <>
+                <form action={markPaymentReceivedAction.bind(null, o.id, "cash")}>
+                  <SubmitButton size="sm" variant="outline">
+                    Nağd alındı
+                  </SubmitButton>
+                </form>
+                <form action={markPaymentReceivedAction.bind(null, o.id, "card")}>
+                  <SubmitButton size="sm" variant="outline">
+                    Kartla alındı
+                  </SubmitButton>
+                </form>
+              </>
             )}
           </div>
         </div>
@@ -156,12 +163,17 @@ export default async function TableDetailPage({ params }: { params: { id: string
           href={`/order-new?table=${table.id}`}
           className="flex items-center gap-1.5 rounded-md bg-accent px-4 py-2.5 text-sm font-semibold text-white hover:opacity-90"
         >
-          <Plus className="h-4 w-4" aria-hidden="true" /> Yeni sifariş
+          <Plus className="h-4 w-4" aria-hidden="true" /> {openOrders.length > 0 ? "Sifarişə əlavə et" : "Yeni sifariş"}
         </Link>
         {anyPayable && canTakePayment && (
-          <form action={payAllTableOrdersAction.bind(null, table.id)}>
-            <SubmitButton variant="outline">Hamısını ödə ({openTotal.toFixed(2)} ₼)</SubmitButton>
-          </form>
+          <>
+            <form action={payAllTableOrdersAction.bind(null, table.id, "cash")}>
+              <SubmitButton variant="outline">Nağd ({openTotal.toFixed(2)} ₼)</SubmitButton>
+            </form>
+            <form action={payAllTableOrdersAction.bind(null, table.id, "card")}>
+              <SubmitButton variant="outline">Kartla ({openTotal.toFixed(2)} ₼)</SubmitButton>
+            </form>
+          </>
         )}
       </div>
 
