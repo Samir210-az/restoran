@@ -17,7 +17,7 @@ export default async function CashPage({ searchParams }: { searchParams: { error
   const shift = await getOpenShift(restaurantId);
   const totals = shift ? await getShiftTotals(restaurantId, shift.opened_at) : null;
   const history = await getRecentShifts(restaurantId);
-  const expected = shift && totals ? Number(shift.opening_cash) + totals.cash + totals.cashTips : 0;
+  const expected = shift && totals ? Number(shift.opening_cash) + totals.cash + totals.cashTips - totals.tipPayouts : 0;
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-4 p-4">
@@ -55,6 +55,7 @@ export default async function CashPage({ searchParams }: { searchParams: { error
             <p className="mt-3 border-t border-border pt-3 text-sm">
               Kassada olmalı olan nağd: <span className="font-semibold">{money(expected)}</span>
               {totals.cashTips > 0 && <span className="text-text-secondary"> (nağd çay pulu {money(totals.cashTips)} daxildir)</span>}
+              {totals.tipPayouts > 0 && <span className="text-text-secondary"> (ofisiantlara verilən {money(totals.tipPayouts)} çıxılıb)</span>}
             </p>
             {totals.tipsByWaiter.length > 0 && (
               <div className="mt-3 text-sm">
