@@ -6,6 +6,7 @@ import { getCurrentStaffContext } from "@/lib/get-current-staff-context";
 import { AvailabilityToggle } from "@/components/menu/AvailabilityToggle";
 import { ChefSpecialToggle } from "@/components/menu/ChefSpecialToggle";
 import { CategoryHeaderActions } from "@/components/menu/CategoryHeaderActions";
+import { MenuImagePicker } from "@/components/menu/MenuImagePicker";
 import { MenuItemActions } from "@/components/menu/MenuItemActions";
 import { createCategoryAction, createMenuItemAction } from "./actions";
 
@@ -85,7 +86,7 @@ export default async function MenuPage({ searchParams }: { searchParams: { error
                   {categoryItems.map((item) => {
                     const itemName = (item.name as LocalizedText)?.az ?? "Adsız";
                     return (
-                      <div key={item.id} className="flex items-center justify-between gap-2 py-3">
+                      <div key={item.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
                         <div className="flex min-w-0 items-center gap-3">
                           {item.image_url && (
                             // eslint-disable-next-line @next/next/no-img-element -- kiçik önizləmə
@@ -99,7 +100,7 @@ export default async function MenuPage({ searchParams }: { searchParams: { error
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex min-w-0 items-center gap-2 has-[form]:w-full has-[form]:flex-wrap">
                           <AvailabilityToggle itemId={item.id} isAvailable={item.is_available} />
                           <ChefSpecialToggle itemId={item.id} tags={item.tags ?? []} />
                           {isOwner && (
@@ -170,16 +171,11 @@ export default async function MenuPage({ searchParams }: { searchParams: { error
                   <option value="bar">Bar (su, kola, hazır içkilər)</option>
                 </select>
               </label>
-              <label className="flex flex-col gap-1.5 text-sm text-text-secondary">
-                Şəkil (istəyə bağlı)
-                <input
-                  type="file"
-                  name="image"
-                  accept="image/png,image/jpeg,image/webp"
-                  className="text-xs file:mr-3 file:rounded-md file:border-0 file:bg-accent-soft file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-accent"
-                />
-                <span className="text-xs text-text-muted">PNG, JPEG və ya WEBP, maks 2MB. Şəkil yoxdursa, avtomatik stiker göstərilir</span>
-              </label>
+              <div className="flex flex-col gap-1.5 text-sm text-text-secondary">
+                <span>Şəkil (istəyə bağlı)</span>
+                <MenuImagePicker />
+                <span className="text-xs text-text-muted">Telefondan PNG, JPEG və ya WEBP (maks 2MB) yüklə və ya hazır stikerlərdən seç</span>
+              </div>
               <SubmitButton leftIcon={<Plus className="h-4 w-4" />} className="self-start">
                 Yemək əlavə et
               </SubmitButton>

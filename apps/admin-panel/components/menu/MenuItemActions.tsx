@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Pencil, Trash2, Check, X } from "lucide-react";
+import { MenuImagePicker } from "@/components/menu/MenuImagePicker";
 import { updateMenuItemAction, deleteMenuItemAction } from "@/app/(dashboard)/menu/actions";
 
 export function MenuItemActions({
@@ -32,7 +33,7 @@ export function MenuItemActions({
             router.refresh();
           });
         }}
-        className="flex flex-1 flex-wrap items-center gap-2"
+        className="flex w-full min-w-0 flex-wrap items-center gap-2"
       >
         <input type="hidden" name="item_id" value={itemId} />
         <input
@@ -64,21 +65,13 @@ export function MenuItemActions({
         <button type="button" onClick={() => setEditing(false)} aria-label="İmtina et" className="text-text-muted hover:opacity-80">
           <X className="h-4 w-4" />
         </button>
-        <div className="flex w-full flex-col gap-1.5">
-          <input
-            type="file"
-            name="image"
-            accept="image/png,image/jpeg,image/webp"
-            aria-label="Yeməyin şəkli"
-            className="text-xs text-text-secondary file:mr-3 file:rounded-md file:border-0 file:bg-accent-soft file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-accent"
-          />
-          {hasImage && (
-            <label className="flex items-center gap-2 text-xs text-text-secondary">
-              <input type="checkbox" name="remove_image" />
-              Şəkli sil
-            </label>
-          )}
-        </div>
+        <MenuImagePicker currentUrl={hasImage ? "yes" : null} />
+        {hasImage && (
+          <label className="flex items-center gap-2 text-xs text-text-secondary">
+            <input type="checkbox" name="remove_image" />
+            Şəkli sil
+          </label>
+        )}
       </form>
     );
   }
