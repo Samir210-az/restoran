@@ -246,7 +246,10 @@ export function OrdersRealtimeList({
                 </Button>
               )}
               {ACTIVE_STATUSES.has(order.status) && order.status === "pending" && (
-                <Button size="sm" variant="danger" disabled={isPending} onClick={() => startTransition(() => cancelOrderAction(order.id))}>
+                <Button size="sm" variant="danger" disabled={isPending} onClick={() => {
+                    const reason = window.prompt("Ləğv səbəbi nədir?");
+                    if (reason && reason.trim().length >= 3) startTransition(() => cancelOrderAction(order.id, reason));
+                  }}>
                   Ləğv et
                 </Button>
               )}

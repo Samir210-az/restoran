@@ -151,9 +151,9 @@ export type Database = {
         ]
       }
       menu_items: {
-        Row: { allergens: string[]; calories: number | null; category_id: string; created_at: string; description: Json; id: string; image_url: string | null; is_available: boolean; name: Json; prep_time_minutes: number | null; price: number; restaurant_id: string; sort_order: number; tags: string[] }
-        Insert: { allergens?: string[]; calories?: number | null; category_id: string; created_at?: string; description?: Json; id?: string; image_url?: string | null; is_available?: boolean; name?: Json; prep_time_minutes?: number | null; price: number; restaurant_id: string; sort_order?: number; tags?: string[] }
-        Update: { allergens?: string[]; calories?: number | null; category_id?: string; created_at?: string; description?: Json; id?: string; image_url?: string | null; is_available?: boolean; name?: Json; prep_time_minutes?: number | null; price?: number; restaurant_id?: string; sort_order?: number; tags?: string[] }
+        Row: { allergens: string[]; calories: number | null; category_id: string; created_at: string; description: Json; id: string; image_url: string | null; is_available: boolean; name: Json; prep_station: Database["public"]["Enums"]["prep_station"]; prep_time_minutes: number | null; price: number; restaurant_id: string; sort_order: number; tags: string[] }
+        Insert: { allergens?: string[]; calories?: number | null; category_id: string; created_at?: string; description?: Json; id?: string; image_url?: string | null; is_available?: boolean; name?: Json; prep_station?: Database["public"]["Enums"]["prep_station"]; prep_time_minutes?: number | null; price: number; restaurant_id: string; sort_order?: number; tags?: string[] }
+        Update: { allergens?: string[]; calories?: number | null; category_id?: string; created_at?: string; description?: Json; id?: string; image_url?: string | null; is_available?: boolean; name?: Json; prep_station?: Database["public"]["Enums"]["prep_station"]; prep_time_minutes?: number | null; price?: number; restaurant_id?: string; sort_order?: number; tags?: string[] }
         Relationships: [
           { foreignKeyName: "menu_items_category_id_fkey"; columns: ["category_id"]; isOneToOne: false; referencedRelation: "menu_categories"; referencedColumns: ["id"] },
           { foreignKeyName: "menu_items_restaurant_id_fkey"; columns: ["restaurant_id"]; isOneToOne: false; referencedRelation: "restaurants"; referencedColumns: ["id"] },
@@ -166,9 +166,9 @@ export type Database = {
         Relationships: [{ foreignKeyName: "notifications_restaurant_id_fkey"; columns: ["restaurant_id"]; isOneToOne: false; referencedRelation: "restaurants"; referencedColumns: ["id"] }]
       }
       order_items: {
-        Row: { created_at: string; id: string; kitchen_status: Database["public"]["Enums"]["kitchen_item_status"]; menu_item_id: string; order_id: string; quantity: number; restaurant_id: string; selected_modifiers: Json; special_instructions: string | null; unit_price: number; variant_id: string | null }
-        Insert: { created_at?: string; id?: string; kitchen_status?: Database["public"]["Enums"]["kitchen_item_status"]; menu_item_id: string; order_id: string; quantity?: number; restaurant_id: string; selected_modifiers?: Json; special_instructions?: string | null; unit_price: number; variant_id?: string | null }
-        Update: { created_at?: string; id?: string; kitchen_status?: Database["public"]["Enums"]["kitchen_item_status"]; menu_item_id?: string; order_id?: string; quantity?: number; restaurant_id?: string; selected_modifiers?: Json; special_instructions?: string | null; unit_price?: number; variant_id?: string | null }
+        Row: { created_at: string; id: string; kitchen_status: Database["public"]["Enums"]["kitchen_item_status"]; menu_item_id: string; order_id: string; quantity: number; ready_at: string | null; restaurant_id: string; selected_modifiers: Json; special_instructions: string | null; station: Database["public"]["Enums"]["prep_station"]; unit_price: number; variant_id: string | null }
+        Insert: { created_at?: string; id?: string; kitchen_status?: Database["public"]["Enums"]["kitchen_item_status"]; menu_item_id: string; order_id: string; quantity?: number; ready_at?: string | null; restaurant_id: string; selected_modifiers?: Json; special_instructions?: string | null; station?: Database["public"]["Enums"]["prep_station"]; unit_price: number; variant_id?: string | null }
+        Update: { created_at?: string; id?: string; kitchen_status?: Database["public"]["Enums"]["kitchen_item_status"]; menu_item_id?: string; order_id?: string; quantity?: number; ready_at?: string | null; restaurant_id?: string; selected_modifiers?: Json; special_instructions?: string | null; station?: Database["public"]["Enums"]["prep_station"]; unit_price?: number; variant_id?: string | null }
         Relationships: [
           { foreignKeyName: "order_items_menu_item_id_fkey"; columns: ["menu_item_id"]; isOneToOne: false; referencedRelation: "menu_items"; referencedColumns: ["id"] },
           { foreignKeyName: "order_items_order_id_fkey"; columns: ["order_id"]; isOneToOne: false; referencedRelation: "orders"; referencedColumns: ["id"] },
@@ -177,9 +177,9 @@ export type Database = {
         ]
       }
       orders: {
-        Row: { branch_id: string; courier_id: string | null; courier_name: string | null; courier_phone: string | null; created_at: string; created_by: string | null; customer_id: string | null; delivery_address: string | null; discount_amount: number; id: string; order_number: number; order_type: Database["public"]["Enums"]["order_type"]; placed_by: Database["public"]["Enums"]["order_placed_by"]; restaurant_id: string; status: Database["public"]["Enums"]["order_status"]; subtotal: number; table_id: string | null; tax: number; total: number; updated_at: string }
-        Insert: { branch_id: string; courier_id?: string | null; courier_name?: string | null; courier_phone?: string | null; created_at?: string; created_by?: string | null; customer_id?: string | null; delivery_address?: string | null; discount_amount?: number; id?: string; order_number: number; order_type?: Database["public"]["Enums"]["order_type"]; placed_by?: Database["public"]["Enums"]["order_placed_by"]; restaurant_id: string; status?: Database["public"]["Enums"]["order_status"]; subtotal?: number; table_id?: string | null; tax?: number; total?: number; updated_at?: string }
-        Update: { branch_id?: string; courier_id?: string | null; courier_name?: string | null; courier_phone?: string | null; created_at?: string; created_by?: string | null; customer_id?: string | null; delivery_address?: string | null; discount_amount?: number; id?: string; order_number?: number; order_type?: Database["public"]["Enums"]["order_type"]; placed_by?: Database["public"]["Enums"]["order_placed_by"]; restaurant_id?: string; status?: Database["public"]["Enums"]["order_status"]; subtotal?: number; table_id?: string | null; tax?: number; total?: number; updated_at?: string }
+        Row: { branch_id: string; cancel_reason: string | null; cancelled_at: string | null; cancelled_by: string | null; courier_id: string | null; courier_name: string | null; courier_phone: string | null; created_at: string; created_by: string | null; customer_id: string | null; delivery_address: string | null; discount_amount: number; id: string; order_number: number; order_type: Database["public"]["Enums"]["order_type"]; paid_at: string | null; paid_by: string | null; placed_by: Database["public"]["Enums"]["order_placed_by"]; ready_at: string | null; restaurant_id: string; served_at: string | null; served_by: string | null; status: Database["public"]["Enums"]["order_status"]; subtotal: number; table_id: string | null; tax: number; total: number; updated_at: string }
+        Insert: { branch_id: string; cancel_reason?: string | null; cancelled_at?: string | null; cancelled_by?: string | null; courier_id?: string | null; courier_name?: string | null; courier_phone?: string | null; created_at?: string; created_by?: string | null; customer_id?: string | null; delivery_address?: string | null; discount_amount?: number; id?: string; order_number: number; order_type?: Database["public"]["Enums"]["order_type"]; paid_at?: string | null; paid_by?: string | null; placed_by?: Database["public"]["Enums"]["order_placed_by"]; ready_at?: string | null; restaurant_id: string; served_at?: string | null; served_by?: string | null; status?: Database["public"]["Enums"]["order_status"]; subtotal?: number; table_id?: string | null; tax?: number; total?: number; updated_at?: string }
+        Update: { branch_id?: string; cancel_reason?: string | null; cancelled_at?: string | null; cancelled_by?: string | null; courier_id?: string | null; courier_name?: string | null; courier_phone?: string | null; created_at?: string; created_by?: string | null; customer_id?: string | null; delivery_address?: string | null; discount_amount?: number; id?: string; order_number?: number; order_type?: Database["public"]["Enums"]["order_type"]; paid_at?: string | null; paid_by?: string | null; placed_by?: Database["public"]["Enums"]["order_placed_by"]; ready_at?: string | null; restaurant_id?: string; served_at?: string | null; served_by?: string | null; status?: Database["public"]["Enums"]["order_status"]; subtotal?: number; table_id?: string | null; tax?: number; total?: number; updated_at?: string }
         Relationships: [
           { foreignKeyName: "orders_branch_id_fkey"; columns: ["branch_id"]; isOneToOne: false; referencedRelation: "branches"; referencedColumns: ["id"] },
           { foreignKeyName: "orders_courier_id_fkey"; columns: ["courier_id"]; isOneToOne: false; referencedRelation: "staff_members"; referencedColumns: ["id"] },
@@ -454,6 +454,7 @@ export type Database = {
       inventory_txn_type: "purchase" | "usage" | "waste" | "adjustment"
       invoice_status: "draft" | "open" | "paid" | "void" | "uncollectible"
       kitchen_item_status: "queued" | "cooking" | "ready"
+      prep_station: "kitchen" | "bar"
       order_placed_by: "customer" | "waiter" | "ai_waiter"
       order_status: "pending" | "confirmed" | "preparing" | "ready" | "served" | "completed" | "cancelled"
       order_type: "dine_in" | "takeaway" | "delivery"
@@ -600,6 +601,7 @@ export const Constants = {
       inventory_txn_type: ["purchase", "usage", "waste", "adjustment"],
       invoice_status: ["draft", "open", "paid", "void", "uncollectible"],
       kitchen_item_status: ["queued", "cooking", "ready"],
+      prep_station: ["kitchen", "bar"],
       order_placed_by: ["customer", "waiter", "ai_waiter"],
       order_status: ["pending", "confirmed", "preparing", "ready", "served", "completed", "cancelled"],
       order_type: ["dine_in", "takeaway", "delivery"],

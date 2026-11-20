@@ -14,6 +14,10 @@ import { uploadMenuItemImage, removeMenuItemImage } from "@/lib/menu-item-image"
  * hansisa basqa restorana yazmaga cehd etmesin (defence in depth).
  */
 
+function parseStation(value: FormDataEntryValue | null): "kitchen" | "bar" {
+  return value === "bar" ? "bar" : "kitchen";
+}
+
 export async function createCategoryAction(formData: FormData) {
   const { restaurantId } = await getCurrentStaffContext();
   const nameAz = String(formData.get("name_az") ?? "").trim();
@@ -47,6 +51,7 @@ export async function createMenuItemAction(formData: FormData) {
     name: { az: nameAz, en: nameAz, ru: nameAz },
     description: { az: "", en: "", ru: "" },
     price,
+    prep_station: parseStation(formData.get("prep_station")),
     ...(image ? { image_url: image.url } : {}),
   });
 
@@ -126,9 +131,15 @@ export async function updateMenuItemAction(formData: FormData) {
   const image = await uploadMenuItemImage(restaurantId, formData.get("image"));
   if (image && "error" in image) redirect("/menu?error=" + encodeURIComponent(image.error));
 
-  const updates: { name: { az: string; en: string; ru: string }; price: number; image_url?: string | null } = {
+  const updates: {
+    name: { az: string; en: string; ru: string };
+    price: number;
+    prep_station: "kitchen" | "bar";
+    image_url?: string | null;
+  } = {
     name: { az: nameAz, en: nameAz, ru: nameAz },
     price,
+    prep_station: parseStation(formData.get("prep_station")),
   };
   if (image) updates.image_url = image.url;
   else if (formData.get("remove_image") === "on") updates.image_url = null;

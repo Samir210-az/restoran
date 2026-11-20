@@ -10,11 +10,13 @@ export function MenuItemActions({
   currentName,
   currentPrice,
   hasImage,
+  currentStation,
 }: {
   itemId: string;
   currentName: string;
   currentPrice: number;
   hasImage: boolean;
+  currentStation: "kitchen" | "bar";
 }) {
   const [isEditing, setEditing] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -47,6 +49,15 @@ export function MenuItemActions({
           defaultValue={currentPrice}
           className="h-8 w-20 rounded-md border border-border-strong bg-bg px-2 text-sm text-text-primary"
         />
+        <select
+          name="prep_station"
+          defaultValue={currentStation}
+          aria-label="Hazırlanma yeri"
+          className="h-8 rounded-md border border-border-strong bg-bg px-2 text-sm text-text-primary"
+        >
+          <option value="kitchen">Mətbəx</option>
+          <option value="bar">Bar</option>
+        </select>
         <button type="submit" disabled={isPending} aria-label="Yadda saxla" className="text-success hover:opacity-80">
           <Check className="h-4 w-4" />
         </button>
