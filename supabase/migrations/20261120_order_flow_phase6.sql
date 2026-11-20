@@ -1,0 +1,3 @@
+-- Faza 6: nağd ödənişdə "müştəri verdi / qaytarılan qalıq". Bazaya MCP ilə tətbiq olunub (order_flow_phase6_cash_change).
+-- payments.tendered_amount, payments.change_amount; record_order_payment() yeni _cash_tendered parametri alır.
+-- payments.amount həmişə hesaba mədaxil olunan xalis məbləğdir.

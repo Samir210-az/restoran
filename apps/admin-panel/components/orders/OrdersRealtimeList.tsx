@@ -99,7 +99,7 @@ export function OrdersRealtimeList({
   }, []);
   const [orders, setOrders] = useState(initialOrders);
   const [openDiscountId, setOpenDiscountId] = useState<string | null>(null);
-  const [openSettleId, setOpenSettleId] = useState<string | null>(null);
+  const [openSettle, setOpenSettle] = useState<{ id: string; cashOnly: boolean } | null>(null);
   const [isPending, startTransition] = useTransition();
 
   // Ehtiyat: server (Next.js) yeni initialOrders-le render etsə (mes.
@@ -308,7 +308,11 @@ export function OrdersRealtimeList({
                       size="sm"
                       variant="outline"
                       disabled={isPending}
-                      onClick={() => startTransition(() => markPaymentReceivedAction(order.id, "cash"))}
+                      onClick={() =>
+                        canTakePayment
+                          ? setOpenSettle({ id: order.id, cashOnly: true })
+                          : startTransition(() => markPaymentReceivedAction(order.id, "cash"))
+                      }
                     >
                       Nağd alındı
                     </Button>
@@ -321,19 +325,20 @@ export function OrdersRealtimeList({
                       Kartla alındı
                     </Button>
                     {canTakePayment && (
-                      <Button size="sm" variant="outline" disabled={isPending} onClick={() => setOpenSettleId(order.id)}>
+                      <Button size="sm" variant="outline" disabled={isPending} onClick={() => setOpenSettle({ id: order.id, cashOnly: false })}>
                         Bölünmüş / çay pulu
                       </Button>
                     )}
                   </>
                 )}
-              {openSettleId === order.id && canTakePayment && order.payment_status !== "completed" && (
+              {openSettle?.id === order.id && canTakePayment && order.payment_status !== "completed" && (
                 <PaymentSettleForm
                   orderId={order.id}
                   due={Math.round((Number(order.total) - Number(order.discount_amount)) * 100) / 100}
                   defaultWaiterId={null}
                   waiters={waiters}
-                  onDone={() => setOpenSettleId(null)}
+                  cashOnly={openSettle.cashOnly}
+                  onDone={() => setOpenSettle(null)}
                 />
               )}
               {ACTIVE_STATUSES.has(order.status) && order.status === "served" && order.payment_status === "completed" && canTakePayment && (
