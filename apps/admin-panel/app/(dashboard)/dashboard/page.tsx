@@ -3,6 +3,8 @@ import { TrendingUp, TrendingDown, ClipboardList, Users, Wallet, Table2, ChefHat
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, Badge, Sticker } from "@restoran/ui";
 import { getCurrentStaffContext } from "@/lib/get-current-staff-context";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
+import { getRestaurantTimeZone } from "@/lib/restaurant-timezone";
+import { periodStart } from "@/lib/tips-report";
 import { BigIconTile } from "@/components/dashboard/BigIconTile";
 
 export const metadata = { title: "Ana Səhifə" };
@@ -52,8 +54,7 @@ export default async function DashboardPage() {
   const supabase = getSupabaseServerClient();
 
   if (context.role === "waiter" || context.role === "cashier") {
-    const now = new Date();
-    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+    const startOfToday = periodStart("today", await getRestaurantTimeZone(context.restaurantId)).toISOString();
 
     const [{ data: myOrders }, { data: myOpenTableOrders }] = await Promise.all([
       supabase
@@ -248,7 +249,7 @@ export default async function DashboardPage() {
 
   // owner / manager - tam KPI dashboard
   const now = new Date();
-  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+  const startOfToday = periodStart("today", await getRestaurantTimeZone(context.restaurantId)).toISOString();
   const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
   const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
 

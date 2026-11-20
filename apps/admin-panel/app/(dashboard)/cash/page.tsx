@@ -2,18 +2,20 @@ import { redirect } from "next/navigation";
 import { Card, CardHeader, CardTitle, CardDescription, Badge, Input, Button } from "@restoran/ui";
 import { getCurrentStaffContext } from "@/lib/get-current-staff-context";
 import { getOpenShift, getRecentShifts, getShiftTotals } from "@/lib/cash-shift";
+import { getRestaurantTimeZone } from "@/lib/restaurant-timezone";
 import { openShiftAction, closeShiftAction } from "./actions";
 
 export const metadata = { title: "Kassa növbəsi" };
 
 const money = (value: number) => `${value.toFixed(2)} ₼`;
-const when = (iso: string) =>
-  new Date(iso).toLocaleString("az-AZ", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+const whenIn = (timeZone: string) => (iso: string) =>
+  new Date(iso).toLocaleString("az-AZ", { timeZone, day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
 
 export default async function CashPage({ searchParams }: { searchParams: { error?: string; saved?: string } }) {
   const { restaurantId, role } = await getCurrentStaffContext();
   if (role !== "owner" && role !== "manager" && role !== "cashier") redirect("/dashboard");
 
+  const when = whenIn(await getRestaurantTimeZone(restaurantId));
   const shift = await getOpenShift(restaurantId);
   const totals = shift ? await getShiftTotals(restaurantId, shift.opened_at) : null;
   const history = await getRecentShifts(restaurantId);
