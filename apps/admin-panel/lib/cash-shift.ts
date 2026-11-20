@@ -110,7 +110,7 @@ export async function getShiftTotals(restaurantId: string, from: string, to?: st
   return totals;
 }
 
-async function staffNames(restaurantId: string) {
+export async function staffNames(restaurantId: string) {
   const supabase = getSupabaseServerClient();
   const { data: staff } = await (
     supabase as unknown as {

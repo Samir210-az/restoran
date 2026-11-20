@@ -17,6 +17,7 @@ import {
   Settings,
   Wallet,
   Landmark,
+  HandCoins,
   GlassWater,
 } from "lucide-react";
 import type { StaffRole } from "@restoran/types";
@@ -40,6 +41,7 @@ const NAV_ITEMS: Array<{
   { href: "/orders", label: "Sifarişlər", icon: ClipboardList, roles: ["owner", "manager", "cashier", "chef", "waiter", "courier"] },
   { href: "/kitchen", label: "Mətbəx Ekranı", icon: ChefHat, roles: ["owner", "manager", "chef"] },
   { href: "/cash", label: "Kassa növbəsi", icon: Landmark, roles: ["owner", "manager", "cashier"] },
+  { href: "/tips", label: "Çay pulu", icon: HandCoins, roles: ["owner", "manager", "cashier"] },
   { href: "/bar", label: "Bar Ekranı", icon: GlassWater, roles: ["owner", "manager", "cashier", "waiter"] },
   { href: "/reservations", label: "Rezervasiyalar", icon: CalendarCheck, roles: ["owner", "manager", "waiter"] },
   { href: "/menu", label: "Menyu", icon: UtensilsCrossed, roles: ["owner", "manager"] },
