@@ -60,7 +60,11 @@ export default async function DashboardPage() {
         .from("orders")
         .select("total")
         .eq("restaurant_id", context.restaurantId)
-        .eq("created_by", context.userId)
+        .or(
+          context.staffId
+            ? `created_by.eq.${context.userId},credited_waiter_id.eq.${context.staffId}`
+            : `created_by.eq.${context.userId}`
+        )
         .neq("status", "cancelled")
         .gte("created_at", startOfToday),
       // "Mənim masalarım" - Samir-in isteyi: ofisiant sifarişi ALANDA
