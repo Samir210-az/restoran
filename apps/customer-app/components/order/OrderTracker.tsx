@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { CheckCircle2, Circle, ChefHat, Clock, Bike, Copy, Check, CreditCard, PlusCircle } from "lucide-react";
-import { Card, Badge } from "@restoran/ui";
+import { Card, Badge, Sticker } from "@restoran/ui";
 import { cn } from "@restoran/utils";
 import { createSupabasePublicClient } from "@restoran/supabase-client";
 import { ReviewForm } from "./ReviewForm";
@@ -97,10 +97,17 @@ export function OrderTracker({ orderId, initialOrder }: { orderId: string; initi
 
   const isCancelled = order.status === "cancelled";
   const currentStepIndex = STEPS.findIndex((s) => s.status === order.status);
+  const statusSticker =
+    order.status === "preparing"
+      ? "steamer-veg"
+      : order.status === "ready" || order.status === "served" || order.status === "completed"
+        ? "champagne-tray"
+        : "coffee-cup";
 
   return (
     <div className="mx-auto max-w-md px-4 py-8">
       <div className="mb-6 text-center">
+        {!isCancelled && <Sticker name={statusSticker} size={80} className="mx-auto mb-2" />}
         <p className="text-sm text-text-secondary">Sifariş nömrəsi</p>
         <p className="text-lg font-semibold text-text-primary">
           {order.restaurant_name} #{order.order_number}

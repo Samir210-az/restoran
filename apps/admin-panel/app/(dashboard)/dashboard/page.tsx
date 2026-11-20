@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { TrendingUp, TrendingDown, ClipboardList, Users, Wallet, Table2, ChefHat, Wallet2 } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, Badge } from "@restoran/ui";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, Badge, Sticker } from "@restoran/ui";
 import { getCurrentStaffContext } from "@/lib/get-current-staff-context";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
 import { BigIconTile } from "@/components/dashboard/BigIconTile";
@@ -344,7 +344,7 @@ export default async function DashboardPage() {
         <CardContent>
           {orders.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-2 rounded-md border border-dashed border-border py-12 text-center">
-              <ClipboardList className="h-8 w-8 text-text-muted" aria-hidden="true" />
+              <Sticker name="coffee-cup" size={80} />
               <p className="text-sm text-text-secondary">Hələ sifariş yoxdur</p>
               <p className="text-xs text-text-muted">Müştəri sifariş verdikdə burada görünəcək</p>
             </div>

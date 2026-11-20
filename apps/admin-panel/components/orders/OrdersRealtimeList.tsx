@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
-import { Card, Badge, Button } from "@restoran/ui";
+import { Card, Badge, Button, Sticker } from "@restoran/ui";
 import { MapPin, Receipt, Tag } from "lucide-react";
 import { createSupabaseBrowserClient } from "@restoran/supabase-client";
 import { cancelOrderAction, markPaymentReceivedAction, closeOrderAction, markOrderServedAction } from "@/app/(dashboard)/orders/actions";
@@ -125,7 +125,10 @@ export function OrdersRealtimeList({
   if (orders.length === 0) {
     return (
       <Card>
-        <p className="py-8 text-center text-sm text-text-secondary">Hələ sifariş yoxdur</p>
+        <div className="flex flex-col items-center gap-2 py-8 text-center">
+          <Sticker name="coffee-cup" size={80} />
+          <p className="text-sm text-text-secondary">Hələ sifariş yoxdur</p>
+        </div>
       </Card>
     );
   }

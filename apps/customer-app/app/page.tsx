@@ -2,8 +2,8 @@ export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import Image from "next/image";
-import { UtensilsCrossed } from "lucide-react";
 import { createSupabasePublicClient } from "@restoran/supabase-client";
+import { Sticker } from "@restoran/ui";
 
 export const metadata = { title: "Restoranlar" };
 
@@ -74,7 +74,7 @@ export default async function HomePage() {
       <section className="relative px-4 pb-20 md:px-6">
         {restaurants.length === 0 ? (
           <div className="mx-auto max-w-md py-16 text-center">
-            <UtensilsCrossed className="mx-auto h-10 w-10 text-white/60" aria-hidden="true" />
+            <Sticker name="gift-basket" size={112} className="mx-auto drop-shadow-xl" />
             <p className="mt-3 text-sm text-white/70">Hələ heç bir restoran qeydiyyatdan keçməyib</p>
           </div>
         ) : (

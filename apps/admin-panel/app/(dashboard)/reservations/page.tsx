@@ -1,5 +1,4 @@
-import { CalendarCheck } from "lucide-react";
-import { Card } from "@restoran/ui";
+import { Card, Sticker } from "@restoran/ui";
 import { getCurrentStaffContext } from "@/lib/get-current-staff-context";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
 import { ReservationRow } from "@/components/reservations/ReservationRow";
@@ -33,7 +32,7 @@ export default async function ReservationsPage() {
       {rows.length === 0 ? (
         <Card>
           <div className="flex flex-col items-center gap-2 py-10 text-center">
-            <CalendarCheck className="h-8 w-8 text-text-muted" aria-hidden="true" />
+            <Sticker name="champagne-tray" size={96} />
             <p className="text-sm text-text-secondary">Hələ rezervasiya yoxdur</p>
           </div>
         </Card>

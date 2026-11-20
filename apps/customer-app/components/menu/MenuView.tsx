@@ -4,9 +4,10 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Plus, Minus, ShoppingBag, CalendarCheck, Banknote, CreditCard, Flame, ChefHat } from "lucide-react";
-import { Button, Modal, Input } from "@restoran/ui";
+import { Button, Modal, Input, Sticker } from "@restoran/ui";
 import { cn } from "@restoran/utils";
 import { placeOrder, type PaymentMethod } from "@/lib/place-order";
+import { pickMenuSticker } from "@/lib/menu-stickers";
 import { AIWaiterChat } from "./AIWaiterChat";
 
 interface CategoryRow {
@@ -72,6 +73,10 @@ export function MenuView({ restaurant, categories, items, tableId, bestsellerIte
   const [deliveryAddress, setDeliveryAddress] = useState("");
 
   const visibleItems = activeCategoryId ? items.filter((item) => item.category_id === activeCategoryId) : items;
+  const categoryNames = useMemo(
+    () => new Map(categories.map((category) => [category.id, category.name.az ?? category.name.en ?? ""])),
+    [categories]
+  );
 
   const cartEntries = Object.values(cart);
   const cartCount = cartEntries.reduce((sum, entry) => sum + entry.quantity, 0);
@@ -218,19 +223,35 @@ export function MenuView({ restaurant, categories, items, tableId, bestsellerIte
       )}
 
       {visibleItems.length === 0 ? (
-        <p className="py-12 text-center text-sm text-text-secondary">Bu kateqoriyada hələ məhsul yoxdur</p>
+        <div className="flex flex-col items-center gap-3 py-12 text-center">
+          <Sticker name="teapot-cupcakes" size={96} />
+          <p className="text-sm text-text-secondary">Bu kateqoriyada hələ məhsul yoxdur</p>
+        </div>
       ) : (
         <div className="flex flex-col divide-y divide-border">
           {visibleItems.map((item) => {
             const inCartQty = cart[item.id]?.quantity ?? 0;
+            const sticker = item.image_url ? null : pickMenuSticker(item.name.az ?? "", categoryNames.get(item.category_id), item.id);
             return (
               <div key={item.id} className="flex items-start justify-between gap-4 py-4">
-                <div className="min-w-0">
-                  <p className="font-medium text-text-primary">{item.name.az}</p>
-                  {item.description.az && (
-                    <p className="mt-1 text-sm text-text-secondary">{item.description.az}</p>
+                <div className="flex min-w-0 items-start gap-3">
+                  {(item.image_url || sticker) && (
+                    <div className="flex h-16 w-16 shrink-0 items-center justify-center">
+                      {item.image_url ? (
+                        /* eslint-disable-next-line @next/next/no-img-element -- Supabase Storage-dan gələn kiçik önizləmə */
+                        <img src={item.image_url} alt={item.name.az} loading="lazy" className="h-16 w-16 rounded-lg object-cover" />
+                      ) : (
+                        sticker && <Sticker name={sticker} size={64} />
+                      )}
+                    </div>
                   )}
-                  <p className="mt-2 text-sm font-semibold text-accent">{item.price.toFixed(2)} ₼</p>
+                  <div className="min-w-0">
+                    <p className="font-medium text-text-primary">{item.name.az}</p>
+                    {item.description.az && (
+                      <p className="mt-1 text-sm text-text-secondary">{item.description.az}</p>
+                    )}
+                    <p className="mt-2 text-sm font-semibold text-accent">{item.price.toFixed(2)} ₼</p>
+                  </div>
                 </div>
 
                 {inCartQty === 0 ? (
@@ -283,7 +304,10 @@ export function MenuView({ restaurant, categories, items, tableId, bestsellerIte
       <Modal isOpen={isCartOpen} onClose={() => setCartOpen(false)} title="Səbətiniz">
         <div className="flex flex-col gap-3">
           {cartEntries.length === 0 ? (
-            <p className="text-sm text-text-secondary">Səbət boşdur</p>
+            <div className="flex flex-col items-center gap-2 py-4 text-center">
+              <Sticker name="grocery-bag" size={72} />
+              <p className="text-sm text-text-secondary">Səbət boşdur</p>
+            </div>
           ) : (
             <>
               <div className="flex max-h-64 flex-col divide-y divide-border overflow-y-auto">
