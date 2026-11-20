@@ -75,6 +75,27 @@ export default async function DashboardPage() {
         .in("status", ACTIVE_STATUSES),
     ]);
 
+    const { data: myTips } =
+      context.role === "waiter" && context.staffId
+        ? await (
+            supabase as unknown as {
+              from: (t: "order_tips") => {
+                select: (c: string) => {
+                  eq: (c: string, v: string) => {
+                    gte: (c: string, v: string) => Promise<{ data: { amount: number; method: string }[] | null }>;
+                  };
+                };
+              };
+            }
+          )
+            .from("order_tips")
+            .select("amount, method")
+            .eq("waiter_id", context.staffId)
+            .gte("created_at", startOfToday)
+        : { data: [] };
+    const myTipsTotal = (myTips ?? []).reduce((sum, t) => sum + Number(t.amount), 0);
+    const myTipsCash = (myTips ?? []).filter((t) => t.method !== "card").reduce((sum, t) => sum + Number(t.amount), 0);
+
     const mySalesToday = (myOrders ?? []).reduce((sum, o) => sum + Number(o.total), 0);
     const myTablesMap = new Map<string, string>();
     for (const row of myOpenTableOrders ?? []) {
@@ -126,6 +147,25 @@ export default async function DashboardPage() {
             </div>
           </div>
         </Card>
+
+        {context.role === "waiter" && (
+          <Card>
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent-soft text-accent">
+                <Wallet className="h-6 w-6" aria-hidden="true" />
+              </div>
+              <div>
+                <p className="text-sm text-text-secondary">Bugünkü çay pulum</p>
+                <p className="text-2xl font-semibold text-text-primary">{myTipsTotal.toFixed(2)} ₼</p>
+                {myTipsTotal > 0 && (
+                  <p className="text-xs text-text-muted">
+                    Nağd {myTipsCash.toFixed(2)} ₼, kartla {(myTipsTotal - myTipsCash).toFixed(2)} ₼
+                  </p>
+                )}
+              </div>
+            </div>
+          </Card>
+        )}
 
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
           <BigIconTile href="/tables" icon={Table2} label="Masalar" description="Toxunub sifariş al" />
