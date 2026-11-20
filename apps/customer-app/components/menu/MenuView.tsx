@@ -3,10 +3,10 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Plus, Minus, ShoppingBag, CalendarCheck, Banknote, CreditCard, Flame, ChefHat } from "lucide-react";
+import { Plus, Minus, ShoppingBag, CalendarCheck, Flame, ChefHat } from "lucide-react";
 import { Button, Modal, Input, Sticker } from "@restoran/ui";
 import { cn } from "@restoran/utils";
-import { placeOrder, type PaymentMethod } from "@/lib/place-order";
+import { placeOrder, addItemsToOrder } from "@/lib/place-order";
 import { AIWaiterChat } from "./AIWaiterChat";
 
 interface CategoryRow {
@@ -35,6 +35,7 @@ interface MenuViewProps {
   categories: CategoryRow[];
   items: ItemRow[];
   tableId: string | null;
+  addToOrder: { id: string; number: number } | null;
   bestsellerItemId: string | null;
   tables: TableRow[];
 }
@@ -58,14 +59,13 @@ type FulfilmentMode = "dine_in" | "takeaway" | "delivery";
  * direktoridan) ise "Masadayam / Ozumle aparıram / Evə çatdırılma"
  * secimini OZU edir.
  */
-export function MenuView({ restaurant, categories, items, tableId, bestsellerItemId, tables }: MenuViewProps) {
+export function MenuView({ restaurant, categories, items, tableId, addToOrder, bestsellerItemId, tables }: MenuViewProps) {
   const router = useRouter();
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(categories[0]?.id ?? null);
   const [cart, setCart] = useState<Record<string, CartEntry>>({});
   const [isCartOpen, setCartOpen] = useState(false);
   const [isSubmitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
   const [phone, setPhone] = useState("");
   const [fulfilmentMode, setFulfilmentMode] = useState<FulfilmentMode>("takeaway");
   const [selectedTableId, setSelectedTableId] = useState<string>("");
@@ -103,6 +103,22 @@ export function MenuView({ restaurant, categories, items, tableId, bestsellerIte
   async function handleCheckout() {
     setSubmitError(null);
 
+    if (addToOrder) {
+      setSubmitting(true);
+      try {
+        await addItemsToOrder({
+          orderId: addToOrder.id,
+          items: cartEntries.map((entry) => ({ menuItemId: entry.item.id, quantity: entry.quantity })),
+        });
+        router.push(`/${restaurant.slug}/order/${addToOrder.id}`);
+      } catch (err) {
+        setSubmitError(err instanceof Error ? err.message : "Xəta baş verdi");
+      } finally {
+        setSubmitting(false);
+      }
+      return;
+    }
+
     // QR-dan gelen tableId varsa - HEMISE dine_in, masa sabitdir.
     // Yoxdursa - musterinin sectiyi rejime gore teyin olunur.
     const effectiveOrderType = tableId ? "dine_in" : fulfilmentMode;
@@ -130,7 +146,6 @@ export function MenuView({ restaurant, categories, items, tableId, bestsellerIte
         tableId: effectiveTableId || null,
         orderType: effectiveOrderType,
         items: cartEntries.map((entry) => ({ menuItemId: entry.item.id, quantity: entry.quantity })),
-        paymentMethod,
         customerPhone: phone.trim() || undefined,
         deliveryAddress: effectiveOrderType === "delivery" ? deliveryAddress.trim() : undefined,
       });
@@ -327,7 +342,7 @@ export function MenuView({ restaurant, categories, items, tableId, bestsellerIte
                 <span>{cartTotal.toFixed(2)} ₼</span>
               </div>
 
-              {!tableId && (
+              {!tableId && !addToOrder && (
                 <div>
                   <p className="mb-2 text-xs font-medium text-text-secondary">Sifariş necə olsun?</p>
                   <div className="grid grid-cols-3 gap-2">
@@ -408,48 +423,18 @@ export function MenuView({ restaurant, categories, items, tableId, bestsellerIte
                 </div>
               )}
 
-              <div>
-                <Input
-                  label={fulfilmentMode === "delivery" && !tableId ? "Telefon *" : "Telefon (loyallıq balı üçün, istəyə bağlı)"}
-                  type="tel"
-                  placeholder="050 123 45 67"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                />
-                <p className="mt-1 text-xs text-text-muted">Hər 1 ₼ xərcə 1 bal — sonrakı sifarişlərdə tanınacaqsınız</p>
-              </div>
-
-              <div>
-                <p className="mb-2 text-xs font-medium text-text-secondary">Ödəniş üsulu</p>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod("cash")}
-                    className={cn(
-                      "flex items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-sm font-medium transition-colors",
-                      paymentMethod === "cash"
-                        ? "border-accent bg-accent-soft text-accent"
-                        : "border-border text-text-secondary hover:bg-bg-muted"
-                    )}
-                  >
-                    <Banknote className="h-4 w-4" aria-hidden="true" />
-                    Nağd
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethod("card")}
-                    className={cn(
-                      "flex items-center justify-center gap-1.5 rounded-md border px-3 py-2 text-sm font-medium transition-colors",
-                      paymentMethod === "card"
-                        ? "border-accent bg-accent-soft text-accent"
-                        : "border-border text-text-secondary hover:bg-bg-muted"
-                    )}
-                  >
-                    <CreditCard className="h-4 w-4" aria-hidden="true" />
-                    Kartla
-                  </button>
+              {!addToOrder && (
+                <div>
+                  <Input
+                    label={fulfilmentMode === "delivery" && !tableId ? "Telefon *" : "Telefon (loyallıq balı üçün, istəyə bağlı)"}
+                    type="tel"
+                    placeholder="050 123 45 67"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                  />
+                  <p className="mt-1 text-xs text-text-muted">Hər 1 ₼ xərcə 1 bal — sonrakı sifarişlərdə tanınacaqsınız</p>
                 </div>
-              </div>
+              )}
 
               {submitError && (
                 <p role="alert" className="text-sm text-danger">
@@ -458,8 +443,11 @@ export function MenuView({ restaurant, categories, items, tableId, bestsellerIte
               )}
 
               <Button onClick={handleCheckout} isLoading={isSubmitting} className="w-full" size="lg">
-                Sifarişi göndər
+                {addToOrder ? `Sifariş #${addToOrder.number}-ə əlavə et` : "Sifarişi göndər"}
               </Button>
+              {!addToOrder && (
+                <p className="text-center text-xs text-text-muted">Ödənişi kassada edirsiniz</p>
+              )}
             </>
           )}
         </div>

@@ -38,7 +38,7 @@ export default async function BarPage() {
   const { data: orderItems } = orderIds.length
     ? await supabase
         .from("order_items")
-        .select("id, order_id, quantity, kitchen_status, special_instructions, created_at, menu_items(name)")
+        .select("id, order_id, quantity, kitchen_status, special_instructions, created_at, is_addition, menu_items(name)")
         .eq("station", "bar")
         .in("order_id", orderIds)
         .order("created_at", { ascending: true })
@@ -53,6 +53,7 @@ export default async function BarPage() {
       quantity: row.quantity,
       kitchen_status: row.kitchen_status as "queued" | "cooking" | "ready",
       special_instructions: row.special_instructions,
+      is_addition: row.is_addition,
       created_at: row.created_at,
       menu_item_name: (menuItem?.name as LocalizedText)?.az ?? "Məhsul",
       table_number: tableId ? tableNumberById.get(tableId) ?? null : null,

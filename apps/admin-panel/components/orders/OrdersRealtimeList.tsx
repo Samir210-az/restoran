@@ -224,16 +224,25 @@ export function OrdersRealtimeList({
               )}
               {(order.status === "served" || order.status === "ready") &&
                 canTakePayment &&
-                (order.payment_method === "cash" || order.payment_method === "card") &&
                 order.payment_status !== "completed" && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled={isPending}
-                    onClick={() => startTransition(() => markPaymentReceivedAction(order.id))}
-                  >
-                    Ödəniş alındı, bağla
-                  </Button>
+                  <>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={isPending}
+                      onClick={() => startTransition(() => markPaymentReceivedAction(order.id, "cash"))}
+                    >
+                      Nağd alındı
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={isPending}
+                      onClick={() => startTransition(() => markPaymentReceivedAction(order.id, "card"))}
+                    >
+                      Kartla alındı
+                    </Button>
+                  </>
                 )}
               {ACTIVE_STATUSES.has(order.status) && order.status === "served" && order.payment_status === "completed" && canTakePayment && (
                 <Button

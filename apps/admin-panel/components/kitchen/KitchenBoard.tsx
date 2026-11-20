@@ -13,6 +13,7 @@ interface KitchenItem {
   quantity: number;
   kitchen_status: "queued" | "cooking" | "ready";
   special_instructions: string | null;
+  is_addition: boolean;
   created_at: string;
   menu_item_name: string;
   table_number: string | null;
@@ -104,6 +105,7 @@ export function KitchenBoard({
                     <div className="min-w-0">
                       <CardTitle className="text-base">
                         {item.quantity} × {item.menu_item_name}
+                        {item.is_addition && <Badge variant="warning" className="ml-2 align-middle">Əlavə</Badge>}
                       </CardTitle>
                       {item.table_number && (
                         <p className="mt-0.5 text-xs text-text-muted">Masa {item.table_number}</p>
