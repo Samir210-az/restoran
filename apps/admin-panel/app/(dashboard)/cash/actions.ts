@@ -52,7 +52,7 @@ export async function closeShiftAction(formData: FormData) {
 
   const closedAt = new Date().toISOString();
   const totals = await getShiftTotals(restaurantId, shift!.opened_at, closedAt);
-  const expected = Math.round((Number(shift!.opening_cash) + totals.cash + totals.cashTips) * 100) / 100;
+  const expected = Math.round((Number(shift!.opening_cash) + totals.cash + totals.cashTips - totals.tipPayouts) * 100) / 100;
 
   const supabase = getSupabaseServerClient();
   const { error } = await supabase

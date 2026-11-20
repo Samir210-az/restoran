@@ -81,3 +81,45 @@ export async function getTipsReport(restaurantId: string, from: Date) {
 
   return { entries, summary: [...byWaiter.values()].sort((a, b) => b.total - a.total) };
 }
+
+export interface WaiterBalance {
+  waiterId: string;
+  name: string;
+  earned: number;
+  paid: number;
+  balance: number;
+}
+
+type SimpleQuery = { eq: (c: string, v: string) => Promise<{ data: { waiter_id: string | null; amount: number }[] | null }> };
+
+/** Ofisiantın bütün vaxt üzrə qazandığı çay pulu ilə ona verilənin fərqi. */
+export async function getTipBalances(restaurantId: string): Promise<WaiterBalance[]> {
+  const client = getSupabaseServerClient() as unknown as {
+    from: (t: "order_tips" | "tip_payouts") => { select: (c: string) => SimpleQuery };
+  };
+  const [{ data: tips }, { data: payouts }] = await Promise.all([
+    client.from("order_tips").select("waiter_id, amount").eq("restaurant_id", restaurantId),
+    client.from("tip_payouts").select("waiter_id, amount").eq("restaurant_id", restaurantId),
+  ]);
+
+  const names = await staffNames(restaurantId);
+  const byWaiter = new Map<string, WaiterBalance>();
+  const row = (id: string) =>
+    byWaiter.get(id) ?? { waiterId: id, name: names.get(id) ?? "Ofisiant", earned: 0, paid: 0, balance: 0 };
+
+  for (const t of tips ?? []) {
+    if (!t.waiter_id) continue;
+    const r = row(t.waiter_id);
+    r.earned += Number(t.amount);
+    byWaiter.set(t.waiter_id, r);
+  }
+  for (const p of payouts ?? []) {
+    if (!p.waiter_id) continue;
+    const r = row(p.waiter_id);
+    r.paid += Number(p.amount);
+    byWaiter.set(p.waiter_id, r);
+  }
+  return [...byWaiter.values()]
+    .map((r) => ({ ...r, balance: Math.round((r.earned - r.paid) * 100) / 100 }))
+    .sort((a, b) => b.balance - a.balance);
+}

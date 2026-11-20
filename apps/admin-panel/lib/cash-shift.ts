@@ -23,6 +23,7 @@ export interface ShiftTotals {
   cashTips: number;
   cardTips: number;
   tipsByWaiter: { name: string; amount: number }[];
+  tipPayouts: number;
 }
 
 type ShiftClient = {
@@ -73,8 +74,9 @@ export async function getShiftTotals(restaurantId: string, from: string, to?: st
   if (to) query = query.lte("paid_at", to);
   const { data: orders } = await query;
 
-  const totals: ShiftTotals = { cash: 0, card: 0, online: 0, orderCount: orders?.length ?? 0, courierCash: [], cashTips: 0, cardTips: 0, tipsByWaiter: [] };
+  const totals: ShiftTotals = { cash: 0, card: 0, online: 0, orderCount: orders?.length ?? 0, courierCash: [], cashTips: 0, cardTips: 0, tipsByWaiter: [], tipPayouts: 0 };
   await addTips(totals, restaurantId, from, to);
+  totals.tipPayouts = await sumPayouts(restaurantId, from, to);
   if (!orders?.length) return totals;
 
   const { data: payments } = await supabase
@@ -147,4 +149,14 @@ async function addTips(totals: ShiftTotals, restaurantId: string, from: string, 
     byWaiter.set(name, (byWaiter.get(name) ?? 0) + amount);
   }
   totals.tipsByWaiter = Array.from(byWaiter, ([name, amount]) => ({ name, amount }));
+}
+
+async function sumPayouts(restaurantId: string, from: string, to?: string) {
+  const client = getSupabaseServerClient() as unknown as {
+    from: (t: "tip_payouts") => { select: (c: string) => TipQuery };
+  };
+  let query = client.from("tip_payouts").select("amount").eq("restaurant_id", restaurantId).gte("created_at", from);
+  if (to) query = query.lte("created_at", to);
+  const { data } = await (query as unknown as Promise<{ data: { amount: number }[] | null }>);
+  return (data ?? []).reduce((sum, p) => sum + Number(p.amount), 0);
 }

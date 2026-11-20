@@ -1,0 +1,2 @@
+-- Faza 8: ofisiantlara çay pulunun verilməsi. Bazaya MCP ilə tətbiq olunub (order_flow_phase8_tip_payouts).
+-- tip_payouts: kassadan ofisianta verilən məbləğ; RLS is_staff_of. Kassa növbəsində gözlənilən nağddan çıxılır.

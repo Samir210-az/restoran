@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Card, CardHeader, CardTitle, CardDescription, Badge } from "@restoran/ui";
+import { Card, CardHeader, CardTitle, CardDescription, Badge, Input, Button } from "@restoran/ui";
 import { getCurrentStaffContext } from "@/lib/get-current-staff-context";
 import { getSupabaseServerClient } from "@/lib/supabase-server";
-import { getTipsReport, periodStart, type TipPeriod } from "@/lib/tips-report";
+import { getTipsReport, getTipBalances, periodStart, type TipPeriod } from "@/lib/tips-report";
+import { payTipAction } from "./actions";
 
 export const metadata = { title: "Çay pulu" };
 
@@ -15,7 +16,7 @@ const PERIODS: { key: TipPeriod; label: string }[] = [
 
 const money = (value: number) => `${value.toFixed(2)} ₼`;
 
-export default async function TipsPage({ searchParams }: { searchParams: { p?: string } }) {
+export default async function TipsPage({ searchParams }: { searchParams: { p?: string; error?: string; saved?: string } }) {
   const { restaurantId, role } = await getCurrentStaffContext();
   if (role !== "owner" && role !== "manager" && role !== "cashier") redirect("/dashboard");
 
@@ -29,12 +30,43 @@ export default async function TipsPage({ searchParams }: { searchParams: { p?: s
   const timeZone = restaurant?.timezone || "Asia/Baku";
 
   const { entries, summary } = await getTipsReport(restaurantId, periodStart(period, timeZone));
+  const balances = (await getTipBalances(restaurantId)).filter((b) => b.balance > 0);
+  const owedTotal = balances.reduce((sum, b) => sum + b.balance, 0);
   const total = summary.reduce((sum, r) => sum + r.total, 0);
   const cash = summary.reduce((sum, r) => sum + r.cash, 0);
   const card = total - cash;
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-4 p-4">
+      {searchParams.error && <Card className="border-danger/40 text-sm text-danger">{searchParams.error}</Card>}
+      {searchParams.saved && <Card className="border-success/40 text-sm text-success">{searchParams.saved}</Card>}
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Ofisiantlara verilməli: {money(owedTotal)}</CardTitle>
+          <CardDescription>Bütün dövr üzrə qazanılan çay pulundan artıq verilənlər çıxılıb. Pulu kassadan verəndə "Verildi" basın, kassadakı nağd da buna görə azalır.</CardDescription>
+        </CardHeader>
+        {balances.length === 0 ? (
+          <p className="text-sm text-text-muted">Verilməli çay pulu qalmayıb</p>
+        ) : (
+          <ul className="flex flex-col divide-y divide-border text-sm">
+            {balances.map((b) => (
+              <li key={b.waiterId} className="flex flex-col gap-2 py-3">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-text-primary">{b.name}</span>
+                  <span className="text-base font-semibold">{money(b.balance)}</span>
+                </div>
+                <form action={payTipAction} className="flex gap-2">
+                  <input type="hidden" name="waiter_id" value={b.waiterId} />
+                  <Input name="amount" type="number" inputMode="decimal" step="0.01" min="0.01" max={b.balance} defaultValue={b.balance.toFixed(2)} aria-label={`${b.name} üçün verilən məbləğ`} />
+                  <Button type="submit" size="sm">Verildi</Button>
+                </form>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
+
       <div className="flex gap-2">
         {PERIODS.map((p) => (
           <Link
