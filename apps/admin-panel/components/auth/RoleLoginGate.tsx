@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { AlertCircle, Shield, Users, ClipboardList, ChefHat, Wallet, Bike, ChevronLeft, Delete } from "lucide-react";
 import { createSupabasePublicClient } from "@restoran/supabase-client";
+import { registrationRequestUrl } from "@/lib/whatsapp";
 import {
   staffPinLoginAction,
   clearDeviceRestaurantAction,
@@ -96,7 +97,7 @@ export function RoleLoginGate({ restaurant, error }: { restaurant: LoginDirector
           <span>
             Hesabınız yoxdur?{" "}
             <a
-              href="https://wa.me/994552107111"
+              href={registrationRequestUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="font-medium text-accent hover:underline"

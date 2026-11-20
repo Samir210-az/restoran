@@ -3,6 +3,7 @@
 import { AlertCircle, KeyRound, UtensilsCrossed } from "lucide-react";
 import { Input, Button } from "@restoran/ui";
 import { selectDeviceRestaurantAction } from "@/app/(auth)/login/pin-actions";
+import { registrationRequestUrl } from "@/lib/whatsapp";
 
 /**
  * Bu cihazda İLK DƏFƏ açılan ekran - Samir-in qərarı: restoran
@@ -48,7 +49,7 @@ export function RestaurantPicker({ error }: { error?: string }) {
       <p className="text-center text-sm text-text-secondary">
         Hesabınız yoxdur?{" "}
         <a
-          href="https://wa.me/994552107111"
+          href={registrationRequestUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="font-medium text-accent hover:underline"
